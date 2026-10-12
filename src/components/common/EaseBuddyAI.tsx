@@ -28,12 +28,12 @@ interface Message {
 const KNOWLEDGE_RESPONSES: Record<string, { answer: string; link?: { label: string; url: string } }> = {
   trial: {
     answer:
-      "🎉 Every new PG owner receives a **45-day Free Trial of the Lite Plan**! During these 45 days, you enjoy unlimited properties, direct UPI intent collections, manual payment approvals, and a Dedicated Account Manager. After 45 days, you can subscribe to Lite (₹29/bed/mo) or Pro (₹49/bed/mo) to keep operations active.",
+      "🎉 New PG owners start on a trial of **PG Ease Pro**. After the trial, renew monthly or yearly. Prices, the Diwali badge, and the strike price come from your live plan page. Tenants are never charged.",
     link: { label: "View Plans & Pricing", url: "/plans" },
   },
   plans: {
     answer:
-      "We offer two transparent pricing plans:\n\n• **Lite Plan (₹29 / bed / month)**: Includes Direct UPI Intent Collection, Manual Payment Approve/Reject, Dedicated Account Manager, and unlimited beds.\n\n• **Pro Plan (₹49 / bed / month)**: Includes everything in Lite PLUS Automated Payment Gateway, Automated Bank Settlement (T+2), and your own Dedicated PG Website (`{pgname}.pgease.in`).",
+      "There is one plan, **PG Ease Pro**, billed per bed monthly or yearly (yearly is 10 months, so 2 months are free). You choose how tenants pay: manual UPI at ₹0, or an automatic gateway after Easebuzz KYC is Active. GST is added at checkout. Open Plans & Subscription for the current price.",
     link: { label: "Compare Plans", url: "/plans" },
   },
   upi: {
@@ -43,7 +43,7 @@ const KNOWLEDGE_RESPONSES: Record<string, { answer: string; link?: { label: stri
   },
   website: {
     answer:
-      "With the **Pro Plan (₹49/bed/month)**, PG Ease gives you your own dedicated subdomain website (e.g. `madhavpg.pgease.in`). You can showcase room photos, amenities, food menus, and accept direct tenant bookings online with zero broker fees!",
+      "PG Ease Pro includes your PG website (for example `madhavpg.pgease.com`). You can show rooms, amenities, and food, and take tenant enquiries without a broker.",
     link: { label: "Upgrade to Pro", url: "/plans" },
   },
   account_manager: {

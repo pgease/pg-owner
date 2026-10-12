@@ -2,10 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Check,
-  X,
-  Crown,
   Zap,
-  Sparkles,
   Loader2,
   Lock,
   Phone,
@@ -21,7 +18,6 @@ import {
   Clock,
   ArrowRight,
   Headphones,
-  Sliders,
   Gift,
 } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -38,6 +34,7 @@ import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useApp } from "@/context/AppContext";
 import { toast } from "@/components/ui/use-toast";
 import { formatINR } from "@/lib/formatters";
+import { getPaymentSettings, updatePaymentSettings } from "@/api/propertyOwner";
 import { SUPPORT_PHONE_DISPLAY, SUPPORT_PHONE_TEL, supportWhatsAppUrl } from "@/config/links";
 
 declare global {
@@ -195,15 +192,15 @@ const COMPARISON_FEATURES: ComparisonFeature[] = [
 const FAQS = [
   {
     q: "How does the 45-day Pro Trial work?",
-    a: "Every new PG Ease owner receives 45 days of complimentary Pro access upon sign-up. You get automated gateway collections, WhatsApp reminders, and dedicated PG website with zero upfront credit card or payment. When the trial ends, your data remains completely safe, and you can pick Lite (₹29/bed) or Pro (₹49/bed) to continue operations.",
+    a: "New owners start on a trial of PG Ease Pro. When it ends, your data stays visible. Renew PG Ease Pro monthly or yearly to restore full access. Tenants are never charged for the app.",
   },
   {
-    q: "Are there any hidden transaction fees on Lite Plan?",
-    a: "None. On the Lite Plan (₹29/bed/month), you collect rent directly to your own bank account via your UPI ID and dynamic QR code with 0% gateway commission. Tenants submit their payment reference, and you approve it from your verification queue.",
+    q: "How do tenants pay rent?",
+    a: "You choose once for your PG: Manual UPI (tenant pays your UPI and submits a UTR or screenshot, you approve) at ₹0 fee, or an automatic payment gateway after Easebuzz KYC is Active. The gateway fee is deducted from your settlement. Tenants never pay extra.",
   },
   {
-    q: "What is the difference between Lite and Pro?",
-    a: "Lite Plan (₹29/bed/month) is built for owners who manage payments manually via direct UPI. Pro Plan (₹49/bed/month) adds automated Razorpay/AutoPay gateway with direct bank settlement (T+2), automated WhatsApp payment reminders, and tenant group chat.",
+    q: "What is included in PG Ease Pro?",
+    a: "Unlimited tenants, rooms and beds, rent tracking, complaints, expenses, your PG website, and WhatsApp notifications. Aadhaar KYC and rent e-agreements are paid add-ons using credits.",
   },
   {
     q: "Can I adjust my bed capacity later?",
@@ -214,6 +211,10 @@ const FAQS = [
 export default function Plans() {
   const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
+  const [payMode, setPayMode] = useState<"MANUAL" | "GATEWAY">("MANUAL");
+  const [upiId, setUpiId] = useState("");
+  const [kycStatus, setKycStatus] = useState("Pending");
+  const [savingPay, setSavingPay] = useState(false);
   const [showMatrix, setShowMatrix] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -245,6 +246,35 @@ export default function Plans() {
     }
   }, [detectedBeds]);
 
+  useEffect(() => {
+    getPaymentSettings()
+      .then((settings) => {
+        setPayMode(settings.paymentMode === "GATEWAY" ? "GATEWAY" : "MANUAL");
+        setUpiId(settings.upiId || "");
+        setKycStatus(settings.kycStatus || "Pending");
+      })
+      .catch(() => {});
+  }, []);
+
+  const savePaymentMode = async (next: "MANUAL" | "GATEWAY") => {
+    const ok = window.confirm(
+      next === "GATEWAY"
+        ? "Switch this PG to automatic gateway collection? Manual UPI stays available until Easebuzz KYC is Active."
+        : "Switch this PG to manual UPI collection?",
+    );
+    if (!ok) return;
+    setSavingPay(true);
+    try {
+      const saved = await updatePaymentSettings({ paymentMode: next, upiId });
+      setPayMode(saved.paymentMode);
+      toast({ title: "Payment method updated" });
+    } catch (err: any) {
+      toast({ title: "Could not update payment method", description: err?.message, variant: "destructive" });
+    } finally {
+      setSavingPay(false);
+    }
+  };
+
   const createOrderMut = useCreatePlanCheckoutOrderMutation();
   const verifyPaymentMut = useVerifyPlanPaymentMutation();
 
@@ -254,19 +284,15 @@ export default function Plans() {
   const apiFeatureKeys = buildFeatureKeySet(featuresData?.features);
   const hasExplicitApiList = Boolean(featuresData?.features && featuresData.features.length > 0);
 
-  // Rates
-  const LITE_RATE_MONTHLY = 29;
-  const LITE_RATE_ANNUAL = 290; // 10 months (2 months free)
-  const PRO_RATE_MONTHLY = 49;
-  const PRO_RATE_ANNUAL = 490; // 10 months (2 months free)
+  const catalog = plansData?.catalog;
+  const cycleKey = billingCycle === "annual" ? "yearly" : "monthly";
+  const selectedCycle = catalog?.cycles?.find((c) => c.cycle === cycleKey) || catalog?.cycles?.[0];
+  const unitRate = selectedCycle?.pricePerBed ?? 0;
+  const subtotal = unitRate * selectedBeds;
+  const gstPercent = catalog?.gstPercent ?? 0;
+  const gstAmount = Math.round(subtotal * gstPercent) / 100;
+  const proTotal = Math.round((subtotal + gstAmount) * 100) / 100;
 
-  const liteUnitRate = billingCycle === "annual" ? LITE_RATE_ANNUAL : LITE_RATE_MONTHLY;
-  const proUnitRate = billingCycle === "annual" ? PRO_RATE_ANNUAL : PRO_RATE_MONTHLY;
-
-  const liteTotal = liteUnitRate * selectedBeds;
-  const proTotal = proUnitRate * selectedBeds;
-
-  const isCurrentPro = (currentPlanKey === "PRO" || subAccess.isTrial) && !subAccess.isExpired;
   const isCurrentLite = currentPlanKey === "LITE" && !subAccess.isTrial && !subAccess.isExpired;
 
   const handleUpgradeCheckout = async (planKey: "LITE" | "PRO") => {
@@ -389,7 +415,7 @@ export default function Plans() {
                 Trial Concluded — Operations Currently Restricted
               </h4>
               <p className="text-[12px] text-[#7A1E14] max-w-2xl leading-relaxed">
-                Your 45-day free trial has expired. Tenant additions, room changes, and automated rent collections are paused. Subscribe to Lite (₹29/bed) or Pro (₹49/bed) below to restore full operational access immediately.
+                Your trial has ended. Your data stays visible in read-only mode, and tenants can still pay. Renew PG Ease Pro below to restore full access. Gateway collections fall back to your UPI until you renew.
               </p>
             </div>
           </div>
@@ -504,9 +530,9 @@ export default function Plans() {
                     : "text-[#556270] hover:text-[#18212B]"
                 }`}
               >
-                <span>Annual</span>
+                <span>Yearly</span>
                 <span className="rounded bg-[#ECFAF1] text-[#157F3D] px-1.5 py-0.2 text-[9px] font-bold border border-[#B4E5C5]">
-                  Save 17%
+                  2 months free
                 </span>
               </button>
             </div>
@@ -514,8 +540,13 @@ export default function Plans() {
         </div>
       </div>
 
-      {/* ================= THE 2 CORE PLAN CARDS ================= */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+      {/* ================= PG EASE PRO ================= */}
+      {catalog?.offer?.badge && (
+        <div className="inline-flex rounded-[4px] bg-[#FFF7E6] border border-[#F5D9A8] text-[#A15C07] text-[12px] font-semibold px-3 py-1">
+          {catalog.offer.badge}
+        </div>
+      )}
+      <div className="max-w-xl">
         {/* CARD 1: LITE PLAN (₹29/BED) */}
         <div
           className={`rounded-[10px] bg-white border transition-all flex flex-col justify-between p-6 sm:p-7 relative shadow-xs ${
@@ -541,12 +572,15 @@ export default function Plans() {
                     <Zap className="h-4 w-4 text-[#E08A00]" />
                   </div>
                   <div>
-                    <h3 className="text-[18px] font-bold text-[#18212B]">Lite Plan</h3>
-                    <p className="text-[11px] text-[#556270]">Direct UPI with 0% gateway fee</p>
+                    <h3 className="text-[18px] font-bold text-[#18212B]">{catalog?.name || "PG Ease Pro"}</h3>
+                    <p className="text-[11px] text-[#556270]">Per bed, plus {gstPercent}% GST</p>
                   </div>
                 </div>
                 <span className="text-[12px] font-bold text-[#556270] bg-[#F6F7F8] px-2.5 py-1 rounded-[4px] border border-[#E2E6EA]">
-                  ₹29 / bed / mo
+                  {selectedCycle?.strikePerBed != null && (
+                    <span className="line-through text-[#98A2AE] mr-1">₹{selectedCycle.strikePerBed}</span>
+                  )}
+                  ₹{unitRate || "—"} / bed
                 </span>
               </div>
             </div>
@@ -555,35 +589,26 @@ export default function Plans() {
             <div className="pt-2 border-t border-[#EEF1F3]">
               <div className="flex items-baseline gap-1.5">
                 <span className="text-3xl font-extrabold text-[#18212B] tabular-nums tracking-tight">
-                  {formatINR(liteTotal)}
+                  {selectedCycle ? formatINR(proTotal) : "—"}
                 </span>
                 <span className="text-[12px] text-[#556270] font-medium">
                   / {billingCycle === "annual" ? "year" : "month"}
                 </span>
               </div>
               <p className="text-[11px] text-[#6B7785] mt-0.5 tabular-nums">
-                Calculated for {selectedBeds} beds ({formatINR(liteUnitRate)}/bed)
+                {selectedBeds} beds × ₹{unitRate} = {formatINR(subtotal)} + GST {formatINR(gstAmount)}
               </p>
             </div>
 
             {/* Features List */}
             <div className="space-y-2.5 pt-3 border-t border-[#EEF1F3]">
               <div className="text-[11px] uppercase font-bold text-[#6B7785] tracking-wider">
-                What's included in Lite:
+                Included:
               </div>
-              {[
-                { bold: "0% Gateway Fee", text: "Collect via your own UPI & QR directly to bank" },
-                { bold: "Payment Verification Queue", text: "1-click Approve / Reject UTR & screenshots" },
-                { bold: "Dedicated PG Website", text: "Custom {pgname}.pgease.in with room vacancy" },
-                { bold: "Unlimited Property Setup", text: "Floors, rooms, bed grid & sharing types" },
-                { bold: "Tenant Onboarding & KYC", text: "DigiLocker Aadhaar ID verification" },
-                { bold: "Dedicated Account Manager", text: "Assigned specialist for 1-on-1 guidance" },
-              ].map((item, idx) => (
-                <div key={idx} className="flex items-start gap-2.5 text-[12px] text-[#3D4A57]">
+              {(catalog?.features || []).map((feature) => (
+                <div key={feature} className="flex items-start gap-2.5 text-[12px] text-[#3D4A57]">
                   <Check className="h-4 w-4 text-[#157F3D] shrink-0 mt-0.5" />
-                  <span className="leading-snug">
-                    <strong className="text-[#18212B]">{item.bold}</strong> — {item.text}
-                  </span>
+                  <span className="leading-snug">{feature}</span>
                 </div>
               ))}
             </div>
@@ -593,137 +618,39 @@ export default function Plans() {
           <div className="pt-6 mt-6 border-t border-[#EEF1F3]">
             <button
               type="button"
-              disabled={isCurrentLite || createOrderMut.isPending}
-              onClick={() => handleUpgradeCheckout("LITE")}
-              className={`w-full h-[44px] rounded-[6px] font-semibold text-[13px] transition-all flex items-center justify-center gap-2 ${
-                isCurrentLite
-                  ? "bg-[#F6F7F8] text-[#556270] border border-[#E2E6EA] cursor-default"
-                  : "bg-white hover:bg-[#F6F7F8] text-[#18212B] border border-[#C8CFD6] active:bg-[#EEF1F3] shadow-2xs"
-              }`}
-            >
-              {createOrderMut.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin text-[#008080]" />
-              ) : isCurrentLite ? (
-                <>
-                  <CheckCircle2 className="h-4 w-4 text-[#157F3D]" /> Current Active Plan
-                </>
-              ) : (
-                <>
-                  <span>Select Lite ({formatINR(liteTotal)})</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* CARD 2: PRO PLAN (₹49/BED) — [HERO CARD] */}
-        <div
-          className={`rounded-[10px] bg-white border-2 border-[#008080] transition-all flex flex-col justify-between p-6 sm:p-7 relative shadow-sm ${
-            isCurrentPro ? "ring-2 ring-[#008080]/30" : ""
-          }`}
-        >
-          {/* Top Recommendation Badge */}
-          <div className="absolute -top-3 left-6">
-            <span className="bg-[#008080] text-white text-[10px] font-bold px-3 py-0.5 rounded-full uppercase tracking-wider shadow-xs flex items-center gap-1">
-              <Sparkles className="h-3 w-3" />
-              {subAccess.isTrial ? "45-Day Pro Trial Active" : "Recommended for Full Automation"}
-            </span>
-          </div>
-
-          {isCurrentPro && (
-            <div className="absolute -top-3 right-6">
-              <span className="bg-[#E8F4F4] text-[#008080] border border-[#008080]/30 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                Current Plan
-              </span>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            {/* Header */}
-            <div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-[6px] bg-[#E8F4F4] border border-[#CCE6E6] flex items-center justify-center text-[#008080]">
-                    <Crown className="h-4 w-4 text-[#008080]" />
-                  </div>
-                  <div>
-                    <h3 className="text-[18px] font-bold text-[#18212B]">Pro Plan</h3>
-                    <p className="text-[11px] text-[#008080] font-semibold">Gateway AutoPay & WhatsApp Automation</p>
-                  </div>
-                </div>
-                <span className="text-[12px] font-bold text-[#008080] bg-[#E8F4F4] px-2.5 py-1 rounded-[4px] border border-[#CCE6E6]">
-                  ₹49 / bed / mo
-                </span>
-              </div>
-            </div>
-
-            {/* Total Dynamic Price */}
-            <div className="pt-2 border-t border-[#EEF1F3]">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-3xl font-extrabold text-[#18212B] tabular-nums tracking-tight">
-                  {formatINR(proTotal)}
-                </span>
-                <span className="text-[12px] text-[#556270] font-medium">
-                  / {billingCycle === "annual" ? "year" : "month"}
-                </span>
-              </div>
-              <p className="text-[11px] text-[#008080] font-semibold mt-0.5 tabular-nums">
-                Calculated for {selectedBeds} beds ({formatINR(proUnitRate)}/bed)
-              </p>
-            </div>
-
-            {/* Features List */}
-            <div className="space-y-2.5 pt-3 border-t border-[#EEF1F3]">
-              <div className="text-[11px] uppercase font-bold text-[#008080] tracking-wider">
-                Everything in Lite, plus Pro Automation:
-              </div>
-              {[
-                { bold: "Automated Payment Gateway", text: "Cards, NetBanking, AutoPay with T+2 bank payouts" },
-                { bold: "Automated WhatsApp Alerts", text: "Rent due reminders & payment receipts on WhatsApp" },
-                { bold: "Private PG Group Chat", text: "Official chat channel for owner, staff & tenants" },
-                { bold: "Digital Rental Agreement", text: "Legally compliant eSign agreements on phone" },
-                { bold: "Notice Period Tracker", text: "Vacating tenant countdown & bed forecasting" },
-                { bold: "Priority Support & Manager", text: "Dedicated VIP operations specialist" },
-              ].map((item, idx) => (
-                <div key={idx} className="flex items-start gap-2.5 text-[12px] text-[#3D4A57]">
-                  <Check className="h-4 w-4 text-[#008080] shrink-0 mt-0.5" />
-                  <span className="leading-snug">
-                    <strong className="text-[#18212B]">{item.bold}</strong> — {item.text}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Action CTA */}
-          <div className="pt-6 mt-6 border-t border-[#EEF1F3]">
-            <button
-              type="button"
-              disabled={isCurrentPro || createOrderMut.isPending}
+              disabled={!selectedCycle || createOrderMut.isPending}
               onClick={() => handleUpgradeCheckout("PRO")}
-              className={`w-full h-[44px] rounded-[6px] font-semibold text-[13px] transition-all flex items-center justify-center gap-2 shadow-xs ${
-                isCurrentPro
-                  ? "bg-[#E8F4F4] text-[#008080] border border-[#CCE6E6] cursor-default"
-                  : "bg-[#008080] hover:bg-[#006B6B] active:bg-[#005757] text-white"
-              }`}
+              className="w-full h-[44px] rounded-[6px] font-semibold text-[13px] transition-all flex items-center justify-center gap-2 bg-[#008080] hover:bg-[#006B6B] text-white disabled:opacity-50"
             >
               {createOrderMut.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin text-white" />
-              ) : isCurrentPro ? (
-                <>
-                  <CheckCircle2 className="h-4 w-4 text-[#008080]" />
-                  <span>Current Active Plan</span>
-                </>
               ) : (
                 <>
-                  <span>Activate Pro Plan ({formatINR(proTotal)})</span>
+                  <span>Buy PG Ease Pro ({selectedCycle ? formatINR(proTotal) : "—"})</span>
                   <ArrowRight className="h-3.5 w-3.5" />
                 </>
               )}
             </button>
           </div>
         </div>
+
+      </div>
+
+      <div className="rounded-[8px] border border-[#E2E6EA] bg-white p-5 space-y-3 max-w-xl">
+        <h3 className="text-[15px] font-bold text-[#18212B]">How tenants pay you</h3>
+        <p className="text-[12px] text-[#556270]">
+          This stays on the account. Gateway fee is taken from your settlement. Tenants are not charged extra.
+          {kycStatus.toLowerCase() !== "active" && payMode === "GATEWAY" ? " KYC is not Active, so manual UPI stays the fallback." : ""}
+        </p>
+        <div className="flex gap-2">
+          <button type="button" disabled={savingPay} onClick={() => savePaymentMode("MANUAL")} className={`px-3 py-2 rounded-[6px] text-[12px] font-semibold border ${payMode === "MANUAL" ? "bg-[#008080] text-white border-[#008080]" : "bg-white border-[#C8CFD6]"}`}>Manual UPI · ₹0</button>
+          <button type="button" disabled={savingPay} onClick={() => savePaymentMode("GATEWAY")} className={`px-3 py-2 rounded-[6px] text-[12px] font-semibold border ${payMode === "GATEWAY" ? "bg-[#008080] text-white border-[#008080]" : "bg-white border-[#C8CFD6]"}`}>Payment gateway</button>
+        </div>
+        <label className="block text-[12px] text-[#556270]">
+          Owner UPI ID
+          <input value={upiId} onChange={(e) => setUpiId(e.target.value)} className="mt-1 w-full h-9 rounded-[6px] border border-[#C8CFD6] px-2 text-[#18212B]" placeholder="name@upi" />
+        </label>
+        <p className="text-[12px] text-[#556270]">Easebuzz KYC: {kycStatus}</p>
       </div>
 
       {/* ================= REFERRAL CASHBACK CALLOUT ================= */}
@@ -771,7 +698,7 @@ export default function Plans() {
               </span>
             </h3>
             <p className="text-[12px] text-[#556270] mt-0.5">
-              Detailed breakdown of features included in Lite (₹29/bed) vs Pro (₹49/bed).
+              Everything in PG Ease Pro. Tenants, rooms, and beds are unlimited.
             </p>
           </div>
           <div className="flex items-center gap-2 text-[12px] font-semibold text-[#008080]">
@@ -786,8 +713,7 @@ export default function Plans() {
               <thead>
                 <tr className="border-b border-[#E2E6EA] bg-[#F6F7F8] text-[#556270]">
                   <th className="py-3 px-4 font-bold min-w-[260px]">Feature & Operational Capability</th>
-                  <th className="py-3 px-4 font-bold text-center w-[160px]">Lite (₹29/bed)</th>
-                  <th className="py-3 px-4 font-bold text-center w-[160px] text-[#008080]">Pro (₹49/bed)</th>
+                  <th className="py-3 px-4 font-bold text-center w-[160px] text-[#008080]">PG Ease Pro</th>
                   <th className="py-3 px-4 font-bold text-center w-[140px] bg-[#E8F4F4]/50 text-[#008080]">
                     Your Plan
                   </th>
@@ -807,19 +733,8 @@ export default function Plans() {
                         <div className="font-semibold text-[#18212B]">{feat.name}</div>
                         <div className="text-[11px] text-[#6B7785] mt-0.5">{feat.description}</div>
                       </td>
-                      <td className="py-3 px-4 text-center">
-                        {feat.lite ? (
-                          <Check className="h-4 w-4 text-[#157F3D] mx-auto" />
-                        ) : (
-                          <X className="h-4 w-4 text-[#C8CFD6] mx-auto" />
-                        )}
-                      </td>
                       <td className="py-3 px-4 text-center bg-[#E8F4F4]/20">
-                        {feat.pro ? (
-                          <Check className="h-4 w-4 text-[#008080] mx-auto stroke-[2.5]" />
-                        ) : (
-                          <X className="h-4 w-4 text-[#C8CFD6] mx-auto" />
-                        )}
+                        <Check className="h-4 w-4 text-[#008080] mx-auto stroke-[2.5]" />
                       </td>
                       <td className="py-3 px-4 text-center bg-[#E8F4F4]/40">
                         {youHave ? (
@@ -871,68 +786,6 @@ export default function Plans() {
         </div>
       </div>
 
-      {/* ================= DEV PLAN SIMULATOR (DEV BUILDS ONLY) ================= */}
-      {import.meta.env.DEV && (
-        <div className="p-3.5 rounded-[8px] bg-[#18212B] text-white border border-[#3D4A57] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2">
-            <Sliders className="h-4 w-4 text-[#008080]" />
-            <span className="font-bold">Dev Mode Simulator:</span>
-            <span className="text-[#98A2AE]">Preview plans without database changes</span>
-          </div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <button
-              type="button"
-              onClick={() => {
-                subAccess.setDemoPlan("trial");
-                toast({ title: "Switched to 45-Day Pro Trial" });
-              }}
-              className="px-2.5 py-1 rounded-[4px] bg-[#008080]/30 hover:bg-[#008080]/50 text-white font-semibold text-[11px]"
-            >
-              🟢 Pro Trial
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                subAccess.setDemoPlan("lite");
-                toast({ title: "Switched to Lite Plan" });
-              }}
-              className="px-2.5 py-1 rounded-[4px] bg-slate-800 hover:bg-slate-700 text-white font-semibold text-[11px]"
-            >
-              ⚡ Lite Plan
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                subAccess.setDemoPlan("pro");
-                toast({ title: "Switched to Paid Pro" });
-              }}
-              className="px-2.5 py-1 rounded-[4px] bg-emerald-950 text-emerald-300 border border-emerald-700 font-semibold text-[11px]"
-            >
-              👑 Paid Pro
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                subAccess.setDemoPlan("expired");
-                toast({ title: "Switched to Expired" });
-              }}
-              className="px-2.5 py-1 rounded-[4px] bg-red-950 text-red-300 border border-red-700 font-semibold text-[11px]"
-            >
-              🔴 Expired
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                subAccess.setDemoPlan("reset");
-                toast({ title: "Reset to Live API" });
-              }}
-              className="px-2.5 py-1 rounded-[4px] bg-slate-800 text-slate-400 hover:text-white text-[11px]"
-            >
-              Reset
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

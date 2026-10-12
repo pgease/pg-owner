@@ -2247,8 +2247,41 @@ export interface CurrentPlanResponse {
   bedsUsage?: { used: number; max: number };
 }
 
+export interface ProPlanCycle {
+  cycle: "monthly" | "yearly";
+  pricePerBed: number;
+  strikePerBed: number | null;
+  period: string;
+  note?: string;
+}
+
+export interface ProPlanCatalog {
+  name: string;
+  gstPercent: number;
+  offer: { enabled: boolean; badge: string | null };
+  features: string[];
+  cycles: ProPlanCycle[];
+}
+
 export async function getPlans() {
-  return httpRequest<{ plans: SubscriptionPlan[] }>(`${PROPERTY_OWNER_BASE}/plans`, {
+  return httpRequest<{ plans: SubscriptionPlan[]; catalog?: ProPlanCatalog }>(`${PROPERTY_OWNER_BASE}/plans`, {
+    auth: false,
+  });
+}
+
+export async function getPaymentSettings() {
+  return httpRequest<{
+    paymentMode: "MANUAL" | "GATEWAY";
+    upiId: string | null;
+    kycStatus: string;
+    effectiveCollection: string;
+  }>("/owner/payment-settings", { auth: true });
+}
+
+export async function updatePaymentSettings(body: { paymentMode: "MANUAL" | "GATEWAY"; upiId?: string }) {
+  return httpRequest<Awaited<ReturnType<typeof getPaymentSettings>>>("/owner/payment-settings", {
+    method: "PATCH",
+    body,
     auth: true,
   });
 }
