@@ -284,7 +284,26 @@ export default function Plans() {
   const apiFeatureKeys = buildFeatureKeySet(featuresData?.features);
   const hasExplicitApiList = Boolean(featuresData?.features && featuresData.features.length > 0);
 
-  const catalog = plansData?.catalog;
+  const STATIC_CATALOG = {
+    name: "PG Ease Pro",
+    gstPercent: 18,
+    offer: { enabled: true, badge: "🪔 Diwali Offer – Grab it soon!" },
+    features: [
+      "Unlimited tenants, rooms, beds",
+      "Rent tracking, dues, auto receipts",
+      "Payment collection: Manual UPI OR Automatic payment gateway",
+      "Complaints & tenant app",
+      "Expenses & reports",
+      "PG website (pgname.pgease.com)",
+      "WhatsApp notifications (free)",
+      "Paid add-ons (credits): Aadhaar KYC, rent e-agreement",
+    ],
+    cycles: [
+      { cycle: "monthly" as const, pricePerBed: 29, strikePerBed: 49, period: "per bed / month" },
+      { cycle: "yearly" as const, pricePerBed: 290, strikePerBed: 490, period: "per bed / year", note: "2 months free" },
+    ],
+  };
+  const catalog = plansData?.catalog?.cycles?.length ? plansData.catalog : STATIC_CATALOG;
   const cycleKey = billingCycle === "annual" ? "yearly" : "monthly";
   const selectedCycle = catalog?.cycles?.find((c) => c.cycle === cycleKey) || catalog?.cycles?.[0];
   const unitRate = selectedCycle?.pricePerBed ?? 0;
