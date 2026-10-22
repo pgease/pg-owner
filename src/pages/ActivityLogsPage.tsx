@@ -149,12 +149,12 @@ function formatRelativeTime(dateString: string): string {
     const now = new Date();
     const diffMs = now.getTime() - d.getTime();
     const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
+    const diffDays = Math.floor(diffMins / 1440);
 
     if (diffMins < 2) return "Just now";
-    if (diffMins < 60) return `${diffMins} mins ago`;
-    if (diffHours < 24) return `${diffHours} hrs ago`;
+    if (diffMins < 60) return diffMins === 1 ? "1 min ago" : `${diffMins} mins ago`;
+    const roundedHours = Math.max(1, Math.round(diffMins / 60));
+    if (roundedHours < 24) return roundedHours === 1 ? "1 hr ago" : `${roundedHours} hrs ago`;
     if (diffDays === 1) return "Yesterday";
     if (diffDays < 7) return `${diffDays} days ago`;
     return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });

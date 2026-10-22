@@ -128,8 +128,19 @@ export function tenantRentDueLabel(t?: any): string {
   const daysInCurrentMonth = new Date(y, mo + 1, 0).getDate();
   let candidate = new Date(y, mo, Math.min(day, daysInCurrentMonth));
 
-  // If this month's due date has already passed, next due date is next month
-  if (candidate <= now) {
+  const status = String(t.rentStatus || t.paymentStatus || t.collectionStatus || "").toLowerCase();
+  const outstanding = Number(
+    t.outstanding ?? t.pendingAmount ?? t.amountOutstanding ?? t.dueAmount ?? NaN,
+  );
+  const currentMonthUnpaid =
+    status === "unpaid" ||
+    status === "pending" ||
+    status === "partial" ||
+    status === "overdue" ||
+    (Number.isFinite(outstanding) && outstanding > 0);
+
+  // An unpaid month stays the next due, even after that calendar day has passed.
+  if (!currentMonthUnpaid && candidate <= now) {
     mo += 1;
     if (mo > 11) {
       mo = 0;

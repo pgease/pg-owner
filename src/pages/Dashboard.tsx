@@ -52,11 +52,11 @@ const Dashboard = () => {
 
   // Show the expired-plan prompt once per session.
   useEffect(() => {
-    if (subAccess.isExpired && !sessionStorage.getItem("trial_expired_gate_prompted")) {
+    if (!subAccess.isLoading && subAccess.isExpired && !sessionStorage.getItem("trial_expired_gate_prompted")) {
       setGateModalOpen(true);
       sessionStorage.setItem("trial_expired_gate_prompted", "true");
     }
-  }, [subAccess.isExpired]);
+  }, [subAccess.isExpired, subAccess.isLoading]);
 
   const data = useDashboardData(selectedPgId);
 

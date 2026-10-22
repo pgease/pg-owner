@@ -291,7 +291,7 @@ export default function ReferralsPage() {
               </div>
               <h3 className="text-sm font-bold text-foreground">Cash Rewards Credited</h3>
               <p className="text-xs text-muted-foreground">
-                Receive ₹500 for starter plans and ₹1,000 for standard or enterprise plans directly into your settlement account.
+                Receive ₹1,000 when the owner you refer activates PG Ease Pro.
               </p>
             </div>
           </div>
@@ -448,8 +448,7 @@ export default function ReferralsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-5 pt-0 space-y-2 text-[11px] text-muted-foreground leading-relaxed">
-              <p>• ₹500 cash credited for Starter subscription plans.</p>
-              <p>• ₹1,000 cash credited for Growth & Enterprise plans.</p>
+              <p>• ₹1,000 cash credited when the referred owner activates PG Ease Pro.</p>
               <p>• Rewards are credited automatically upon first successful plan activation.</p>
               <p>• Payouts are transferred directly to your bank account with zero fees.</p>
             </CardContent>

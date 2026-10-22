@@ -748,7 +748,11 @@ export default function TenantDetailPage() {
   const initials = tenantInitials(tenant);
   const stayStatus = tenantStayStatus(tenant);
   const stayDuration = getStayDurationText(tenant.joiningDate, tenant.moveOutDate || (tenant as any).moveOutDate, Boolean((tenant as any).isOnNotice), tenant.expectedMoveOutDate);
-  const currentPropertyName = (tenant as any)?.propertyName || (tenant as any)?.currentStay?.propertyName || "PG Ease Property";
+  const currentPropertyName =
+    (tenant as any)?.propertyName ||
+    (tenant as any)?.currentStay?.propertyName ||
+    propertyList.find((p) => p.id === currentPropertyId)?.name ||
+    "—";
   const photo = (tenant as any)?.photoUrl || (tenant as any)?.imageUrl || (tenant as any)?.profilePhotoUrl;
   const statusInfo = tenantStatusDisplay(tenant);
   const rawRoomNo = tenantRoomNo(tenant);
@@ -3981,24 +3985,29 @@ export default function TenantDetailPage() {
                   <Select value={targetRoomId} onValueChange={setTargetRoomId}>
                     <SelectTrigger><SelectValue placeholder="Select Room" /></SelectTrigger>
                     <SelectContent>
-                      {targetRooms.map((r: any) => (
-                        <SelectItem key={r.id} value={r.id}>
-                          Room {r.roomNumber} ({r.availableBeds ?? 1} bed free)
+                      {targetRooms.map((r: any) => {
+                        const free = Number(r.availableBeds ?? 1);
+                        const freeLabel = free === 1 ? "1 bed free" : `${free} beds free`;
+                        return (
+                        <SelectItem key={r.id} value={r.id} disabled={free <= 0}>
+                          Room {r.roomNumber} ({free <= 0 ? "full" : freeLabel})
                         </SelectItem>
-                      ))}
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-1.5">
                   <Label>Target Bed Number</Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={10}
-                    value={targetBedNumber}
-                    onChange={(e) => setTargetBedNumber(parseInt(e.target.value, 10) || 1)}
-                  />
+                  <Select value={String(targetBedNumber || 1)} onValueChange={(v) => setTargetBedNumber(parseInt(v, 10) || 1)}>
+                    <SelectTrigger aria-label="Target bed"><SelectValue placeholder="Select bed" /></SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: Math.max(1, Number(targetRooms.find((r: any) => r.id === targetRoomId)?.availableBeds ?? 1)) }, (_, i) => (
+                        <SelectItem key={i + 1} value={String(i + 1)}>Bed {i + 1}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

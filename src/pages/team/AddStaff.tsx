@@ -103,7 +103,6 @@ export default function AddStaff() {
       const res = await createOwnerStaff({
         propertyId: pgId,
         name: name.trim(),
-        email: `${name.trim().toLowerCase().replace(/\s+/g, "")}_${digits}@pgease.local`,
         mobileContactNumber: digits,
         designation: selectedDesignation || role || undefined,
         countryCode: "+91",

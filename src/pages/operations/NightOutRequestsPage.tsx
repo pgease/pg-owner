@@ -143,6 +143,10 @@ export default function NightOutRequestsPage() {
       const leaveAt = combineWhen(leaveDay, leaveTime);
       const returnAt = combineWhen(returnDay, returnTime);
       if (!selectedPgId || !selectedTenantId || !leaveAt || !returnAt) return;
+      const stayPhone = contactDuringStay.replace(/\D/g, "");
+      if (stayPhone && stayPhone.length !== 10) {
+        throw new Error("Stay contact must be a 10-digit mobile number.");
+      }
       return createNightOutRequest(selectedPgId, {
         tenantId: selectedTenantId,
         leaveDate: leaveAt.toISOString(),
@@ -167,8 +171,12 @@ export default function NightOutRequestsPage() {
       setParentConsentConfirmed(false);
       queryClient.invalidateQueries({ queryKey: ["nightOutRequests", selectedPgId] });
     },
-    onError: () => {
-      toast({ title: "Couldn't issue this pass", description: "Check the details and try again.", variant: "destructive" });
+    onError: (error: unknown) => {
+      toast({
+        title: "Couldn't issue this pass",
+        description: error instanceof Error ? error.message : "Check the details and try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -234,7 +242,7 @@ export default function NightOutRequestsPage() {
                 aria-label="Search night out passes"
                 className="h-9 w-full sm:max-w-xs"
               />
-              <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filter by status">
+              <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by status">
                 {(["all", "pending", "approved", "rejected"] as const).map((status) => (
                   <Button
                     key={status}

@@ -86,6 +86,7 @@ export const BankAccountManager = () => {
   const [ifscCode, setIfscCode] = useState("");
   const [accountType, setAccountType] = useState<"savings" | "current">("current");
   const [upiId, setUpiId] = useState("");
+  const [addErrors, setAddErrors] = useState<string[]>([]);
   const [isPrimaryNew, setIsPrimaryNew] = useState(false);
 
   // IFSC Lookup State
@@ -198,6 +199,7 @@ export const BankAccountManager = () => {
     setIfscCode("");
     setAccountType("current");
     setUpiId("");
+    setAddErrors([]);
     setIsPrimaryNew(accounts.length === 0);
     setIfscResult(null);
     setIfscError(null);
@@ -212,28 +214,20 @@ export const BankAccountManager = () => {
   const handleAddAccount = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!accountHolder.trim()) {
-      toast({ title: "Account holder name is required", variant: "destructive" });
-      return;
-    }
-    const cleanAcc = accountNumber.trim();
-    if (!cleanAcc || cleanAcc.length < 8) {
-      toast({ title: "Valid account number is required (min 8 digits)", variant: "destructive" });
-      return;
-    }
-    if (cleanAcc !== confirmAccountNumber.trim()) {
-      toast({
-        title: "Account numbers do not match",
-        description: "Please verify that both account number fields match exactly.",
-        variant: "destructive",
-      });
-      return;
-    }
+    const cleanAcc = accountNumber.replace(/\s/g, "");
     const cleanIfsc = ifscCode.trim().toUpperCase();
-    if (!cleanIfsc || cleanIfsc.length !== 11) {
-      toast({ title: "Valid 11-digit IFSC code is required", variant: "destructive" });
+    const cleanUpi = upiId.trim();
+    const problems: string[] = [];
+    if (!accountHolder.trim()) problems.push("Account holder name is required.");
+    if (!/^\d{9,18}$/.test(cleanAcc)) problems.push("Account number must be 9 to 18 digits.");
+    if (cleanAcc !== confirmAccountNumber.replace(/\s/g, "")) problems.push("Account numbers do not match.");
+    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(cleanIfsc)) problems.push("Enter a real IFSC, like HDFC0001234.");
+    if (cleanUpi && !/^[\w.\-]{2,}@[A-Za-z]{2,}$/.test(cleanUpi)) problems.push("UPI ID must look like name@bank.");
+    if (problems.length > 0) {
+      setAddErrors(problems);
       return;
     }
+    setAddErrors([]);
 
     setIsSaving(true);
     const payload = {
@@ -573,8 +567,8 @@ export const BankAccountManager = () => {
                     {/* Footer Actions */}
                     <div className="pt-2 border-t flex items-center justify-between text-[11px]">
                       <span className="text-muted-foreground flex items-center gap-1">
-                        <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                        Verified for tenant settlements
+                        <CheckCircle2 className={cn("h-3 w-3", acc.isVerified ? "text-emerald-600" : "text-amber-600")} />
+                        {acc.isVerified ? "Verified for tenant settlements" : "Not verified — check IFSC, account number and UPI"}
                       </span>
                       <Button
                         size="sm"
@@ -629,14 +623,18 @@ export const BankAccountManager = () => {
                 </div>
               )}
 
-              <div className="p-4 rounded-2xl bg-white border-2 border-dashed border-teal-300 shadow-md flex items-center justify-center">
-                {/* Real Scannable UPI QR Code */}
+              <div
+                className="p-4 rounded-2xl bg-white border-2 border-dashed border-teal-300 shadow-md flex items-center justify-center"
+                role="img"
+                aria-label={`UPI QR for ${selectedPg?.name || "this PG"}, payee ${activeUpiId}`}
+              >
                 <QRCodeSVG
                   value={upiQrString}
                   size={180}
                   level="M"
                   includeMargin={true}
                   className="mx-auto rounded-lg"
+                  title={`UPI QR for ${selectedPg?.name || "this PG"}`}
                 />
               </div>
 
@@ -707,6 +705,13 @@ export const BankAccountManager = () => {
           </DialogHeader>
 
           <form onSubmit={handleAddAccount} className="space-y-3.5 text-xs py-2">
+            {addErrors.length > 0 && (
+              <ul className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-red-700 space-y-1" role="alert">
+                {addErrors.map((err) => (
+                  <li key={err}>{err}</li>
+                ))}
+              </ul>
+            )}
             {/* Account Holder Name */}
             <div className="space-y-1">
               <Label htmlFor={`${formId}-holder`} className="text-xs font-semibold">

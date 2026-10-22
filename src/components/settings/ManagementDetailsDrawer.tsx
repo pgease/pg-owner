@@ -62,8 +62,8 @@ export function ManagementDetailsDrawer({
 
   // Account Admin Details State
   const [adminName, setAdminName] = useState(owner?.name || "Not Set");
-  const [adminEmail, setAdminEmail] = useState(owner?.email || "developer.shivam0@gmail.com");
-  const [adminPhone, setAdminPhone] = useState(owner?.mobileContactNumber || "8368612646");
+  const [adminEmail, setAdminEmail] = useState(owner?.email && !String(owner.email).endsWith(".local") ? owner.email : "Not added");
+  const [adminPhone, setAdminPhone] = useState(owner?.mobileContactNumber || "Not added");
 
   // Modals
   const [editBusinessOpen, setEditBusinessOpen] = useState(false);

@@ -141,6 +141,13 @@ export default function GuestRequestsPage() {
       if (validGuests.length === 0) {
         throw new Error("Please enter at least one guest name.");
       }
+      const badPhone = validGuests.find((g) => {
+        const digits = g.phone.replace(/\D/g, "");
+        return digits.length > 0 && digits.length !== 10;
+      });
+      if (badPhone) {
+        throw new Error("Guest phone must be a 10-digit mobile number.");
+      }
 
       const primary = validGuests[0];
 
@@ -747,7 +754,7 @@ export default function GuestRequestsPage() {
 
             <div className="space-y-3 py-2 text-sm">
               <p className="text-slate-700">
-                Are you sure you want to {actionType} visitor arrival for:
+                Are you sure you want to {actionType === "approved" ? "approve" : "reject"} visitor arrival for:
               </p>
 
               {Array.isArray(selectedRequest?.guests) && selectedRequest.guests.length > 0 ? (

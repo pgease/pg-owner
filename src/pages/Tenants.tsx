@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Plus,
   ArrowRightLeft,
@@ -40,6 +40,7 @@ import {
   useBlocks,
   useFloors,
   usePropertyTenants,
+  useRentCollectionDashboard,
   useRoomsList,
   useMoveTenantMutation,
   useSetTenantNoticeMutation,
@@ -106,7 +107,12 @@ const Tenants = () => {
     }
   };
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get("search") || "");
+  useEffect(() => {
+    const next = searchParams.get("search");
+    if (next != null) setSearchQuery(next);
+  }, [searchParams]);
   const [kycFilter, setKycFilter] = useState<"all" | "verified" | "pending">("all");
   const [selectedBlockId, setSelectedBlockId] = useState<string>("");
   const [selectedFloorId, setSelectedFloorId] = useState<string>("");
@@ -317,6 +323,22 @@ const Tenants = () => {
 
   const isVacantRoomsPage = location.pathname === "/tenants/vacant-rooms";
   const tenantsQuery = usePropertyTenants(isVacantRoomsPage ? null : selectedPgId);
+  const rentMonth = new Date();
+  const rentDashQuery = useRentCollectionDashboard(
+    isVacantRoomsPage ? null : selectedPgId,
+    rentMonth.getMonth() + 1,
+    rentMonth.getFullYear(),
+  );
+  const paidThisMonth = useMemo(() => {
+    const ids = new Set<string>();
+    for (const row of rentDashQuery.data?.paidTenants ?? []) {
+      if (row.roomTenantId) ids.add(String(row.roomTenantId));
+      if (row.tenantId) ids.add(String(row.tenantId));
+      if (row.room_tenant_id) ids.add(String(row.room_tenant_id));
+      if (row.tenant_id) ids.add(String(row.tenant_id));
+    }
+    return ids;
+  }, [rentDashQuery.data]);
 
   const filteredTenants = useMemo(() => {
     const rows = tenantsQuery.data ?? [];
@@ -332,16 +354,20 @@ const Tenants = () => {
       next = next.filter((t) => (t.room?.id ?? "") === selectedRoomId);
     }
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
+      const q = searchQuery.trim().toLowerCase().replace(/\s+/g, "");
+      const qDigits = q.replace(/\D/g, "").replace(/^91/, "");
       next = next.filter((row) => {
+        const phone = tenantPhone(row);
+        const phoneDigits = phone.replace(/\D/g, "").replace(/^91/, "");
         const blob = [
           tenantDisplayName(row),
-          tenantPhone(row),
+          phone,
+          phoneDigits,
           tenantRoomNo(row),
           tenantFloor(row),
           tenantBlock(row),
-        ].join(" ").toLowerCase();
-        return blob.includes(q);
+        ].join(" ").toLowerCase().replace(/\s+/g, "");
+        return blob.includes(q) || (qDigits.length >= 4 && phoneDigits.includes(qDigits));
       });
     }
     if (kycFilter === "verified") {
@@ -499,6 +525,7 @@ const Tenants = () => {
             <SearchInput
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search tenants by name, phone, or room"
               placeholder="Search name, phone, room…"
               className="w-full sm:w-64"
             />
@@ -512,7 +539,7 @@ const Tenants = () => {
                 setSelectedRoomId("");
               }}
             >
-              <SelectTrigger className="w-[130px] h-9 text-xs">
+              <SelectTrigger className="w-[130px] h-9 text-xs" aria-label="Filter by block">
                 <SelectValue placeholder="All Blocks" />
               </SelectTrigger>
               <SelectContent>
@@ -533,7 +560,7 @@ const Tenants = () => {
                 setSelectedRoomId("");
               }}
             >
-              <SelectTrigger className="w-[125px] h-9 text-xs">
+              <SelectTrigger className="w-[125px] h-9 text-xs" aria-label="Filter by floor">
                 <SelectValue placeholder="All Floors" />
               </SelectTrigger>
               <SelectContent>
@@ -553,7 +580,7 @@ const Tenants = () => {
               value={selectedRoomId || "all"}
               onValueChange={(v) => setSelectedRoomId(v === "all" ? "" : v)}
             >
-              <SelectTrigger className="w-[125px] h-9 text-xs">
+              <SelectTrigger className="w-[125px] h-9 text-xs" aria-label="Filter by room">
                 <SelectValue placeholder="All Rooms" />
               </SelectTrigger>
               <SelectContent>
@@ -570,7 +597,7 @@ const Tenants = () => {
 
             {/* KYC Status Filter */}
             <Select value={kycFilter} onValueChange={(v) => setKycFilter(v as typeof kycFilter)}>
-              <SelectTrigger className="w-[120px] h-9 text-xs">
+              <SelectTrigger className="w-[120px] h-9 text-xs" aria-label="Filter by KYC status">
                 <SelectValue placeholder="KYC status" />
               </SelectTrigger>
               <SelectContent>
@@ -686,7 +713,14 @@ const Tenants = () => {
               id: "thisMonth",
               header: "This Month",
               render: (t: PropertyTenant) => {
-                const isOverdue = t.isOverdue || t.rentDueDays && t.rentDueDays > 0;
+                const ids = [t.id, (t as { roomTenantId?: string }).roomTenantId, (t as { roomTenant?: { id?: string } }).roomTenant?.id]
+                  .filter(Boolean)
+                  .map(String);
+                const isPaid = ids.some((id) => paidThisMonth.has(id));
+                if (isPaid) {
+                  return <StatusBadge status="paid" label="Paid" size="sm" />;
+                }
+                const isOverdue = t.isOverdue || (t.rentDueDays && t.rentDueDays > 0);
                 return (
                   <div className="flex flex-col gap-0.5">
                     <StatusBadge
@@ -912,24 +946,29 @@ const Tenants = () => {
                   <Select value={targetRoomId} onValueChange={setTargetRoomId}>
                     <SelectTrigger><SelectValue placeholder="Select Room" /></SelectTrigger>
                     <SelectContent>
-                      {targetRooms.map((r: any) => (
-                        <SelectItem key={r.id} value={r.id}>
-                          Room {r.roomNumber} ({r.availableBeds ?? 1} bed free)
+                      {targetRooms.map((r: any) => {
+                        const free = Number(r.availableBeds ?? 1);
+                        const freeLabel = free === 1 ? "1 bed free" : `${free} beds free`;
+                        return (
+                        <SelectItem key={r.id} value={r.id} disabled={free <= 0}>
+                          Room {r.roomNumber} ({free <= 0 ? "full" : freeLabel})
                         </SelectItem>
-                      ))}
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-1.5">
                   <Label>Target Bed Number</Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={10}
-                    value={targetBedNumber}
-                    onChange={(e) => setTargetBedNumber(parseInt(e.target.value, 10) || 1)}
-                  />
+                  <Select value={String(targetBedNumber || 1)} onValueChange={(v) => setTargetBedNumber(parseInt(v, 10) || 1)}>
+                    <SelectTrigger aria-label="Target bed"><SelectValue placeholder="Select bed" /></SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: Math.max(1, Number(targetRooms.find((r: any) => r.id === targetRoomId)?.availableBeds ?? 1)) }, (_, i) => (
+                        <SelectItem key={i + 1} value={String(i + 1)}>Bed {i + 1}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

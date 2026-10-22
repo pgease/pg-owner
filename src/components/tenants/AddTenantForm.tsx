@@ -60,6 +60,7 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
   const { selectedPgId, properties } = useApp();
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [showStepErrors, setShowStepErrors] = useState(false);
   const [otherDetailsOpen, setOtherDetailsOpen] = useState(false);
 
   const location = useLocation();
@@ -80,7 +81,7 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
   const [bedNumber, setBedNumber] = useState<string>(() => String(navState?.prefillBedNumber || "1"));
   const [bookedBy, setBookedBy] = useState("");
   const [referredBy, setReferredBy] = useState("");
-  const [sendWhatsappReminder, setSendWhatsappReminder] = useState(true);
+  const [sendWhatsappReminder, setSendWhatsappReminder] = useState(false);
   const [expandedOtherDetails, setExpandedOtherDetails] = useState<string>("none");
 
   // Personal Details
@@ -222,7 +223,7 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
   const [agreementPeriod, setAgreementPeriod] = useState("11 Months");
   const [fixedRent, setFixedRent] = useState("");
   const [rentalFrequency, setRentalFrequency] = useState("Monthly");
-  const [rentDueDate, setRentDueDate] = useState("1st");
+  const [rentDueDate, setRentDueDate] = useState("5th");
   const [securityDeposit, setSecurityDeposit] = useState("");
   const [electricityBill, setElectricityBill] = useState("0");
   const [electricityMeter, setElectricityMeter] = useState(false);
@@ -298,6 +299,7 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
     }
   }, [selectedPgId, effectiveBlockId, effectiveFloorId, queryClient]);
 
+  const tenantsQuery = usePropertyTenants(selectedPgId);
   const selectableRooms = useMemo(() => rooms.filter((r) => hasSelectValue(r.id)), [rooms]);
 
   const effectiveRoomId = useMemo(() => {
@@ -305,10 +307,17 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
     const sel = idStr(selectedRoomId);
     const matched = sel && selectableRooms.some((r) => idStr(r.id) === sel);
     if (matched) return sel;
-    return idStr(selectableRooms[0].id);
-  }, [selectableRooms, selectedRoomId]);
-
-  const tenantsQuery = usePropertyTenants(selectedPgId);
+    const tenants = Array.isArray(tenantsQuery.data) ? tenantsQuery.data : [];
+    const withSpace = selectableRooms.find((r) => {
+      const beds = Number(r.numberOfBeds || r.capacity || r.beds || 1);
+      const used = tenants.filter((t: any) => {
+        const roomId = idStr(t.roomId || t.room_id || t.room?.id || t.roomTenant?.roomId);
+        return roomId === idStr(r.id);
+      }).length;
+      return used < beds;
+    });
+    return idStr((withSpace || selectableRooms[0]).id);
+  }, [selectableRooms, selectedRoomId, tenantsQuery.data]);
   const currentRoomTenants = useMemo(() => {
     if (!effectiveRoomId || !Array.isArray(tenantsQuery.data)) return [];
     return (tenantsQuery.data as any[]).filter((t) => {
@@ -493,11 +502,27 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
 
   const selectedPg = properties.find((p) => p.id === selectedPgId);
 
-  // Sync Fixed Rent & Deposit to Payment details dues on change
+  // Opening rent for a mid-month joining date is pro-rata, not the full month.
   useEffect(() => {
-    setRentDueAmt(fixedRent || "0");
+    const monthly = parseInt(fixedRent, 10);
+    if (!Number.isFinite(monthly) || monthly <= 0) {
+      setRentDueAmt(fixedRent || "0");
+    } else {
+      const parts = (moveInDate || "").split("-").map((n) => parseInt(n, 10));
+      const y = parts[0];
+      const m = parts[1];
+      const d = parts[2];
+      if (!y || !m || !d) {
+        setRentDueAmt(String(monthly));
+      } else {
+        const lastDay = new Date(y, m, 0).getDate();
+        const daysStayed = Math.max(1, lastDay - d + 1);
+        const prorated = d <= 1 ? monthly : Math.round((monthly * daysStayed) / lastDay);
+        setRentDueAmt(String(prorated));
+      }
+    }
     setDepositDueAmt(securityDeposit || "0");
-  }, [fixedRent, securityDeposit]);
+  }, [fixedRent, securityDeposit, moveInDate]);
 
   // Dynamically compute rent due label (e.g. "Sep Rent") and cycle date range based on move-in date
   const { rentDueType, rentDueFor } = useMemo(() => {
@@ -546,13 +571,16 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
 
   const goNext = () => {
     if (step === 1 && stepOneError) {
+      setShowStepErrors(true);
       toast({ title: "Incomplete Tenant Details", description: stepOneError, variant: "destructive" });
       return;
     }
     if (step === 2 && stepTwoError) {
+      setShowStepErrors(true);
       toast({ title: "Incomplete Stay Details", description: stepTwoError, variant: "destructive" });
       return;
     }
+    setShowStepErrors(false);
     setStep((s) => (Math.min(3, s + 1) as 1 | 2 | 3));
   };
 
@@ -1926,12 +1954,12 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
         </Card>
       )}
 
-      {step === 1 && stepOneError && (
+      {step === 1 && showStepErrors && stepOneError && (
         <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 text-amber-800 dark:text-amber-300 text-xs font-semibold">
           <span>⚠️ {stepOneError}</span>
         </div>
       )}
-      {step === 2 && stepTwoError && (
+      {step === 2 && showStepErrors && stepTwoError && (
         <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 text-amber-800 dark:text-amber-300 text-xs font-semibold">
           <span>⚠️ {stepTwoError}</span>
         </div>
@@ -1959,7 +1987,6 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
               type="button"
               className="bg-teal-600 hover:bg-teal-700 text-white min-w-32"
               onClick={goNext}
-              disabled={step === 1 ? !!stepOneError : !!stepTwoError}
             >
               Continue <ChevronRight className="h-4 w-4 ml-1" />
             </Button>

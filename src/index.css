@@ -115,3 +115,19 @@
     scrollbar-color: var(--gray-300) transparent;
   }
 }
+
+.dark body {
+  color: #f1f5f9;
+  background-color: #0b1220;
+}
+
+.dark .bg-white,
+.dark .register-card {
+  background-color: #111827;
+  color: #f1f5f9;
+}
+
+.dark h1,
+.dark .text-page-title {
+  color: #f8fafc;
+}

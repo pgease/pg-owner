@@ -125,6 +125,14 @@ const Complaints = () => {
   const handleUpdate = async (statusOverride?: string) => {
     if (!selectedComplaint) return;
     const nextStatus = statusOverride || updateStatus;
+    if (norm(nextStatus) === "resolved" && !updateRemarks.trim()) {
+      toast({
+        title: "Add a note for the tenant",
+        description: "Say what was fixed before closing this complaint.",
+        variant: "destructive",
+      });
+      return;
+    }
     try {
       const payload: UpdateComplaintStatusPayload = {
         status: nextStatus,
@@ -210,7 +218,7 @@ const Complaints = () => {
                 aria-label="Search complaints"
                 className="h-9 w-full sm:max-w-xs"
               />
-              <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filter by status">
+              <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by status">
                 {(["all", "open", "in_progress", "resolved"] as const).map((status) => (
                   <Button
                     key={status}
@@ -223,7 +231,7 @@ const Complaints = () => {
                   </Button>
                 ))}
               </div>
-              <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filter by priority">
+              <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by priority">
                 {["all", "high", "medium", "low"].map((priority) => (
                   <Button
                     key={priority}
@@ -283,7 +291,7 @@ const Complaints = () => {
                               <p className="mt-1 line-clamp-2 text-sm text-[var(--gray-700)]">{complaint.description}</p>
                             ) : null}
                             <p className="mt-1 text-xs text-[var(--gray-500)]">
-                              {tenant?.name || "Tenant"} · {roomLine(tenant)} · {complaint.category?.trim() || "Category not set"} · {complaint.createdAt ? formatDate(complaint.createdAt) : "—"}
+                              {tenant?.name || "Tenant"} · {roomLine(tenant)} · {complaint.category?.trim() || "General"} · {complaint.createdAt ? formatDate(complaint.createdAt) : "—"}
                             </p>
                           </button>
                           <CanAccess permission="complaint_edit_assign">
@@ -294,7 +302,15 @@ const Complaints = () => {
                                 </Button>
                               ) : null}
                               {status !== "resolved" ? (
-                                <Button size="sm" onClick={() => void handleQuickStatusChange(complaint, "resolved")}>
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedComplaint(complaint);
+                                    setUpdateStatus("resolved");
+                                    setUpdateRemarks("");
+                                    setDrawerOpen(true);
+                                  }}
+                                >
                                   Resolve
                                 </Button>
                               ) : null}
@@ -346,7 +362,7 @@ const Complaints = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-[var(--gray-500)]">Category</p>
-                  <p className="text-sm font-medium text-[var(--gray-900)]">{selectedComplaint?.category?.trim() || "Not set"}</p>
+                  <p className="text-sm font-medium text-[var(--gray-900)]">{selectedComplaint?.category?.trim() || "General"}</p>
                 </div>
                 <div>
                   <p className="text-xs text-[var(--gray-500)]">Priority</p>

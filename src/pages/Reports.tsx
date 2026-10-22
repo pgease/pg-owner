@@ -126,7 +126,9 @@ export default function Reports() {
     const roomsList = Array.isArray(roomsQuery.data) ? roomsQuery.data : [];
     return rawTenants.map((t: any) => {
       const room = roomsList.find((r: any) => r.roomId === t.roomId || r.id === t.roomId);
-      const rent = Number(t.rentAmount || tenantRentAmount(t) || 0);
+      const rent = Number(
+        String(t.rentAmount ?? t.monthlyRent ?? t.currentStay?.rentAmount ?? t.roomTenant?.rentAmount ?? "0").replace(/[^\d.]/g, ""),
+      ) || 0;
       const ids = [t.roomTenantId, t.roomTenant?.id, t.id].filter(Boolean).map(String);
       const isUnpaid = t.rentStatus === "unpaid" || ids.some((id) => rentStatusIndex.unpaid.has(id));
       const isPaid = t.rentStatus === "paid" || ids.some((id) => rentStatusIndex.paid.has(id));
@@ -153,8 +155,16 @@ export default function Reports() {
   // Aggregate Metrics for top bar (Includes All-time revenue moved from Rent Collection)
   const metrics = useMemo(() => {
     const rentData = rentQuery.data;
-    const collected = Number(rentData?.totalPaidAmount ?? 0);
-    const pending = Number(rentData?.totalUnpaidAmount ?? 0);
+    const collectedFromRows = (rentData?.paidTenants ?? []).reduce((sum, row) => {
+      const n = Number(row.amountPaid ?? row.amount_paid ?? 0);
+      return sum + (Number.isFinite(n) ? n : 0);
+    }, 0);
+    const pendingFromRows = (rentData?.unpaidTenants ?? []).reduce((sum, row) => {
+      const n = Number((row as { amountOutstanding?: number | string }).amountOutstanding ?? row.amountDue ?? row.pendingAmount ?? row.rentAmount ?? 0);
+      return sum + (Number.isFinite(n) ? n : 0);
+    }, 0);
+    const collected = Number(rentData?.totalCollectedThisPeriod ?? collectedFromRows) || 0;
+    const pending = pendingFromRows;
     const kycVerified = rawTenants.filter((t) => t.isKycVerified).length;
     return {
       collected,

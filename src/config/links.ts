@@ -8,14 +8,15 @@ const env = import.meta.env as Record<string, string | undefined>;
 /** PG Ease Help Center (help-pgease project). */
 export const HELP_CENTER_URL = (env.VITE_HELP_CENTER_URL || "https://help.pgease.in").replace(/\/+$/, "");
 
-/** Public marketing website. */
+/** Public marketing website. Support and help links may still use pgease.in. */
 export const MARKETING_SITE_URL = "https://pgease.in";
 
 /**
- * Base URL where a PG's public listing page lives. Override with
- * VITE_PUBLIC_LISTING_BASE_URL (e.g. http://localhost:5173/properties in local dev).
+ * Live public listing. pgease.in does not serve the listing (SSL fails).
+ * The marketing site route is https://pgease.com/properties/:id.
+ * Override with VITE_PUBLIC_LISTING_BASE_URL for local dev.
  */
-export const PUBLIC_LISTING_BASE_URL = (env.VITE_PUBLIC_LISTING_BASE_URL || `${MARKETING_SITE_URL}/properties`).replace(/\/+$/, "");
+export const PUBLIC_LISTING_BASE_URL = (env.VITE_PUBLIC_LISTING_BASE_URL || "https://pgease.com/properties").replace(/\/+$/, "");
 
 export function publicListingUrl(propertyId?: string | null): string {
   return propertyId ? `${PUBLIC_LISTING_BASE_URL}/${encodeURIComponent(propertyId)}` : PUBLIC_LISTING_BASE_URL;

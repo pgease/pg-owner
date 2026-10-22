@@ -189,7 +189,17 @@ export default function FoodDiningPage() {
     });
 
     setSchedule(updated);
-    updateMutation.mutate(updated);
+    setSlotEditModal((p) => ({ ...p, open: false }));
+    updateMutation.mutate([
+      {
+        dayOfWeek,
+        [mealType]: {
+          menu: slotMenu.trim(),
+          startTime: formatHHmm(slotStart),
+          endTime: formatHHmm(slotEnd),
+        },
+      },
+    ] as DiningDaySchedule[]);
   };
 
   const handleApplyBulkTimings = () => {
@@ -251,7 +261,22 @@ export default function FoodDiningPage() {
               <Button
                 size="sm"
                 className="bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white gap-1.5 font-medium"
-                onClick={() => updateMutation.mutate(schedule)}
+                onClick={() => {
+                  const payload = schedule
+                    .map((day) => {
+                      const keep = (slot?: { menu?: string; startTime?: string; endTime?: string }) =>
+                        slot && (slot.menu?.trim() || slot.startTime || slot.endTime) ? slot : undefined;
+                      const next = {
+                        dayOfWeek: day.dayOfWeek,
+                        breakfast: keep(day.breakfast),
+                        lunch: keep(day.lunch),
+                        dinner: keep(day.dinner),
+                      };
+                      return next.breakfast || next.lunch || next.dinner ? next : null;
+                    })
+                    .filter(Boolean) as DiningDaySchedule[];
+                  updateMutation.mutate(payload);
+                }}
                 disabled={updateMutation.isPending || !selectedPgId}
               >
                 <Save className="h-3.5 w-3.5" />

@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useApp } from "@/context/AppContext";
+import { authStorage } from "@/api/http";
 import { toast } from "@/components/ui/use-toast";
 import { PageHeader } from "@/components/common/PageHeader";
 import { SearchInput } from "@/components/common/SearchInput";
@@ -75,10 +76,15 @@ const StaffListContent = () => {
     if (
       !selectedPgId ||
       !form.name.trim() ||
-      !form.email.trim() ||
       !form.mobileContactNumber.trim()
     ) {
       toast({ title: "Fill required fields", variant: "destructive" });
+      return;
+    }
+    const ownerDigits = String(authStorage.getPropertyOwner()?.mobileContactNumber || "").replace(/\D/g, "").slice(-10);
+    const staffDigits = form.mobileContactNumber.replace(/\D/g, "").slice(-10);
+    if (ownerDigits && staffDigits && ownerDigits === staffDigits) {
+      toast({ title: "This number belongs to the PG owner", variant: "destructive" });
       return;
     }
 
@@ -86,7 +92,7 @@ const StaffListContent = () => {
       await createStaffMutation.mutateAsync({
         propertyId: selectedPgId,
         name: form.name.trim(),
-        email: form.email.trim(),
+        email: form.email.trim() || undefined,
         mobileContactNumber: form.mobileContactNumber
           .replace(/\D/g, "")
           .slice(0, 10),
@@ -143,7 +149,9 @@ const StaffListContent = () => {
       header: "Designation",
       render: (s) => (
         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[var(--gray-100)] text-[var(--gray-700)] border border-[var(--gray-200)]">
-          {s.designation || "General Staff"}
+          {s.designation
+            ? s.designation.replace(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            : "General Staff"}
         </span>
       ),
     },
@@ -315,7 +323,7 @@ const StaffListContent = () => {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-[var(--gray-700)]">
-                Email Address <span className="text-[#B42318]">*</span>
+                Email Address <span className="text-[var(--gray-500)] font-normal">(optional)</span>
               </Label>
               <Input
                 type="email"

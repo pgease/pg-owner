@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Loader2,
   ShieldCheck,
@@ -113,21 +114,31 @@ function getTransactionTypeBadge(type: string) {
     case "usage":
       return (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-          <ShieldCheck className="h-3 w-3 text-slate-500" /> Tenant KYC Verified
+          <ShieldCheck className="h-3 w-3 text-slate-500" /> KYC requested
         </span>
       );
     case "purchase":
+    case "topup":
+    case "razorpay_topup":
       return (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-          <CreditCard className="h-3 w-3 text-blue-600" /> Credit Recharge
+          <CreditCard className="h-3 w-3 text-blue-600" /> Credit purchase
         </span>
       );
-    default:
+    case "admin_grant":
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
-          {type}
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <Sparkles className="h-3 w-3 text-emerald-600" /> Credits granted
         </span>
       );
+    default: {
+      const label = String(type || "Other").replace(/_/g, " ");
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200 capitalize">
+          {label}
+        </span>
+      );
+    }
   }
 }
 
@@ -136,7 +147,11 @@ export default function Kyc() {
   const entitlements = useEntitlements();
   const [trialExpiredOpen, setTrialExpiredOpen] = useState(false);
   const [trialExpiredFeature, setTrialExpiredFeature] = useState("");
-  const [activeTab, setActiveTab] = useState<"kyc" | "agreements" | "credits">("kyc");
+  const [searchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<"kyc" | "agreements" | "credits">(
+    tabFromUrl === "agreements" || tabFromUrl === "credits" ? tabFromUrl : "kyc",
+  );
 
   // KYC Queries & Mutations
   const { data: kycRows = [], isLoading: isKycLoading, refetch: refetchKyc } = useKycApplications();
@@ -202,6 +217,21 @@ export default function Kyc() {
   const recentTransactions = (Array.isArray(balanceData?.recentTransactions)
     ? balanceData.recentTransactions
     : []) as CreditTransaction[];
+  const grantedCredits = recentTransactions.reduce((sum, tx) => {
+    const type = String(tx.type || "");
+    const credits = Number(tx.credits) || 0;
+    if (credits > 0 && (type === "admin_grant" || type === "admin_adjustment")) return sum + credits;
+    return sum;
+  }, 0);
+  const purchasedFromLedger = recentTransactions.reduce((sum, tx) => {
+    const type = String(tx.type || "");
+    const credits = Number(tx.credits) || 0;
+    if (credits > 0 && (type === "purchase" || type === "topup" || type === "razorpay_topup")) return sum + credits;
+    return sum;
+  }, 0);
+  const purchasedCredits = purchasedFromLedger > 0
+    ? purchasedFromLedger
+    : Math.max(0, paidCreditsBalance - grantedCredits);
 
   // Top-up Razorpay Checkout
   const handleTopupCheckout = async (packId: string) => {
@@ -428,14 +458,16 @@ export default function Kyc() {
 
               <div className="bg-white rounded-lg border border-[var(--gray-200)] p-4 shadow-xs">
                 <div className="flex items-center justify-between text-xs text-[var(--gray-500)] mb-1">
-                  <span className="font-medium">Paid / Purchased Balance</span>
+                  <span className="font-medium">Purchased balance</span>
                   <Wallet className="h-4 w-4 text-teal-600" />
                 </div>
                 <div className="text-2xl font-bold text-teal-700 tabular-nums">
-                  {paidCreditsBalance} <span className="text-xs font-normal text-[var(--gray-500)]">credits</span>
+                  {purchasedCredits} <span className="text-xs font-normal text-[var(--gray-500)]">credits</span>
                 </div>
                 <p className="text-xs text-[var(--gray-500)] mt-1">
-                  Non-expiring · Used after free quota
+                  {grantedCredits > 0
+                    ? `Granted separately: ${grantedCredits}. Purchased credits do not expire.`
+                    : "Non-expiring · Used after free quota"}
                 </p>
               </div>
 
@@ -541,6 +573,9 @@ export default function Kyc() {
                       const id = row.id || row.roomTenantId || row.applicationId;
                       const status = (row.status || "pending").toLowerCase();
                       const isVerified = status === "completed" || status === "approved" || row.processing_done;
+                      const canApprove = Boolean(
+                        row.aadhaarNumber || row.digilockerVerified || row.documentUrl || row.kycDocument || row.address,
+                      );
 
                       return (
                         <TableRow key={id || String(i)} className="text-xs hover:bg-[var(--gray-50)]">
@@ -593,7 +628,8 @@ export default function Kyc() {
                                     size="sm"
                                     variant="outline"
                                     className="h-7 text-xs px-2 text-[var(--success)] border-[#B4E5C5] hover:bg-[#ECFAF1]"
-                                    disabled={approveMut.isPending}
+                                    disabled={!canApprove || approveMut.isPending}
+                                    title={canApprove ? "Approve KYC" : "Waiting for Aadhaar details"}
                                     onClick={async () => {
                                       await approveMut.mutateAsync(id);
                                       toast({ title: "KYC Application Approved" });
@@ -794,8 +830,21 @@ export default function Kyc() {
                             <TableCell className="py-2.5 px-3 font-medium text-[var(--gray-900)]">
                               {tx.notes || (isCredit ? "Credits Added" : "Tenant Verification")}
                             </TableCell>
-                            <TableCell className="py-2.5 px-3 whitespace-nowrap text-xs text-[var(--gray-500)] font-mono">
-                              {tx.referenceType || tx.referenceId || "—"}
+                            <TableCell className="py-2.5 px-3 whitespace-nowrap text-xs text-[var(--gray-600)]">
+                              {(() => {
+                                const kind = String(tx.referenceType || "").toLowerCase();
+                                const labels: Record<string, string> = {
+                                  tenant: "Tenant",
+                                  kyc: "KYC",
+                                  payment: "Payment",
+                                  razorpay: "Razorpay",
+                                  admin: "Admin",
+                                  usage: "Verification",
+                                };
+                                const label = labels[kind] || (kind ? kind.replace(/_/g, " ") : "");
+                                const shortId = tx.referenceId ? String(tx.referenceId).slice(0, 8) : "";
+                                return [label, shortId].filter(Boolean).join(" · ") || "—";
+                              })()}
                             </TableCell>
                             <TableCell className="py-2.5 px-3 text-right whitespace-nowrap tabular-nums">
                               {isCredit ? (
@@ -1110,9 +1159,15 @@ export default function Kyc() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-[var(--success)] font-medium pt-1">
-                  <CheckCircle2 className="h-4 w-4" /> Authenticated directly via UIDAI DigiLocker Gateway
-                </div>
+                {kycDetail?.name || kycDetail?.address || kycDetail?.dob || kycDetail?.aadhaarNumber ? (
+                  <div className="flex items-center gap-2 text-xs text-[var(--success)] font-medium pt-1">
+                    <CheckCircle2 className="h-4 w-4" /> Authenticated directly via UIDAI DigiLocker Gateway
+                  </div>
+                ) : (
+                  <p className="text-xs text-[var(--gray-600)] pt-1">
+                    Waiting for the tenant to finish DigiLocker. No Aadhaar details yet.
+                  </p>
+                )}
               </div>
             ) : (
               <p className="text-xs text-[var(--gray-500)] text-center py-4">No data available.</p>

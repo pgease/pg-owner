@@ -8,7 +8,7 @@ import { helpCenterTutorialUrl } from "@/config/links";
 
 interface TutorialContextValue {
   openTutorial: (tutorialKey: string) => Promise<void>;
-  /** Opens the page tutorial on YouTube. Falls back to a YouTube search for this topic. */
+  /** Opens the page tutorial video. Falls back to the Help Center when no video exists. */
   openYouTubeTutorial: (tutorialKey: string) => Promise<void>;
   currentRouteTutorialKey: string;
   isTutorialOpen: boolean;
@@ -87,8 +87,7 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const currentRouteTutorialKey = useMemo(() => resolveRouteTutorialKey(location.pathname), [location.pathname]);
 
   const openYouTubeTutorial = useCallback(async (tutorialKey: string) => {
-    const topic = formatKeyToTitle(tutorialKey || "PG Ease");
-    const search = `https://www.youtube.com/results?search_query=${encodeURIComponent(`PG Ease ${topic} tutorial`)}`;
+    const help = helpCenterTutorialUrl(tutorialKey);
     try {
       let data = await getTutorialByKey(tutorialKey);
       if (!data && tutorialKey === "post_your_pg_in_live") {
@@ -97,9 +96,9 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         data = await getTutorialByKey("post_your_pg_in_live");
       }
       const watch = toWatchUrl(data?.videoUrl || data?.youtube_url || data?.youtubeUrl);
-      window.open(watch || search, "_blank", "noopener,noreferrer");
+      window.open(watch || help, "_blank", "noopener,noreferrer");
     } catch {
-      window.open(search, "_blank", "noopener,noreferrer");
+      window.open(help, "_blank", "noopener,noreferrer");
     }
   }, []);
 
@@ -176,7 +175,9 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 <div className="min-w-0">
                   <DialogTitle className="text-base font-semibold leading-snug">{activeTutorial.title}</DialogTitle>
                   <DialogDescription className="mt-1 text-sm">
-                    {activeTutorial.description || "A short step-by-step guide to this feature."}
+                    {/how you can post your pg|this video will tell/i.test(activeTutorial.description || "")
+                      ? "Learn how to publish your PG so nearby tenants can find it."
+                      : activeTutorial.description || "A short step-by-step guide to this feature."}
                   </DialogDescription>
                 </div>
                 <Button asChild variant="outline" size="sm" className="shrink-0 gap-1.5">

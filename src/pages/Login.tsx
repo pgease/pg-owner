@@ -150,7 +150,7 @@ const TEXTS = {
     nameHint: "Used on tenant rent receipts, invoices, and your owner profile.",
     signingUpAs: "Registering as",
     phoneLabel: "MOBILE NUMBER",
-    otpNote: "We will send a 6-digit one-time password (OTP)",
+    otpNote: "We will send a 4-digit one-time password (OTP)",
     sendVia: "Send verification code via:",
     sendOtpWhatsapp: "Get OTP on WhatsApp",
     sendOtpSms: "Get OTP via SMS",
@@ -188,7 +188,7 @@ const TEXTS = {
     nameHint: "किरायेदार रसीदों और आपके ओनर प्रोफ़ाइल पर उपयोग किया जाता है।",
     signingUpAs: "रजिस्टर कर रहे हैं",
     phoneLabel: "मोबाइल नंबर",
-    otpNote: "हम आपके नंबर पर 6-अंकीय ओटीपी कोड भेजेंगे",
+    otpNote: "हम आपके नंबर पर 4-अंकीय ओटीपी कोड भेजेंगे",
     sendVia: "सत्यापन कोड माध्यम चुनें:",
     sendOtpWhatsapp: "व्हाट्सएप पर ओटीपी पाएं",
     sendOtpSms: "एसएमएस द्वारा ओटीपी पाएं",
@@ -233,6 +233,7 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
     }
   });
   const [otp, setOtp] = useState("");
+  const [otpError, setOtpError] = useState("");
   const [shaking, setShaking] = useState(false);
 
   const [isSendingOtp, setIsSendingOtp] = useState(false);
@@ -383,9 +384,11 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
       } catch (error: any) {
         triggerShake();
         setOtp("");
+        const message = error?.message || "That code is not correct. Check the 4-digit code and try again.";
+        setOtpError(message);
         toast({
-          title: "Invalid Verification Code",
-          description: error?.message ?? "Please verify the 4-digit code and try again.",
+          title: "Invalid OTP",
+          description: message,
           variant: "destructive",
         });
       } finally {
@@ -450,6 +453,7 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
     (value: string) => {
       const cleaned = clampDigits(value, 4);
       setOtp(cleaned);
+      setOtpError("");
       if (cleaned.length === 4) {
         handleVerifyOtp(cleaned);
       }
@@ -903,6 +907,11 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
                       ))}
                     </InputOTPGroup>
                   </InputOTP>
+                  {otpError ? (
+                    <p className="text-center text-sm font-medium text-red-600" role="alert">
+                      {otpError}
+                    </p>
+                  ) : null}
                 </div>
 
                 <button

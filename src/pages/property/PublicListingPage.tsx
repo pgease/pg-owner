@@ -741,6 +741,9 @@ export default function PublicListingPage() {
   }, [propertyName, address]);
 
   const publicWebsiteUrl = publicListingUrl(selectedPgId);
+  const addressPin = (address.match(/\b\d{6}\b/) || [])[0] || "";
+  const enteredPin = String(locationPin || "").replace(/\D/g, "");
+  const pinMismatch = Boolean(addressPin && enteredPin && addressPin !== enteredPin);
 
   return (
     <div className="space-y-6 pb-20 max-w-6xl mx-auto animate-fade-in">
@@ -1057,7 +1060,7 @@ export default function PublicListingPage() {
                   <Input
                     value={website}
                     onChange={(e) => setWebsite(e.target.value)}
-                    placeholder="e.g. https://mypg.pgease.com"
+                    placeholder="https://pgease.com"
                     className="h-9 text-xs rounded-xl"
                   />
                 </div>
@@ -1118,6 +1121,7 @@ export default function PublicListingPage() {
                       </Label>
                       <Input
                         type="number"
+                        aria-label="Single room rent with food per month"
                         value={pricing.single.withFood}
                         onChange={(e) =>
                           setPricing({
@@ -1135,6 +1139,7 @@ export default function PublicListingPage() {
                       </Label>
                       <Input
                         type="number"
+                        aria-label="Single room rent without food per month"
                         value={pricing.single.withoutFood}
                         onChange={(e) =>
                           setPricing({
@@ -1174,6 +1179,7 @@ export default function PublicListingPage() {
                       </Label>
                       <Input
                         type="number"
+                        aria-label="Double sharing rent with food per month"
                         value={pricing.double.withFood}
                         onChange={(e) =>
                           setPricing({
@@ -1191,6 +1197,7 @@ export default function PublicListingPage() {
                       </Label>
                       <Input
                         type="number"
+                        aria-label="Double sharing rent without food per month"
                         value={pricing.double.withoutFood}
                         onChange={(e) =>
                           setPricing({
@@ -1230,6 +1237,7 @@ export default function PublicListingPage() {
                       </Label>
                       <Input
                         type="number"
+                        aria-label="Triple sharing rent with food per month"
                         value={pricing.triple.withFood}
                         onChange={(e) =>
                           setPricing({
@@ -1247,6 +1255,7 @@ export default function PublicListingPage() {
                       </Label>
                       <Input
                         type="number"
+                        aria-label="Triple sharing rent without food per month"
                         value={pricing.triple.withoutFood}
                         onChange={(e) =>
                           setPricing({
@@ -1286,6 +1295,7 @@ export default function PublicListingPage() {
                       </Label>
                       <Input
                         type="number"
+                        aria-label="Four sharing rent with food per month"
                         value={pricing.fourSharing.withFood}
                         onChange={(e) =>
                           setPricing({
@@ -1303,6 +1313,7 @@ export default function PublicListingPage() {
                       </Label>
                       <Input
                         type="number"
+                        aria-label="Four sharing rent without food per month"
                         value={pricing.fourSharing.withoutFood}
                         onChange={(e) =>
                           setPricing({
@@ -1605,6 +1616,11 @@ export default function PublicListingPage() {
                     placeholder="e.g. 560095 or 122001"
                     className="h-9 text-xs rounded-xl"
                   />
+                  {pinMismatch && (
+                    <p className="text-[11px] text-amber-800">
+                      The street address includes PIN {addressPin}, which does not match the PIN field ({enteredPin}).
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -1612,6 +1628,7 @@ export default function PublicListingPage() {
                     <Label className="text-xs font-semibold text-foreground">Latitude</Label>
                     <Input
                       type="number"
+                      aria-label="Latitude"
                       step="0.0001"
                       value={latitude}
                       onChange={(e) => setLatitude(Number(e.target.value))}
@@ -1622,6 +1639,7 @@ export default function PublicListingPage() {
                     <Label className="text-xs font-semibold text-foreground">Longitude</Label>
                     <Input
                       type="number"
+                      aria-label="Longitude"
                       step="0.0001"
                       value={longitude}
                       onChange={(e) => setLongitude(Number(e.target.value))}
@@ -2073,7 +2091,7 @@ export default function PublicListingPage() {
                       </div>
 
                       <div className="pt-2 text-[10px] text-muted-foreground">
-                        {depositMonths} Months Security Deposit • {noticeDays} Days Notice
+                        {Number(depositMonths) === 1 ? "1 month" : `${depositMonths} months`} security deposit • {Number(noticeDays) === 1 ? "1 day" : `${noticeDays} days`} notice
                       </div>
                     </div>
                   );

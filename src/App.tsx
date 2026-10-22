@@ -50,7 +50,6 @@ import ReferralsPage from "./pages/ReferralsPage";
 import ApiCatalogPage from "./pages/reference/ApiCatalogPage";
 import PublicListingPage from "./pages/property/PublicListingPage";
 import FeatureCataloguePage from "./pages/FeatureCataloguePage";
-import GroupChatPage from "./pages/chat/GroupChatPage";
 import { TutorialProvider } from "./context/TutorialContext";
 
 const queryClient = new QueryClient({
@@ -127,8 +126,11 @@ const App = () => (
                         <Route path="/rent-payments/dues" element={<RentPayments />} />
                         <Route path="/staff" element={<Staff />} />
                         <Route path="/complaints" element={<Complaints />} />
-                        <Route path="/group-chat" element={<GroupChatPage />} />
-                        <Route path="/chat" element={<GroupChatPage />} />
+                        <Route path="/group-chat" element={<Navigate to="/complaints" replace />} />
+                        <Route path="/chat" element={<Navigate to="/complaints" replace />} />
+                        <Route path="/property" element={<Navigate to="/my-pgs" replace />} />
+                        <Route path="/operations" element={<Navigate to="/complaints" replace />} />
+                        <Route path="/account" element={<Navigate to="/settings" replace />} />
                         <Route path="/staff/roles" element={<Staff />} />
                         <Route path="/expenses" element={<Expenses />} />
                         <Route path="/expenses/categories" element={<Expenses />} />

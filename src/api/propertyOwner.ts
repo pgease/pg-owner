@@ -1182,7 +1182,7 @@ export async function getAllRoomsAndCounts(propertyId: string) {
 export interface CreateStaffPayload {
   propertyId: string;
   name: string;
-  email: string;
+  email?: string;
   mobileContactNumber: string;
   countryCode?: string;
   designation?: string;
@@ -2263,19 +2263,62 @@ export interface ProPlanCatalog {
   cycles: ProPlanCycle[];
 }
 
+function cycleFromApi(key: "monthly" | "yearly", raw: any): ProPlanCycle | null {
+  if (!raw || typeof raw !== "object" || raw.pricePerBed == null) return null;
+  return {
+    cycle: key,
+    pricePerBed: Number(raw.pricePerBed),
+    strikePerBed: raw.strikePerBed == null ? null : Number(raw.strikePerBed),
+    period: raw.unit || raw.period || (key === "monthly" ? "per bed / month" : "per bed / year"),
+    note: raw.description || raw.note,
+  };
+}
+
+export function normalizeProCatalog(json: any): ProPlanCatalog | null {
+  const source = json?.catalog?.name || json?.catalog?.cycles ? json.catalog : json;
+  if (!source) return null;
+  let cycles: ProPlanCycle[] = [];
+  if (Array.isArray(source.cycles)) {
+    cycles = source.cycles
+      .map((item: any) => cycleFromApi(item?.cycle === "yearly" ? "yearly" : "monthly", item))
+      .filter(Boolean) as ProPlanCycle[];
+  } else if (source.cycles && typeof source.cycles === "object") {
+    cycles = [cycleFromApi("monthly", source.cycles.monthly), cycleFromApi("yearly", source.cycles.yearly)].filter(
+      Boolean,
+    ) as ProPlanCycle[];
+  }
+  if (!cycles.length) return null;
+  const enabled = Boolean(source.offer?.enabled);
+  return {
+    name: source.name || "PG Ease Pro",
+    gstPercent: Number(source.gstPercent ?? 18),
+    offer: { enabled, badge: enabled ? source.offer?.badge || null : null },
+    features: Array.isArray(source.features) ? source.features : [],
+    cycles,
+  };
+}
+
 export async function getPlans() {
-  return httpRequest<{ plans: SubscriptionPlan[]; catalog?: ProPlanCatalog }>(`${PROPERTY_OWNER_BASE}/plans`, {
+  const data = await httpRequest<{ plans: SubscriptionPlan[]; catalog?: ProPlanCatalog }>(`${PROPERTY_OWNER_BASE}/plans`, {
     auth: false,
   });
+  const catalog = normalizeProCatalog(data);
+  return catalog ? { ...data, catalog } : data;
+}
+
+export interface PaymentSettings {
+  success?: boolean;
+  paymentMode: "MANUAL" | "GATEWAY";
+  activeMode?: "MANUAL" | "GATEWAY";
+  upiId: string | null;
+  isKycActive?: boolean;
+  kycStatus: string;
+  canUseGateway?: boolean;
+  message?: string;
 }
 
 export async function getPaymentSettings() {
-  return httpRequest<{
-    paymentMode: "MANUAL" | "GATEWAY";
-    upiId: string | null;
-    kycStatus: string;
-    effectiveCollection: string;
-  }>("/owner/payment-settings", { auth: true });
+  return httpRequest<PaymentSettings>("/owner/payment-settings", { auth: true });
 }
 
 export async function updatePaymentSettings(body: { paymentMode: "MANUAL" | "GATEWAY"; upiId?: string }) {
@@ -2349,9 +2392,12 @@ export interface RentalAgreement {
 }
 
 export async function getPropertyAgreements(propertyId: string) {
-  return httpRequest<{ agreements: RentalAgreement[] }>(`${PROPERTY_OWNER_BASE}/properties/${propertyId}/agreements`, {
-    auth: true,
-  });
+  const data = await httpRequest<RentalAgreement[] | { agreements?: RentalAgreement[] }>(
+    `${PROPERTY_OWNER_BASE}/properties/${propertyId}/agreements`,
+    { auth: true },
+  );
+  const agreements = Array.isArray(data) ? data : data?.agreements || [];
+  return { agreements };
 }
 
 export async function createRentalAgreement(

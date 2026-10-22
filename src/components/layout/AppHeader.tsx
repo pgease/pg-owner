@@ -37,6 +37,7 @@ import { authStorage } from "@/api/http";
 import { useTutorials } from "@/context/TutorialContext";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
+import { useComplaints, useRentCollectionDashboard } from "@/hooks/usePropertyOwnerQueries";
 import pgeaseIconColor from "@/assets/pgease-icon-color.png";
 import mascotRent from "@/assets/mascot/mascot-rent.png";
 import { cn } from "@/lib/utils";
@@ -52,7 +53,7 @@ interface AppHeaderProps {
 const SEARCH_COMMANDS = [
   { title: "Dashboard", category: "Overview", icon: LayoutDashboard, url: "/dashboard", keywords: "home summary stats overview" },
   { title: "All Tenants", category: "Tenants", icon: Users, url: "/tenants", keywords: "tenant resident occupant customer find list" },
-  { title: "Rent Collection & Dues", category: "Finance", icon: IndianRupee, url: "/rent-payments", keywords: "payment rent collect dues pending" },
+  { title: "Rent Collection & Dues", category: "Finance", icon: IndianRupee, url: "/rent-payments", keywords: "payment rent collect dues pending overdue unpaid defaulter" },
   { title: "Payment History", category: "Finance", icon: IndianRupee, url: "/rent-payments/history", keywords: "transactions receipts ledger history" },
   { title: "Expenses Tracker", category: "Finance", icon: IndianRupee, url: "/expenses", keywords: "bills electricity maintenance spend cost" },
   { title: "Rooms & Structure", category: "Property", icon: Building2, url: "/my-pgs/structure", keywords: "rooms beds floors building layout" },
@@ -77,7 +78,7 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
   const [trialExpiredOpen, setTrialExpiredOpen] = useState(false);
   const [isDark, setIsDark] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
-    return document.documentElement.classList.contains("dark");
+    return localStorage.getItem("pgease_theme") === "dark";
   });
 
   const [searchModalOpen, setSearchModalOpen] = useState(false);
@@ -148,10 +149,19 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
 
 
   useEffect(() => {
-    const root = document.documentElement;
-    if (isDark) root.classList.add("dark");
-    else root.classList.remove("dark");
+    document.documentElement.classList.toggle("dark", isDark);
+    localStorage.setItem("pgease_theme", isDark ? "dark" : "light");
   }, [isDark]);
+
+  const complaintsQuery = useComplaints(selectedPgId);
+  const rentPeriod = new Date();
+  const rentDashQuery = useRentCollectionDashboard(selectedPgId, rentPeriod.getMonth() + 1, rentPeriod.getFullYear());
+  const openComplaints = (Array.isArray(complaintsQuery.data) ? complaintsQuery.data : []).filter((c) => {
+    const status = String((c as { status?: string }).status || "").toLowerCase();
+    return status !== "resolved" && status !== "closed";
+  });
+  const unpaidCount = Array.isArray(rentDashQuery.data?.unpaidTenants) ? rentDashQuery.data.unpaidTenants.length : 0;
+  const unreadCount = openComplaints.length + unpaidCount;
 
   const handleLogout = () => {
     authStorage.clear();
@@ -379,8 +389,9 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
               >
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                   <span className="text-xs font-bold text-slate-900 dark:text-white">Notifications</span>
-                  <span className="text-[10px] font-semibold text-slate-400">0 unread</span>
+                  <span className="text-[10px] font-semibold text-slate-400">{unreadCount} unread</span>
                 </div>
+                {unreadCount === 0 ? (
                 <div className="py-6 px-4 text-center">
                   <div className="h-10 w-10 rounded-full bg-teal-50 dark:bg-teal-950/40 text-[#008080] dark:text-teal-300 flex items-center justify-center mx-auto mb-2">
                     <Bell className="h-5 w-5" />
@@ -388,6 +399,31 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
                   <p className="text-xs font-bold text-slate-800 dark:text-slate-200">All caught up!</p>
                   <p className="text-[11px] text-slate-500 mt-1">No unread alerts or notifications right now.</p>
                 </div>
+                ) : (
+                <div className="py-2 space-y-1">
+                  {openComplaints.slice(0, 3).map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => navigate("/complaints")}
+                      className="w-full text-left px-2 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
+                    >
+                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">{c.subject || c.category || "Open complaint"}</p>
+                      <p className="text-[11px] text-slate-500">Complaint needs attention</p>
+                    </button>
+                  ))}
+                  {unpaidCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => navigate("/rent-payments/dues")}
+                      className="w-full text-left px-2 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
+                    >
+                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-100">{unpaidCount} rent {unpaidCount === 1 ? "due" : "dues"}</p>
+                      <p className="text-[11px] text-slate-500">Open the rent register</p>
+                    </button>
+                  )}
+                </div>
+                )}
                 <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                   <button
                     type="button"
@@ -414,9 +450,7 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
                     alt="Ease Buddy"
                     className="h-7 w-7 sm:h-8 sm:w-8 rounded-full object-cover object-top ring-2 ring-emerald-400 group-hover:scale-105 transition-transform"
                   />
-                  <span className="absolute -bottom-1 -right-1 bg-emerald-500 text-[7.5px] font-black text-white px-1 rounded-full uppercase shadow-xs">
-                    AI
-                  </span>
+                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-700 ring-2 ring-slate-900" aria-hidden="true" />
                 </button>
               </TooltipTrigger>
               <TooltipContent className="text-xs bg-slate-900 text-white border-slate-700">
@@ -654,6 +688,20 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
                     <ArrowRight className="h-4 w-4 text-slate-500 group-hover:text-teal-300 transition-colors shrink-0 opacity-0 group-hover:opacity-100" />
                   </button>
                 ))
+              ) : searchQuery.trim() ? (
+                <div className="p-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigate(`/tenants?search=${encodeURIComponent(searchQuery.trim())}`);
+                      setSearchModalOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-teal-500/15 text-white text-left"
+                  >
+                    <Search className="h-4 w-4 text-teal-300" />
+                    <span className="text-[13.5px] font-semibold">Search tenants for "{searchQuery.trim()}"</span>
+                  </button>
+                </div>
               ) : (
                 <div className="p-6 text-center">
                   <p className="text-sm font-semibold text-slate-300">

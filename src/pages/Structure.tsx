@@ -59,6 +59,13 @@ import { useEntitlements } from "@/hooks/useEntitlements";
 import { TrialExpiredGateModal } from "@/components/common/TrialExpiredGateModal";
 import { cn } from "@/lib/utils";
 
+function floorSortKey(name: string): number {
+  const text = name.toLowerCase();
+  if (text.includes("ground") || text === "g" || text.includes("gf")) return 0;
+  const match = text.match(/(\d+)/);
+  return match ? Number(match[1]) : 99;
+}
+
 export default function Structure() {
   const { selectedPgId, properties, refreshProperties, setSelectedPgId } = useApp();
   const currentPropertyId = selectedPgId;
@@ -172,7 +179,9 @@ export default function Structure() {
 
   // Synthesize floors if needed
   const floors = useMemo(() => {
-    if (rawFloors.length > 0) return rawFloors;
+    const byRank = (a: { name?: string; floorNumber?: number | null }, b: { name?: string; floorNumber?: number | null }) =>
+      floorSortKey(String(a.floorNumber ?? a.name ?? "")) - floorSortKey(String(b.floorNumber ?? b.name ?? ""));
+    if (rawFloors.length > 0) return [...rawFloors].sort(byRank);
     if (allRooms.length === 0) return [];
 
     const floorNames = new Set<string>();
@@ -181,7 +190,9 @@ export default function Structure() {
       floorNames.add(f);
     });
 
-    return Array.from(floorNames).map((name, idx) => ({
+    return Array.from(floorNames)
+      .sort((a, b) => floorSortKey(a) - floorSortKey(b))
+      .map((name, idx) => ({
       id: `synth-floor-${idx}`,
       name,
       blockId: effectiveBlockId,
@@ -674,6 +685,7 @@ export default function Structure() {
                                   : "bg-emerald-50 border-emerald-200 text-emerald-900"
                                 : "bg-white border-dashed border-[var(--gray-300)] text-[var(--gray-500)] hover:border-[var(--brand-600)] hover:text-[var(--brand-600)]"
                             )}
+                            aria-label={isOccupied ? `Bed ${idx + 1}, occupied by ${assignedTenant.name}` : `Bed ${idx + 1} is vacant. Add a tenant.`}
                             title={isOccupied ? `Occupied by ${assignedTenant.name}` : `Bed ${idx + 1} is vacant. Click to add tenant.`}
                           >
                             <div className="flex items-center justify-between font-medium">
@@ -700,12 +712,19 @@ export default function Structure() {
                     </div>
 
                     <div className="flex items-center justify-between pt-1 border-t border-[var(--gray-200)] text-xs text-[var(--gray-500)]">
-                      <span>Floor {r.floorNumber ?? "—"}</span>
+                      <span>
+                        {r.floorName || r.floor?.name
+                          ? `Floor ${r.floorName || r.floor?.name}`
+                          : r.floorNumber != null
+                            ? `Floor ${r.floorNumber}`
+                            : "Floor not set"}
+                      </span>
                       {!r.id.startsWith("synth-") && (
                         <button
                           type="button"
                           onClick={() => setDeleteConfirm({ open: true, type: "room", id: r.id, name: `Room ${r.roomNumber}` })}
                           className="text-[var(--gray-400)] hover:text-red-600"
+                          aria-label={`Delete room ${r.roomNumber}`}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>

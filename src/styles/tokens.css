@@ -18,8 +18,8 @@
   --gray-900: #18212B; /* Primary text */
   --gray-700: #3D4A57; /* Strong secondary */
   --gray-600: #556270; /* Secondary text */
-  --gray-500: #6B7785; /* Tertiary (>= 4.5:1 on white) */
-  --gray-400: #98A2AE; /* Placeholder, disabled text */
+  --gray-500: #52606C; /* Tertiary (>= 4.5:1 on white) */
+  --gray-400: #5C6774; /* Secondary amounts; must clear 4.5:1 on white */
   --gray-300: #C8CFD6; /* Strong border */
   --gray-200: #E2E6EA; /* Default border */
   --gray-100: #EEF1F3; /* Subtle bg, table header */
@@ -110,6 +110,13 @@
 }
 
 .dark {
+  --gray-900: #F1F5F9;
+  --gray-700: #E2E8F0;
+  --gray-600: #CBD5E1;
+  --gray-500: #94A3B8;
+  --gray-400: #94A3B8;
+  --gray-50: #0B1220;
+  --gray-100: #111827;
   --background: 215 28% 9%;
   --foreground: 210 20% 96%;
   --card: 215 25% 12%;

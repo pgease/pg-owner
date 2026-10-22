@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Building2,
   Gift,
@@ -48,12 +48,15 @@ import {
 } from "@/hooks/usePropertyOwnerQueries";
 import { toast } from "@/components/ui/use-toast";
 import { ManagementDetailsDrawer } from "@/components/settings/ManagementDetailsDrawer";
+import { publicListingUrl } from "@/config/links";
 import { StatusBadge } from "@/components/common/StatusBadge";
 
 export default function SettingsPage() {
   const { language, setLanguage, selectedPgId, properties } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
+  const isNotifications = location.pathname.includes("/notifications");
 
   useEffect(() => {
     if (searchParams.get("tab") === "activity") {
@@ -64,6 +67,15 @@ export default function SettingsPage() {
   }, [searchParams, navigate]);
 
   const [managementDrawerOpen, setManagementDrawerOpen] = useState(false);
+  const [billingOpen, setBillingOpen] = useState(false);
+  const [noticeOpen, setNoticeOpen] = useState(false);
+  const [dueDay, setDueDay] = useState(() => localStorage.getItem("pgease_rent_due_day") || "5");
+  const [graceDays, setGraceDays] = useState(() => localStorage.getItem("pgease_rent_grace_days") || "3");
+  const [lateFee, setLateFee] = useState(() => localStorage.getItem("pgease_rent_late_fee") || "0");
+  const [noticeDays, setNoticeDays] = useState(() => localStorage.getItem("pgease_notice_days") || "30");
+  const [notifyComplaints, setNotifyComplaints] = useState(() => localStorage.getItem("pgease_notify_complaints") !== "off");
+  const [notifyPayments, setNotifyPayments] = useState(() => localStorage.getItem("pgease_notify_payments") !== "off");
+  const [notifyKyc, setNotifyKyc] = useState(() => localStorage.getItem("pgease_notify_kyc") !== "off");
   const fileRef = useRef<HTMLInputElement>(null);
   const uploadMut = useUploadPhotoMutation();
   const deletePhotoMut = useDeleteProfilePhotoMutation();
@@ -110,7 +122,7 @@ export default function SettingsPage() {
   useEffect(() => {
     if (me) {
       setOwnerName(me.name || "");
-      setOwnerEmail(me.email || "");
+      setOwnerEmail(me.email && !me.email.endsWith(".local") ? me.email : "");
       setOwnerPhone(me.mobileContactNumber || "");
       setOwnerCountryCode(me.countryCode || "+91");
       setOwnerLanguage((me.language as "en-US" | "hi-IN") || "en-US");
@@ -192,8 +204,10 @@ export default function SettingsPage() {
     <div className="space-y-6 max-w-[1200px]">
       {/* Page Header */}
       <PageHeader
-        title="Settings"
-        description="Configure property business profiles, payouts, tenant verification, and platform preferences."
+        title={isNotifications ? "Notification preferences" : "Settings"}
+        description={isNotifications
+          ? "Choose which owner alerts stay on for this browser."
+          : "Configure property business profiles, payouts, tenant verification, and platform preferences."}
         action={
           <Button
             size="sm"
@@ -204,6 +218,33 @@ export default function SettingsPage() {
           </Button>
         }
       />
+
+      {isNotifications && (
+        <div className="bg-white rounded-md border border-[var(--gray-200)] p-5 space-y-3">
+          <h2 className="text-base font-semibold text-[var(--gray-900)]">Alerts</h2>
+          <p className="text-xs text-[var(--gray-600)]">These switches stay on this device. They do not send SMS.</p>
+          {([
+            ["Complaints", notifyComplaints, setNotifyComplaints, "pgease_notify_complaints"],
+            ["Rent payments", notifyPayments, setNotifyPayments, "pgease_notify_payments"],
+            ["KYC updates", notifyKyc, setNotifyKyc, "pgease_notify_kyc"],
+          ] as const).map(([label, on, setOn, key]) => (
+            <button
+              key={key}
+              type="button"
+              aria-pressed={on}
+              onClick={() => {
+                const next = !on;
+                setOn(next);
+                localStorage.setItem(key, next ? "on" : "off");
+              }}
+              className="w-full flex items-center justify-between rounded-md border border-[var(--gray-200)] px-3 py-2 text-sm"
+            >
+              <span>{label}</span>
+              <span className="font-semibold text-[var(--brand-700)]">{on ? "On" : "Off"}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* SECTION 1: ACCOUNT PROFILE */}
       <div className="bg-white rounded-md border border-[var(--gray-200)] p-5 space-y-4">
@@ -237,7 +278,7 @@ export default function SettingsPage() {
                 onClick={() => {
                   if (me) {
                     setOwnerName(me.name || "");
-                    setOwnerEmail(me.email || "");
+                    setOwnerEmail(me.email && !me.email.endsWith(".local") ? me.email : "");
                     setOwnerPhone(me.mobileContactNumber || "");
                     setOwnerCountryCode(me.countryCode || "+91");
                     setOwnerLanguage((me.language as "en-US" | "hi-IN") || "en-US");
@@ -321,7 +362,7 @@ export default function SettingsPage() {
                 onChange={(e) => setOwnerLanguage(e.target.value as "en-US" | "hi-IN")}
                 className="w-full h-9 text-sm rounded-md border border-[var(--gray-300)] bg-white px-3 py-1 text-[var(--gray-900)] focus:outline-none focus:border-[var(--brand-600)]"
               >
-                <option value="en-US">English (en-US)</option>
+                <option value="en-US">English (India)</option>
                 <option value="hi-IN">Hindi (हिंदी)</option>
               </select>
             </div>
@@ -337,7 +378,7 @@ export default function SettingsPage() {
             <div className="bg-[var(--gray-50)] p-3 rounded-md border border-[var(--gray-200)]">
               <span className="text-[11px] font-medium text-[var(--gray-500)] block">Registered Email</span>
               <p className="text-sm font-semibold text-[var(--gray-900)] mt-0.5 truncate">
-                {me?.email || "—"}
+                {me?.email && !me.email.endsWith(".local") ? me.email : "Not added"}
               </p>
             </div>
             <div className="bg-[var(--gray-50)] p-3 rounded-md border border-[var(--gray-200)]">
@@ -459,7 +500,7 @@ export default function SettingsPage() {
           </div>
 
           <div
-            onClick={() => navigate("/rent-payments/dues")}
+            onClick={() => setBillingOpen(true)}
             className="bg-white rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
           >
             <div className="space-y-0.5">
@@ -467,7 +508,7 @@ export default function SettingsPage() {
                 Rent Dues & Billing Rules
               </h4>
               <p className="text-xs text-[var(--gray-500)]">
-                Configure monthly rent cycle due date, grace period, and late fee rules
+                Due day {dueDay}, {graceDays} day grace, late fee ₹{lateFee}
               </p>
             </div>
             <ChevronRight className="h-4 w-4 text-[var(--gray-400)] shrink-0 ml-3" />
@@ -482,7 +523,7 @@ export default function SettingsPage() {
                 Public Website & Marketing
               </h4>
               <p className="text-xs text-[var(--gray-500)]">
-                Manage your pgname.pgease.com booking website and public photos
+                Public listing: {publicListingUrl(selectedPgId)}
               </p>
             </div>
             <ChevronRight className="h-4 w-4 text-[var(--gray-400)] shrink-0 ml-3" />
@@ -512,7 +553,7 @@ export default function SettingsPage() {
           </div>
 
           <div
-            onClick={() => navigate("/tenants/notice-period")}
+            onClick={() => setNoticeOpen(true)}
             className="bg-white rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
           >
             <div className="space-y-0.5">
@@ -520,7 +561,7 @@ export default function SettingsPage() {
                 Notice Period & Move-Out Rules
               </h4>
               <p className="text-xs text-[var(--gray-500)]">
-                Default notice duration (30 days), vacate clearance, and room turnover
+                Default notice duration is {noticeDays} days. Open this card to change it.
               </p>
             </div>
             <ChevronRight className="h-4 w-4 text-[var(--gray-400)] shrink-0 ml-3" />
@@ -740,6 +781,59 @@ export default function SettingsPage() {
       </Dialog>
 
       {/* Slide-over Drawer for Management Details */}
+      <Dialog open={billingOpen} onOpenChange={setBillingOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rent dues and billing rules</DialogTitle>
+            <DialogDescription>Set the monthly due day, grace period, and late fee for this browser.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="rent-due-day">Rent due day</Label>
+              <Input id="rent-due-day" type="number" min={1} max={28} value={dueDay} onChange={(e) => setDueDay(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="rent-grace">Grace period (days)</Label>
+              <Input id="rent-grace" type="number" min={0} max={15} value={graceDays} onChange={(e) => setGraceDays(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="rent-late-fee">Late fee (₹)</Label>
+              <Input id="rent-late-fee" type="number" min={0} value={lateFee} onChange={(e) => setLateFee(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" onClick={() => {
+              localStorage.setItem("pgease_rent_due_day", dueDay || "5");
+              localStorage.setItem("pgease_rent_grace_days", graceDays || "0");
+              localStorage.setItem("pgease_rent_late_fee", lateFee || "0");
+              setBillingOpen(false);
+              toast({ title: "Billing rules saved" });
+            }}>Save rules</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={noticeOpen} onOpenChange={setNoticeOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Notice period and move-out rules</DialogTitle>
+            <DialogDescription>This is the default notice length shown to new tenants.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1">
+            <Label htmlFor="notice-days">Default notice (days)</Label>
+            <Input id="notice-days" type="number" min={1} max={90} value={noticeDays} onChange={(e) => setNoticeDays(e.target.value)} />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" onClick={() => navigate("/tenants/notice-period")}>View tenants on notice</Button>
+            <Button type="button" onClick={() => {
+              localStorage.setItem("pgease_notice_days", noticeDays || "30");
+              setNoticeOpen(false);
+              toast({ title: "Notice period saved" });
+            }}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <ManagementDetailsDrawer
         open={managementDrawerOpen}
         onOpenChange={setManagementDrawerOpen}

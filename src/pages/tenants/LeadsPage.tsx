@@ -119,15 +119,25 @@ export default function LeadsPage() {
 
   const handleAddLead = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !phone.trim()) {
-      toast({ title: "Validation Error", description: "Name and contact number are required.", variant: "destructive" });
+    const phoneDigits = phone.replace(/\D/g, "");
+    if (!name.trim() || phoneDigits.length !== 10) {
+      toast({ title: "Validation Error", description: "Enter the lead name and a 10-digit mobile number.", variant: "destructive" });
       return;
+    }
+    if (followUpDate) {
+      const follow = new Date(`${followUpDate}T00:00:00`);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (follow < today) {
+        toast({ title: "Validation Error", description: "Follow-up date cannot be in the past.", variant: "destructive" });
+        return;
+      }
     }
     const newLead: StoredLead = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       pgId: selectedPgId || "general",
       name: name.trim(),
-      phone: phone.trim(),
+      phone: phoneDigits,
       source,
       status: "NEW",
       followUpDate: followUpDate || undefined,

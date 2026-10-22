@@ -189,7 +189,7 @@ const Expenses = () => {
               <MetricDisplay
                 label="Total Outflow"
                 value={formatINR(stats.total)}
-                hint={`${filteredExpenses.length} expense entries recorded`}
+                hint={`${filteredExpenses.length} expense ${filteredExpenses.length === 1 ? "entry" : "entries"} recorded`}
                 tone={stats.total > 0 ? "error" : "neutral"}
               />
               <MetricDisplay

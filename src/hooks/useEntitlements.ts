@@ -241,6 +241,20 @@ export function useEntitlements(): EntitlementsInfo {
       trialEndsAt = trialExpiresAtDate.toISOString();
     }
 
+    const daysCameFromApi =
+      (apiSub?.daysRemaining !== undefined && apiSub?.daysRemaining !== null) ||
+      typeof currentPlanData?.daysRemaining === "number";
+
+    // A plan that still has days left is not expired, even if another payload says so.
+    if (rawStatus === "EXPIRED" && daysCameFromApi && daysRemaining > 0) {
+      const planNameStr = String(
+        apiSub?.planName || apiPayload?.planName || currentPlanData?.currentPlan?.name || "",
+      ).toLowerCase();
+      if (apiSub?.isTrial || planNameStr.includes("trial")) rawStatus = "TRIAL";
+      else if (planNameStr.includes("lite") && !planNameStr.includes("pro")) rawStatus = "LITE";
+      else rawStatus = "PRO";
+    }
+
     // If trial is computed with 0 days and not on paid plan, status is EXPIRED
     if (rawStatus === "TRIAL" && daysRemaining <= 0) {
       rawStatus = "EXPIRED";

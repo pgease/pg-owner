@@ -458,7 +458,11 @@ export function exportReportToExcel(
 
   // 3. Build Sheet 2: Property-specific sheet (e.g. "Saksham Pg")
   const propertySheetName = (options.pgName || "Detailed Report").slice(0, 31);
-  const rows = items.map((item) => mapTenantTo95Columns(item, monthName));
+  const rows = items.map((item) =>
+    mapTenantTo95Columns(item, monthName).map((cell) =>
+      typeof cell === "number" && !Number.isFinite(cell) ? 0 : cell === "NaN" ? 0 : cell,
+    ),
+  );
   const detailData = [headers, ...rows];
 
   const detailWs = XLSX.utils.aoa_to_sheet(detailData);
@@ -479,7 +483,11 @@ export function exportReportToCsv(
 ): void {
   const monthName = getMonthName();
   const headers = build95Headers(monthName);
-  const rows = items.map((item) => mapTenantTo95Columns(item, monthName));
+  const rows = items.map((item) =>
+    mapTenantTo95Columns(item, monthName).map((cell) =>
+      typeof cell === "number" && !Number.isFinite(cell) ? 0 : cell === "NaN" ? 0 : cell,
+    ),
+  );
 
   const csvContent = [headers, ...rows]
     .map((row) =>

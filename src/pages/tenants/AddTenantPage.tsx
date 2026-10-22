@@ -38,7 +38,7 @@ export default function AddTenantPage() {
             </Button>
             <div>
               <h1 className="text-page-title">Add tenant</h1>
-              <p className="text-sm text-muted-foreground">Allocate a guest to a room and bed. Changes apply immediately.</p>
+              <p className="text-sm text-muted-foreground">Allocate a tenant to a room and bed. Changes apply immediately.</p>
             </div>
           </div>
 

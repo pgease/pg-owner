@@ -79,6 +79,65 @@ const MONTH_NAMES = [
   "July", "August", "September", "October", "November", "December",
 ];
 
+function rentDueState(year: number, month: number, dueDay: number, raw: any) {
+  const startRaw =
+    raw?.billingStartDate ||
+    raw?.startDate ||
+    raw?.joiningDate ||
+    raw?.moveInDate ||
+    raw?.checkInDate ||
+    raw?.roomTenant?.billingStartDate ||
+    raw?.roomTenant?.startDate;
+  const parsed = startRaw ? new Date(startRaw) : null;
+  const start = parsed && !Number.isNaN(parsed.getTime()) ? parsed : null;
+  const lastDay = new Date(year, month, 0).getDate();
+  const periodEnd = new Date(year, month, 0, 23, 59, 59);
+  if (start && start > periodEnd) {
+    return { overdueDays: 0, dueDay: Math.min(Math.max(dueDay, 1), lastDay), startedThisMonth: false };
+  }
+  let effectiveDueDay = Math.min(Math.max(dueDay || 5, 1), lastDay);
+  const startedThisMonth = Boolean(start && start.getFullYear() === year && start.getMonth() === month - 1);
+  if (startedThisMonth && start) {
+    effectiveDueDay = Math.max(effectiveDueDay, start.getDate());
+  }
+  const dueDateObj = new Date(year, month - 1, effectiveDueDay);
+  const overdueDays = Math.max(0, Math.floor((Date.now() - dueDateObj.getTime()) / 86400000));
+  return { overdueDays, dueDay: effectiveDueDay, startedThisMonth, start };
+}
+
+function isZeroRazorpayPlaceholder(row: { amountPaid?: number | string; paymentMethod?: string | null; status?: string | null }) {
+  const amt = Number(row.amountPaid) || 0;
+  const method = String(row.paymentMethod || "").toLowerCase();
+  const status = String(row.status || "").toLowerCase();
+  return amt <= 0 && method === "razorpay" && (status === "pending" || status === "");
+}
+
+function collectionDisplayStatus(row: { amountPaid?: number | string; rentAmount?: number | string; status?: string | null }) {
+  const paid = Number(row.amountPaid) || 0;
+  const rent = Number(row.rentAmount) || 0;
+  const status = String(row.status || "").toLowerCase();
+  if (rent > 0 && paid > 0 && paid + 0.009 < rent) return "partial";
+  if (status === "paid" || (rent > 0 && paid + 0.009 >= rent)) return "paid";
+  if (status === "partial") return "partial";
+  if (paid <= 0 && status === "overdue") return "pending";
+  return status || "pending";
+}
+
+function exportPhone(raw?: string | null) {
+  const digits = String(raw || "").replace(/\D/g, "");
+  const ten = digits.length > 10 ? digits.slice(-10) : digits;
+  return ten.length === 10 ? `+91${ten}` : String(raw || "");
+}
+
+function exportStatusLabel(status: string) {
+  if (status === "paid") return "Paid";
+  if (status === "partial") return "Partially paid";
+  if (status === "pending") return "Pending";
+  if (status === "overdue") return "Overdue";
+  if (status === "verification_pending") return "Verification pending";
+  return status ? status.charAt(0).toUpperCase() + status.slice(1) : "Pending";
+}
+
 interface PaymentVerificationItem {
   id: string;
   tenantId: string;
@@ -94,30 +153,7 @@ interface PaymentVerificationItem {
 }
 
 // Stored / simulated offline payment proofs for Lite Plan
-const INITIAL_VERIFICATIONS: PaymentVerificationItem[] = [
-  {
-    id: "ver-101",
-    tenantId: "t-101",
-    roomTenantId: "rt-101",
-    tenantName: "Rohan Verma",
-    roomNumber: "201",
-    amountClaimed: 8500,
-    utrNumber: "428910284719",
-    submittedAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
-    status: "pending",
-  },
-  {
-    id: "ver-102",
-    tenantId: "t-102",
-    roomTenantId: "rt-102",
-    tenantName: "Priya Sharma",
-    roomNumber: "105",
-    amountClaimed: 9000,
-    utrNumber: "UPI/428931982736",
-    submittedAt: new Date(Date.now() - 5 * 3600 * 1000).toISOString(),
-    status: "pending",
-  },
-];
+const INITIAL_VERIFICATIONS: PaymentVerificationItem[] = [];
 
 export const RentPayments = () => {
   const navigate = useNavigate();
@@ -336,6 +372,11 @@ export const RentPayments = () => {
     historyParams
   );
 
+  const historyRows = useMemo(
+    () => (historyQuery.data?.data || []).filter((row) => !isZeroRazorpayPlaceholder(row)),
+    [historyQuery.data],
+  );
+
   // Live Historical Ledger for Tenant in Passbook Drawer
   const tenantPassbookQuery = useRentCollectionHistory(
     passbookDrawerOpen && selectedPassbookTenant?.tenantId ? selectedPgId : null,
@@ -372,8 +413,10 @@ export const RentPayments = () => {
     paidList.forEach((item: any, idx: number) => {
       const parsed = parseRentTenantRow(item);
       const row = item as any;
-      const amtPaid = Number(row.amountPaid) || Number(row.rentAmount) || amountFromRow(item) || 0;
-      const rent = Number(row.monthlyRent) || amtPaid;
+      const rent = Number(row.monthlyRent) || Number(row.rentAmount) || Number(row.rent) || 0;
+      const amtPaid = Number(row.amountPaid) || 0;
+      const stillDue = Math.max(0, rent - amtPaid);
+      const paidStatus: "paid" | "partial" = rent > 0 && stillDue > 0 ? "partial" : "paid";
       const room = String(item.roomNumber ?? item.room_number ?? "—");
       const name = item.tenantName || item.name || item.tenant_name || (parsed?.label ? parsed.label.split(" · ")[0] : `Tenant #${idx + 1}`);
       const phone = String(item.phone || item.mobile || item.tenantPhone || item.tenant_phone || "");
@@ -387,8 +430,8 @@ export const RentPayments = () => {
         roomNumber: room,
         monthlyRent: rent,
         amountPaid: amtPaid,
-        amountDue: 0,
-        status: "paid",
+        amountDue: stillDue,
+        status: paidStatus,
         dueDate: `05 ${MONTH_NAMES[month - 1].slice(0, 3)} ${year}`,
         overdueDays: 0,
         raw: item,
@@ -417,16 +460,21 @@ export const RentPayments = () => {
       );
 
       const dueDayRaw = row.rentDueDate ?? row.dueDay ?? row.rent_due_date ?? 5;
-      const dueDay = Number(dueDayRaw) || 5;
-      const dueDateObj = new Date(year, month - 1, dueDay);
-      const overdueDays = Math.max(0, Math.floor((Date.now() - dueDateObj.getTime()) / 86400000));
+      const dueInfo = rentDueState(year, month, Number(dueDayRaw) || 5, row);
+      const overdueDays = dueInfo.overdueDays;
+      let effectiveDueAdjusted = effectiveDue;
+      if (dueInfo.startedThisMonth && dueInfo.start && amtPaid === 0 && rawRent > 0 && effectiveDue >= rawRent - 1) {
+        const lastDay = new Date(year, month, 0).getDate();
+        const days = lastDay - dueInfo.start.getDate() + 1;
+        if (days < lastDay) effectiveDueAdjusted = Math.round((rawRent * days) / lastDay);
+      }
 
       let st: "paid" | "partial" | "pending" | "overdue" | "verification_pending" = "pending";
       if (hasPendingVerification) {
         st = "verification_pending";
-      } else if (amtPaid > 0 && effectiveDue > 0) {
+      } else if (amtPaid > 0 && effectiveDueAdjusted > 0) {
         st = "partial";
-      } else if (overdueDays > 0) {
+      } else if (overdueDays > 0 && effectiveDueAdjusted > 0) {
         st = "overdue";
       }
 
@@ -439,9 +487,9 @@ export const RentPayments = () => {
         roomNumber: room,
         monthlyRent: rent,
         amountPaid: amtPaid,
-        amountDue: effectiveDue,
+        amountDue: effectiveDueAdjusted,
         status: st,
-        dueDate: `${String(dueDay).padStart(2, "0")} ${MONTH_NAMES[month - 1].slice(0, 3)} ${year}`,
+        dueDate: `${String(dueInfo.dueDay).padStart(2, "0")} ${MONTH_NAMES[month - 1].slice(0, 3)} ${year}`,
         overdueDays,
         raw: item,
       });
@@ -461,12 +509,17 @@ export const RentPayments = () => {
         const roomTenantId = t.roomTenant?.id || t.roomTenantId || tId;
 
         const dueDayRaw = t.rentDueDate ?? t.dueDay ?? 5;
-        const dueDay = Number(dueDayRaw) || 5;
-        const dueDateObj = new Date(year, month - 1, dueDay);
-        const overdueDays = Math.max(0, Math.floor((Date.now() - dueDateObj.getTime()) / 86400000));
+        const dueInfo = rentDueState(year, month, Number(dueDayRaw) || 5, t);
+        const overdueDays = dueInfo.overdueDays;
+        let amountDue = rent;
+        if (dueInfo.startedThisMonth && dueInfo.start && rent > 0) {
+          const lastDay = new Date(year, month, 0).getDate();
+          const days = lastDay - dueInfo.start.getDate() + 1;
+          if (days < lastDay) amountDue = Math.round((rent * days) / lastDay);
+        }
 
         let st: "paid" | "partial" | "pending" | "overdue" | "verification_pending" = "pending";
-        if (overdueDays > 0) {
+        if (overdueDays > 0 && amountDue > 0) {
           st = "overdue";
         }
 
@@ -479,9 +532,9 @@ export const RentPayments = () => {
           roomNumber: room,
           monthlyRent: rent,
           amountPaid: 0,
-          amountDue: rent,
+          amountDue,
           status: st,
-          dueDate: `${String(dueDay).padStart(2, "0")} ${MONTH_NAMES[month - 1].slice(0, 3)} ${year}`,
+          dueDate: `${String(dueInfo.dueDay).padStart(2, "0")} ${MONTH_NAMES[month - 1].slice(0, 3)} ${year}`,
           overdueDays,
           raw: t,
         });
@@ -504,13 +557,10 @@ export const RentPayments = () => {
         paid++;
       } else if (r.status === "partial") {
         partial++;
-        pending++;
       } else if (r.status === "verification_pending") {
         verification++;
-        pending++;
       } else if (r.status === "overdue") {
         overdue++;
-        pending++;
       } else {
         pending++;
       }
@@ -532,7 +582,7 @@ export const RentPayments = () => {
       // Status filter
       if (statusFilter === "paid" && r.status !== "paid") return false;
       if (statusFilter === "partial" && r.status !== "partial") return false;
-      if (statusFilter === "pending" && r.status !== "pending" && r.status !== "overdue" && r.status !== "partial" && r.status !== "verification_pending") return false;
+      if (statusFilter === "pending" && r.status !== "pending") return false;
       if (statusFilter === "overdue" && r.status !== "overdue") return false;
       if (statusFilter === "verification_pending" && r.status !== "verification_pending") return false;
 
@@ -703,7 +753,7 @@ export const RentPayments = () => {
 
   // Export History Ledger to CSV
   const handleExportHistoryCSV = () => {
-    const items = historyQuery.data?.data || [];
+    const items = historyRows;
     if (items.length === 0) return;
     const headers = [
       "Receipt ID",
@@ -728,7 +778,7 @@ export const RentPayments = () => {
             `"${r.id}"`,
             `"${r.paidAt ? formatDate(r.paidAt) : ""}"`,
             `"${r.tenantName || ""}"`,
-            `"${r.tenantPhone || ""}"`,
+            `"${exportPhone(r.tenantPhone)}"`,
             `"${r.roomNumber || ""}"`,
             `"${MONTH_NAMES[r.periodMonth - 1] || r.periodMonth}"`,
             `"${r.periodYear}"`,
@@ -736,7 +786,7 @@ export const RentPayments = () => {
             `"${r.rentAmount}"`,
             `"${r.paymentMethod || ""}"`,
             `"${r.reference || ""}"`,
-            `"${r.status}"`,
+            `"${exportStatusLabel(collectionDisplayStatus(r))}"`,
           ].join(",")
         ),
       ].join("\n");
@@ -862,7 +912,7 @@ export const RentPayments = () => {
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-[var(--gray-700)]">Period:</span>
                 <Select value={String(month)} onValueChange={(v) => setMonth(parseInt(v, 10))}>
-                  <SelectTrigger className="w-[130px] h-8 text-xs">
+                  <SelectTrigger className="w-[130px] h-8 text-xs" aria-label="Rent period month">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -875,7 +925,7 @@ export const RentPayments = () => {
                 </Select>
 
                 <Select value={String(year)} onValueChange={(v) => setYear(parseInt(v, 10))}>
-                  <SelectTrigger className="w-[95px] h-8 text-xs">
+                  <SelectTrigger className="w-[95px] h-8 text-xs" aria-label="Rent period year">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1046,7 +1096,7 @@ export const RentPayments = () => {
                     <span
                       className={cn(
                         "tabular-nums font-semibold",
-                        row.amountDue > 0 ? "text-[#B42318]" : "text-[var(--gray-400)]"
+                        row.amountDue > 0 ? "text-[#B42318]" : "text-[var(--gray-700)]"
                       )}
                     >
                       {row.amountDue > 0 ? formatINR(row.amountDue) : "₹0"}
@@ -1292,7 +1342,7 @@ export const RentPayments = () => {
                       setHistoryPage(1);
                     }}
                   >
-                    <SelectTrigger className="w-[110px] h-8 text-xs">
+                    <SelectTrigger className="w-[110px] h-8 text-xs" aria-label="Filter payment history by status">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1314,7 +1364,7 @@ export const RentPayments = () => {
                       setHistoryPage(1);
                     }}
                   >
-                    <SelectTrigger className="w-[120px] h-8 text-xs">
+                    <SelectTrigger className="w-[120px] h-8 text-xs" aria-label="Filter payment history by month">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1338,7 +1388,7 @@ export const RentPayments = () => {
                       setHistoryPage(1);
                     }}
                   >
-                    <SelectTrigger className="w-[95px] h-8 text-xs">
+                    <SelectTrigger className="w-[95px] h-8 text-xs" aria-label="Filter payment history by year">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1363,6 +1413,7 @@ export const RentPayments = () => {
                       setHistoryPage(1);
                     }}
                     placeholder="From Date"
+                    aria-label="Payments from date"
                     className="w-[130px] h-8 text-xs py-1"
                     title="Payments from date"
                   />
@@ -1375,6 +1426,7 @@ export const RentPayments = () => {
                       setHistoryPage(1);
                     }}
                     placeholder="To Date"
+                    aria-label="Payments to date"
                     className="w-[130px] h-8 text-xs py-1"
                     title="Payments to date"
                   />
@@ -1390,7 +1442,7 @@ export const RentPayments = () => {
                       setHistoryPage(1);
                     }}
                   >
-                    <SelectTrigger className="w-[125px] h-8 text-xs">
+                    <SelectTrigger className="w-[125px] h-8 text-xs" aria-label="Sort payment history">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1534,9 +1586,10 @@ export const RentPayments = () => {
                   id: "status",
                   header: "Status",
                   render: (row: RentCollectionHistoryItem) => {
+                    const shown = collectionDisplayStatus(row);
                     let statusKey: StatusBadgeProps["status"] = "pending";
-                    if (row.status === "paid") statusKey = "paid";
-                    else if (row.status === "partial") statusKey = "partially_paid";
+                    if (shown === "paid") statusKey = "paid";
+                    else if (shown === "partial") statusKey = "partially_paid";
 
                     return <StatusBadge status={statusKey} size="sm" />;
                   },
@@ -1547,6 +1600,7 @@ export const RentPayments = () => {
                   align: "right",
                   render: (row: RentCollectionHistoryItem) => (
                     <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                      {(Number(row.amountPaid) || 0) > 0 && (
                       <Button
                         size="sm"
                         variant="secondary"
@@ -1555,6 +1609,7 @@ export const RentPayments = () => {
                       >
                         <Receipt className="h-3.5 w-3.5 text-[var(--brand-600)]" /> Receipt
                       </Button>
+                      )}
 
                       <ActionMenu
                         items={[
@@ -1590,7 +1645,7 @@ export const RentPayments = () => {
                   ),
                 },
               ]}
-              data={historyQuery.data?.data || []}
+              data={historyRows}
               keyExtractor={(r) => r.id}
               loading={historyQuery.isLoading}
               density={density}
@@ -2111,6 +2166,11 @@ export const RentPayments = () => {
                     <span className="font-semibold text-sm text-[var(--gray-900)] block">
                       {selectedPg?.name || "PG Property"}
                     </span>
+                    {(selectedPg as { address?: string } | null)?.address ? (
+                      <span className="text-[11px] text-[var(--gray-600)] block mt-0.5">
+                        {(selectedPg as { address?: string }).address}
+                      </span>
+                    ) : null}
                     <span className="text-[11px] text-[var(--gray-500)] block mt-0.5">
                       Room {selectedReceipt.roomNumber}
                     </span>
@@ -2132,7 +2192,15 @@ export const RentPayments = () => {
                     {formatINR(selectedReceipt.amountPaid)}
                   </div>
                   <span className="text-[11px] text-emerald-700 mt-1 block">
-                    Full payment credited towards rent
+                    {(() => {
+                      const rent = Number(selectedReceipt.rentAmount) || 0;
+                      const paid = Number(selectedReceipt.amountPaid) || 0;
+                      const balance = Math.max(0, rent - paid);
+                      if (rent > 0 && paid + 0.009 < rent) {
+                        return `Part payment credited towards rent. Balance still due ${formatINR(balance)}.`;
+                      }
+                      return "Full payment credited towards rent";
+                    })()}
                   </span>
                 </div>
 
@@ -2178,7 +2246,7 @@ export const RentPayments = () => {
                   <div className="flex justify-between items-center py-1">
                     <span className="text-[var(--gray-500)]">Receipt / Txn ID</span>
                     <span className="font-mono text-[10px] text-[var(--gray-600)]">
-                      {selectedReceipt.id}
+                      RCPT-{String(selectedReceipt.id || "").replace(/-/g, "").slice(0, 10).toUpperCase()}
                     </span>
                   </div>
                 </div>
