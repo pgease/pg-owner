@@ -1687,8 +1687,12 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Monthly">Monthly</SelectItem>
+                      <SelectItem value="Quarterly">Quarterly</SelectItem>
+                      <SelectItem value="Half-yearly">Half-yearly</SelectItem>
+                      <SelectItem value="Yearly">Yearly</SelectItem>
                       <SelectItem value="Weekly">Weekly</SelectItem>
                       <SelectItem value="Daily">Daily</SelectItem>
+                      <SelectItem value="Custom">Custom</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1704,12 +1708,11 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                       <SelectValue placeholder="Add Rent On" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1st">1st of every month</SelectItem>
-                      <SelectItem value="5th">5th of every month</SelectItem>
-                      <SelectItem value="10th">10th of every month</SelectItem>
-                      <SelectItem value="15th">15th of every month</SelectItem>
-                      <SelectItem value="20th">20th of every month</SelectItem>
-                      <SelectItem value="25th">25th of every month</SelectItem>
+                      {Array.from({ length: 28 }, (_, index) => {
+                        const day = index + 1;
+                        const suffix = day % 10 === 1 && day !== 11 ? "st" : day % 10 === 2 && day !== 12 ? "nd" : day % 10 === 3 && day !== 13 ? "rd" : "th";
+                        return <SelectItem key={day} value={`${day}${suffix}`}>{day}{suffix} of every month</SelectItem>;
+                      })}
                     </SelectContent>
                   </Select>
                 </div>

@@ -193,7 +193,17 @@ export default function Kyc() {
   });
 
   const kycList = Array.isArray(kycRows) ? (kycRows as Record<string, any>[]) : [];
-  const agreementsList = agreementsData?.agreements || [];
+  const [agreementStatus, setAgreementStatus] = useState("all");
+  const agreementsList = (agreementsData?.agreements || []).filter((ag) => {
+    if (!String(ag.tenantName || "").trim()) return false;
+    if (agreementStatus === "all") return true;
+    const status = String(ag.status || "draft").toLowerCase();
+    if (agreementStatus === "draft") return status === "draft";
+    if (agreementStatus === "sent") return status.includes("sent") || status.includes("sign");
+    if (agreementStatus === "signed") return status === "signed";
+    if (agreementStatus === "cancelled") return status === "rejected" || status === "expired" || status === "cancelled";
+    return true;
+  });
   const creditPacks = (Array.isArray(packsData) ? packsData : packsData?.creditPacks) || [];
 
   const verifiedKycCount = kycList.filter((r) => {
@@ -660,6 +670,19 @@ export default function Kyc() {
             fallbackDescription="Draft legally valid rental agreements, send online Aadhaar e-Sign links, and automate tenant stamp papers exclusively on the Pro plan."
           >
             <div className="bg-white rounded-md border border-[var(--gray-200)] p-4 space-y-4">
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Agreement status">
+              {[
+                ["all", "All"],
+                ["draft", "Draft"],
+                ["sent", "Sent"],
+                ["signed", "Signed"],
+                ["cancelled", "Cancelled"],
+              ].map(([value, label]) => (
+                <Button key={value} type="button" size="sm" variant={agreementStatus === value ? "default" : "outline"} onClick={() => setAgreementStatus(value)}>
+                  {label}
+                </Button>
+              ))}
+            </div>
             {isAgreementsLoading ? (
               <div className="flex justify-center py-16 text-sm text-[var(--gray-500)]">
                 <Loader2 className="h-6 w-6 animate-spin text-[var(--brand-600)] mr-2" />

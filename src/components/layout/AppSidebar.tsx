@@ -122,6 +122,7 @@ const NAV_ITEMS: NavItem[] = [
     permissionKey: "complaint_view_all",
     children: [
       { title: "Complaints", url: "/complaints", permissionKey: "complaint_view_all" },
+      { title: "Property tools", url: "/operations/tools", permissionKey: "complaint_view_all" },
       { title: "Food & Meals", url: "/food", permissionKey: "food_view_edit", featureKey: "food_menu_planner" },
       { title: "Night Out Passes", url: "/nightout", permissionKey: "nightout_view", featureKey: "nightout_guest_requests" },
     ],

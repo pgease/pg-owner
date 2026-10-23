@@ -35,6 +35,7 @@ import EditStaffPermissions from "./pages/team/EditStaffPermissions";
 import PermissionsMatrixPage from "./pages/team/PermissionsMatrixPage";
 import { FeaturePlaceholder } from "./pages/FeaturePlaceholder";
 import LeadsPage from "./pages/tenants/LeadsPage";
+import SprintToolsPage from "./pages/operations/SprintToolsPage";
 import WifiManagementPage from "./pages/property/WifiManagementPage";
 import PropertyNoticesPage from "./pages/property/PropertyNoticesPage";
 import GuestRequestsPage from "./pages/operations/GuestRequestsPage";
@@ -126,6 +127,8 @@ const App = () => (
                         <Route path="/rent-payments/dues" element={<RentPayments />} />
                         <Route path="/staff" element={<Staff />} />
                         <Route path="/complaints" element={<Complaints />} />
+                        <Route path="/operations/tools" element={<SprintToolsPage />} />
+                        <Route path="/rent-payments/pending" element={<Navigate to="/rent-payments/dues" replace />} />
                         <Route path="/group-chat" element={<Navigate to="/complaints" replace />} />
                         <Route path="/chat" element={<Navigate to="/complaints" replace />} />
                         <Route path="/property" element={<Navigate to="/my-pgs" replace />} />

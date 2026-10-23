@@ -36,14 +36,18 @@ import {
 } from "@/components/ui/table";
 import { CanAccessPage } from "@/components/PermissionGuard";
 import { formatINR, formatDate } from "@/lib/formatters";
+import { createOps, deleteOps, importOps, listOps } from "@/api/ownerOps";
 
 interface ExpenseItem {
   id: string;
   propertyId: string;
   amount: number;
-  category: "SALARY" | "ELECTRICITY" | "FOOD" | "MAINTENANCE" | "OTHERS";
+  category: "SALARY" | "RENT" | "ELECTRICITY" | "FOOD" | "MAINTENANCE" | "DEPOSIT_REFUND" | "OTHERS";
   description: string;
   expenseDate: string;
+  paidBy?: string;
+  paidTo?: string;
+  paymentMode?: string;
 }
 
 const STORAGE_KEY = "pgease_local_expenses_v1";
@@ -60,9 +64,11 @@ function loadExpenses(): ExpenseItem[] {
 
 const CATEGORY_LABELS: Record<ExpenseItem["category"], string> = {
   SALARY: "Staff Salary",
+  RENT: "Property rent",
   ELECTRICITY: "Electricity & Utilities",
   FOOD: "Food & Dining",
   MAINTENANCE: "Repairs & Maintenance",
+  DEPOSIT_REFUND: "Deposit refund",
   OTHERS: "Other Expenses",
 };
 
@@ -72,12 +78,37 @@ const Expenses = () => {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(allExpenses));
-    } catch {
-      /* storage unavailable */
-    }
-  }, [allExpenses]);
+    if (!selectedPgId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        let remote = await listOps(selectedPgId, "expense");
+        const local = loadExpenses().filter((item) => item.propertyId === selectedPgId);
+        if (remote.length === 0 && local.length > 0) {
+          await importOps(selectedPgId, "expense", local);
+          remote = await listOps(selectedPgId, "expense");
+        }
+        if (!cancelled) {
+          setAllExpenses(remote.map((item) => ({
+            id: item.id,
+            propertyId: selectedPgId,
+            amount: Number(item.amount) || 0,
+            category: (item.category as ExpenseItem["category"]) || "OTHERS",
+            description: String(item.description || ""),
+            expenseDate: String(item.expenseDate || new Date().toISOString().slice(0, 10)),
+            paidBy: item.paidBy ? String(item.paidBy) : undefined,
+            paidTo: item.paidTo ? String(item.paidTo) : undefined,
+            paymentMode: item.paymentMode ? String(item.paymentMode) : undefined,
+          })));
+        }
+      } catch {
+        /* keep the browser copy */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedPgId]);
 
   const expenses = useMemo(
     () => allExpenses.filter((e) => !selectedPgId || e.propertyId === selectedPgId || e.propertyId === "general"),
@@ -91,6 +122,9 @@ const Expenses = () => {
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<ExpenseItem["category"]>("MAINTENANCE");
   const [description, setDescription] = useState("");
+  const [paidBy, setPaidBy] = useState("");
+  const [paidTo, setPaidTo] = useState("");
+  const [paymentMode, setPaymentMode] = useState("cash");
   const [expenseDate, setExpenseDate] = useState(() => new Date().toISOString().split("T")[0]);
 
   const filteredExpenses = useMemo(() => {
@@ -111,7 +145,7 @@ const Expenses = () => {
     return { total, categoryTotals };
   }, [filteredExpenses]);
 
-  const handleAddExpense = (e: React.FormEvent) => {
+  const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     const amt = parseFloat(amount);
     if (!Number.isFinite(amt) || amt <= 0) {
@@ -130,8 +164,19 @@ const Expenses = () => {
       category,
       description: description.trim(),
       expenseDate,
+      paidBy: paidBy.trim() || undefined,
+      paidTo: paidTo.trim() || undefined,
+      paymentMode,
     };
 
+    if (selectedPgId) {
+      try {
+        const saved = await createOps(selectedPgId, "expense", newItem);
+        newItem.id = saved.id;
+      } catch (error) {
+        toast({ title: error instanceof Error ? error.message : "Saved on this device only", variant: "destructive" });
+      }
+    }
     setAllExpenses((prev) => [newItem, ...prev]);
     toast({ title: "Expense recorded" });
     setAmount("");
@@ -139,9 +184,16 @@ const Expenses = () => {
     setOpen(false);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     setAllExpenses((prev) => prev.filter((item) => item.id !== id));
     setPendingDeleteId(null);
+    if (selectedPgId) {
+      try {
+        await deleteOps(selectedPgId, "expense", id);
+      } catch {
+        /* local change remains */
+      }
+    }
     toast({ title: "Expense deleted" });
   };
 
@@ -166,10 +218,10 @@ const Expenses = () => {
           <AlertTriangle className="h-4 w-4 text-[var(--warning)] shrink-0 mt-0.5" />
           <div className="space-y-0.5">
             <span className="font-semibold text-[#A15C07]">
-              Device-Only Storage Warning
+              Saved on this device only
             </span>
             <p className="text-[var(--gray-700)] leading-relaxed">
-              Expenses are currently stored locally in your browser cache. They will not appear on other devices or for your staff, and clearing browser history will erase these records. Cloud sync API integration is in development.
+              Expenses are saved for this PG. Reports can include them after the server update is deployed.
             </p>
           </div>
         </div>
@@ -352,14 +404,38 @@ const Expenses = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="SALARY">Salary (Staff / Warden)</SelectItem>
+                    <SelectItem value="RENT">Property rent</SelectItem>
                     <SelectItem value="ELECTRICITY">Electricity & Utilities</SelectItem>
                     <SelectItem value="FOOD">Food & Dining Supplies</SelectItem>
                     <SelectItem value="MAINTENANCE">Maintenance & Repairs</SelectItem>
+                    <SelectItem value="DEPOSIT_REFUND">Deposit refund</SelectItem>
                     <SelectItem value="OTHERS">Others (Internet, Consumables)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="paid-by" className="text-xs">Paid by</Label>
+                  <Input id="paid-by" value={paidBy} onChange={(e) => setPaidBy(e.target.value)} className="h-9 text-sm" placeholder="Owner or caretaker" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="paid-to" className="text-xs">Paid to</Label>
+                  <Input id="paid-to" value={paidTo} onChange={(e) => setPaidTo(e.target.value)} className="h-9 text-sm" placeholder="Vendor name" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Payment mode</Label>
+                <Select value={paymentMode} onValueChange={setPaymentMode}>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="upi">UPI</SelectItem>
+                    <SelectItem value="bank">Bank</SelectItem>
+                    <SelectItem value="card">Card</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-1.5">
                 <Label htmlFor="date" className="text-xs font-medium text-[var(--gray-700)]">
                   Expense Date <span className="text-[#B42318]">*</span>

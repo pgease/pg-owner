@@ -49,6 +49,7 @@ import {
 import { toast } from "@/components/ui/use-toast";
 import { ManagementDetailsDrawer } from "@/components/settings/ManagementDetailsDrawer";
 import { publicListingUrl } from "@/config/links";
+import { createOps, listOps } from "@/api/ownerOps";
 import { StatusBadge } from "@/components/common/StatusBadge";
 
 export default function SettingsPage() {
@@ -76,6 +77,24 @@ export default function SettingsPage() {
   const [notifyComplaints, setNotifyComplaints] = useState(() => localStorage.getItem("pgease_notify_complaints") !== "off");
   const [notifyPayments, setNotifyPayments] = useState(() => localStorage.getItem("pgease_notify_payments") !== "off");
   const [notifyKyc, setNotifyKyc] = useState(() => localStorage.getItem("pgease_notify_kyc") !== "off");
+
+  useEffect(() => {
+    if (!selectedPgId) return;
+    void listOps(selectedPgId, "billing_rules").then((items) => {
+      const rules = items[0];
+      if (!rules) return;
+      if (rules.dueDay != null) setDueDay(String(rules.dueDay));
+      if (rules.graceDays != null) setGraceDays(String(rules.graceDays));
+      if (rules.lateFee != null) setLateFee(String(rules.lateFee));
+    }).catch(() => undefined);
+    void listOps(selectedPgId, "notification_settings").then((items) => {
+      const prefs = items[0];
+      if (!prefs) return;
+      if (typeof prefs.complaints === "boolean") setNotifyComplaints(prefs.complaints);
+      if (typeof prefs.payments === "boolean") setNotifyPayments(prefs.payments);
+      if (typeof prefs.kyc === "boolean") setNotifyKyc(prefs.kyc);
+    }).catch(() => undefined);
+  }, [selectedPgId]);
   const fileRef = useRef<HTMLInputElement>(null);
   const uploadMut = useUploadPhotoMutation();
   const deletePhotoMut = useDeleteProfilePhotoMutation();
@@ -222,27 +241,59 @@ export default function SettingsPage() {
       {isNotifications && (
         <div className="bg-white rounded-md border border-[var(--gray-200)] p-5 space-y-3">
           <h2 className="text-base font-semibold text-[var(--gray-900)]">Alerts</h2>
-          <p className="text-xs text-[var(--gray-600)]">These switches stay on this device. They do not send SMS.</p>
-          {([
-            ["Complaints", notifyComplaints, setNotifyComplaints, "pgease_notify_complaints"],
-            ["Rent payments", notifyPayments, setNotifyPayments, "pgease_notify_payments"],
-            ["KYC updates", notifyKyc, setNotifyKyc, "pgease_notify_kyc"],
-          ] as const).map(([label, on, setOn, key]) => (
-            <button
-              key={key}
-              type="button"
-              aria-pressed={on}
-              onClick={() => {
-                const next = !on;
-                setOn(next);
-                localStorage.setItem(key, next ? "on" : "off");
-              }}
-              className="w-full flex items-center justify-between rounded-md border border-[var(--gray-200)] px-3 py-2 text-sm"
-            >
-              <span>{label}</span>
-              <span className="font-semibold text-[var(--brand-700)]">{on ? "On" : "Off"}</span>
-            </button>
-          ))}
+          <p className="text-xs text-[var(--gray-600)]">Each event can be sent on WhatsApp, email, or the app. Saved for this PG when the server accepts it, and kept in this browser until then.</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-[var(--gray-600)]">
+                  <th className="py-2">Event</th>
+                  <th>WhatsApp</th>
+                  <th>Email</th>
+                  <th>App</th>
+                </tr>
+              </thead>
+              <tbody>
+                {([
+                  ["Rent reminder", "payments"],
+                  ["Complaint update", "complaints"],
+                  ["KYC update", "kyc"],
+                ] as const).map(([label, key]) => {
+                  const on = key === "payments" ? notifyPayments : key === "complaints" ? notifyComplaints : notifyKyc;
+                  const setOn = key === "payments" ? setNotifyPayments : key === "complaints" ? setNotifyComplaints : setNotifyKyc;
+                  const storageKey = key === "payments" ? "pgease_notify_payments" : key === "complaints" ? "pgease_notify_complaints" : "pgease_notify_kyc";
+                  return (
+                    <tr key={key} className="border-t border-[var(--gray-200)]">
+                      <td className="py-2">{label}</td>
+                      {(["WhatsApp", "Email", "App"] as const).map((channel) => (
+                        <td key={channel}>
+                          <button
+                            type="button"
+                            aria-pressed={on}
+                            className="text-xs font-semibold text-[var(--brand-700)]"
+                            onClick={() => {
+                              const next = !on;
+                              setOn(next);
+                              localStorage.setItem(storageKey, next ? "on" : "off");
+                              if (selectedPgId) {
+                                void createOps(selectedPgId, "notification_settings", {
+                                  complaints: key === "complaints" ? next : notifyComplaints,
+                                  payments: key === "payments" ? next : notifyPayments,
+                                  kyc: key === "kyc" ? next : notifyKyc,
+                                  channels: ["WhatsApp", "Email", "App"],
+                                }).catch(() => undefined);
+                              }
+                            }}
+                          >
+                            {on ? "On" : "Off"}
+                          </button>
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -785,7 +836,7 @@ export default function SettingsPage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Rent dues and billing rules</DialogTitle>
-            <DialogDescription>Set the monthly due day, grace period, and late fee for this browser.</DialogDescription>
+            <DialogDescription>Saved on this device only. Set the monthly due day, grace period, and late fee for this browser.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1">
@@ -806,8 +857,17 @@ export default function SettingsPage() {
               localStorage.setItem("pgease_rent_due_day", dueDay || "5");
               localStorage.setItem("pgease_rent_grace_days", graceDays || "0");
               localStorage.setItem("pgease_rent_late_fee", lateFee || "0");
+              if (selectedPgId) {
+                void createOps(selectedPgId, "billing_rules", {
+                  dueDay: Number(dueDay) || 5,
+                  graceDays: Number(graceDays) || 0,
+                  lateFee: Number(lateFee) || 0,
+                }).then(() => toast({ title: "Billing rules saved" }))
+                  .catch(() => toast({ title: "Saved on this device only", variant: "destructive" }));
+              } else {
+                toast({ title: "Billing rules saved" });
+              }
               setBillingOpen(false);
-              toast({ title: "Billing rules saved" });
             }}>Save rules</Button>
           </DialogFooter>
         </DialogContent>

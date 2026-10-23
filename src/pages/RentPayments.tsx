@@ -180,6 +180,9 @@ export const RentPayments = () => {
   const [amountPaid, setAmountPaid] = useState("");
   const [paymentReference, setPaymentReference] = useState("");
   const [paymentMode, setPaymentMode] = useState("cash");
+  const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [paymentNote, setPaymentNote] = useState("");
+  const [paymentDiscount, setPaymentDiscount] = useState("");
 
   const handleOpenRecordPayment = (row?: RentDashboardTenantRow) => {
     if (entitlements.isExpired) {
@@ -631,6 +634,8 @@ export const RentPayments = () => {
         amountPaid: amt,
         paymentMethod: normalizedMethod,
         reference: paymentReference.trim() || undefined,
+        paidAt: paymentDate ? new Date(`${paymentDate}T12:00:00`).toISOString() : undefined,
+        notes: [paymentNote.trim(), paymentDiscount ? `Discount ₹${paymentDiscount} (not counted as collected)` : ""].filter(Boolean).join(". ") || undefined,
       });
 
       toast({
@@ -2083,14 +2088,33 @@ export const RentPayments = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="cash">Cash</SelectItem>
-                      <SelectItem value="upi">UPI / QR Code (GPay, PhonePe, Paytm)</SelectItem>
-                      <SelectItem value="bank_transfer">Bank Transfer (NEFT/IMPS)</SelectItem>
+                      <SelectItem value="gpay">GPay</SelectItem>
+                      <SelectItem value="phonepe">PhonePe</SelectItem>
+                      <SelectItem value="paytm">Paytm</SelectItem>
+                      <SelectItem value="upi">UPI</SelectItem>
+                      <SelectItem value="bank_transfer">Bank</SelectItem>
+                      <SelectItem value="card">Card</SelectItem>
                       <SelectItem value="cheque">Cheque</SelectItem>
+                      <SelectItem value="other">Others</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs" htmlFor="payment-date">Payment date</Label>
+                  <Input id="payment-date" type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} className="h-9 text-xs" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs" htmlFor="payment-discount">Discount (₹)</Label>
+                  <Input id="payment-discount" type="number" min="0" value={paymentDiscount} onChange={(e) => setPaymentDiscount(e.target.value)} className="h-9 text-xs" placeholder="0" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs" htmlFor="payment-note">Note</Label>
+                <Input id="payment-note" value={paymentNote} onChange={(e) => setPaymentNote(e.target.value)} className="h-9 text-xs" placeholder="Received at the office" />
+              </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Reference / UTR Number (Optional)</Label>
                 <Input

@@ -7,6 +7,7 @@ import {
   tenantRentAmount,
   tenantRoomNo,
 } from "@/lib/tenantDisplay";
+import { formatOrdinalDay } from "@/lib/formatters";
 
 export interface TenantExportRow {
   tenant: PropertyTenant;
@@ -247,7 +248,9 @@ export function mapTenantTo95Columns(
   const addedOn = t.createdAt ? new Date(t.createdAt).toLocaleDateString("en-GB") : "-";
   const lastMeterReading = t.lastMeterReading || "-";
   const lastMeterDate = t.lastReadingDate ? new Date(t.lastReadingDate).toLocaleDateString("en-GB") : "-";
-  const rentAddDate = t.rentDueDate ? `${t.rentDueDate}th of every month` : "1st of every month";
+  const rentAddDate = t.rentDueDate
+    ? `${formatOrdinalDay(String(t.rentDueDate).replace(/\D/g, "") || t.rentDueDate)} of every month`
+    : "1st of every month";
 
   const pan = t.panNumber || kyc.panNumber || "-";
   const voterId = t.voterId || kyc.voterId || "-";

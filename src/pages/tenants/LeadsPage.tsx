@@ -36,6 +36,7 @@ import { useApp } from "@/context/AppContext";
 import { toast } from "@/components/ui/use-toast";
 import { CanAccessPage } from "@/components/PermissionGuard";
 import { formatDate } from "@/lib/formatters";
+import { createOps, deleteOps, importOps, listOps, updateOps } from "@/api/ownerOps";
 
 interface LeadItem {
   id: string;
@@ -78,12 +79,38 @@ export default function LeadsPage() {
   const [allLeads, setAllLeads] = useState<StoredLead[]>(loadLeads);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(allLeads));
-    } catch {
-      /* storage unavailable */
-    }
-  }, [allLeads]);
+    if (!selectedPgId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        let remote = await listOps(selectedPgId, "lead");
+        const local = loadLeads().filter((lead) => lead.pgId === selectedPgId);
+        if (remote.length === 0 && local.length > 0) {
+          await importOps(selectedPgId, "lead", local);
+          remote = await listOps(selectedPgId, "lead");
+          const rest = loadLeads().filter((lead) => lead.pgId !== selectedPgId);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(rest));
+        }
+        if (!cancelled) {
+          setAllLeads(remote.map((item) => ({
+            id: item.id,
+            pgId: selectedPgId,
+            name: String(item.name || ""),
+            phone: String(item.phone || ""),
+            source: String(item.source || "Walk-in"),
+            status: (item.status as StoredLead["status"]) || "NEW",
+            followUpDate: item.followUpDate ? String(item.followUpDate) : undefined,
+            notes: item.notes ? String(item.notes) : undefined,
+          })));
+        }
+      } catch {
+        /* keep the browser copy if the server is not updated yet */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedPgId]);
 
   const leads = useMemo(
     () => allLeads.filter((l) => l.pgId === (selectedPgId || "general")),
@@ -117,7 +144,7 @@ export default function LeadsPage() {
     return { total, active, booked, conversionRate };
   }, [filteredLeads]);
 
-  const handleAddLead = (e: React.FormEvent) => {
+  const handleAddLead = async (e: React.FormEvent) => {
     e.preventDefault();
     const phoneDigits = phone.replace(/\D/g, "");
     if (!name.trim() || phoneDigits.length !== 10) {
@@ -144,6 +171,14 @@ export default function LeadsPage() {
       notes: notes.trim() || undefined,
     };
 
+    if (selectedPgId) {
+      try {
+        const saved = await createOps(selectedPgId, "lead", newLead);
+        newLead.id = saved.id;
+      } catch (error) {
+        toast({ title: error instanceof Error ? error.message : "Saved on this device only", variant: "destructive" });
+      }
+    }
     setAllLeads((prev) => [newLead, ...prev]);
     toast({ title: "Lead added successfully" });
     setName("");
@@ -153,13 +188,28 @@ export default function LeadsPage() {
     setOpen(false);
   };
 
-  const handleUpdateStatus = (id: string, newStatus: LeadItem["status"]) => {
+  const handleUpdateStatus = async (id: string, newStatus: LeadItem["status"]) => {
+    const current = allLeads.find((lead) => lead.id === id);
     setAllLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l)));
+    if (selectedPgId && current) {
+      try {
+        await updateOps(selectedPgId, "lead", id, { ...current, status: newStatus });
+      } catch {
+        /* local change remains */
+      }
+    }
     toast({ title: `Lead status updated to ${STATUS_DETAILS[newStatus].label}` });
   };
 
-  const handleDeleteLead = (id: string) => {
+  const handleDeleteLead = async (id: string) => {
     setAllLeads((prev) => prev.filter((l) => l.id !== id));
+    if (selectedPgId) {
+      try {
+        await deleteOps(selectedPgId, "lead", id);
+      } catch {
+        /* local change remains */
+      }
+    }
     toast({ title: "Lead removed" });
   };
 
@@ -184,10 +234,10 @@ export default function LeadsPage() {
           <AlertTriangle className="h-4 w-4 text-[var(--warning)] shrink-0 mt-0.5" />
           <div className="space-y-0.5">
             <span className="font-semibold text-[#A15C07]">
-              Device-Only Storage Warning
+              Saved on this device only
             </span>
             <p className="text-[var(--gray-700)] leading-relaxed">
-              Leads are currently stored locally in your browser cache. They will not sync across other devices or for your staff, and clearing browser history will erase these inquiries. Cloud CRM API integration is in development.
+              Leads are saved for this PG. If the server is unavailable, a copy stays in this browser until the next successful save.
             </p>
           </div>
         </div>

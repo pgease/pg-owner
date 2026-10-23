@@ -255,7 +255,24 @@ export const EaseBuddyAI: React.FC<{
                         : "bg-[var(--gray-100)] text-[var(--gray-900)] border border-[var(--gray-200)]"
                     }`}
                   >
-                    <p className="whitespace-pre-line">{m.text}</p>
+                    <div className="whitespace-pre-line">
+                      {m.text.split("\n").map((line, lineIndex) => {
+                        const bullet = line.match(/^\s*[-*]\s+(.*)$/);
+                        const content = bullet ? bullet[1] : line.replace(/^\s*\|/, "").replace(/\|\s*$/, "");
+                        return (
+                          <div key={lineIndex} className={bullet ? "pl-3" : undefined}>
+                            {bullet ? "• " : ""}
+                            {content.split(/(\*\*[^*]+\*\*)/g).map((part, index) =>
+                              part.startsWith("**") && part.endsWith("**") ? (
+                                <strong key={index}>{part.slice(2, -2)}</strong>
+                              ) : (
+                                <span key={index}>{part}</span>
+                              ),
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   {m.actionLink && (
