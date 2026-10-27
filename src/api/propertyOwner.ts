@@ -125,7 +125,7 @@ export async function verifyOtp(mobileNumber: string, otp: string, name?: string
   authStorage.set({
     accessToken: data.accessToken,
     refreshToken: data.refreshToken,
-    propertyOwner: data.propertyOwner,
+    propertyOwner: data.propertyOwner || (data as any).staff,
   });
 
   return data;

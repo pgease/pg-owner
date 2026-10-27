@@ -358,6 +358,37 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
         setIsVerifyingOtp(true);
         const data = await verifyOtp(phone, otpValue);
 
+        // Check if this is a staff user
+        const isStaffUser =
+          (data as any).userType === "staff" ||
+          Boolean((data as any).staff) ||
+          authStorage.isStaff();
+
+        if (isStaffUser) {
+          const staffObj = (data as any).staff;
+          if (staffObj) {
+            authStorage.setPropertyOwner({
+              id: staffObj.id,
+              name: staffObj.name || "Staff",
+              email: staffObj.email || "",
+              mobileContactNumber: staffObj.mobileContactNumber || phone,
+              ...staffObj,
+            } as any);
+            if (staffObj.propertyId) {
+              appPrefs.setSelectedPgId(staffObj.propertyId);
+            }
+          }
+          setShowSuccess(true);
+          toast({
+            title: "Authenticated Successfully",
+            description: `Welcome back${staffObj?.name ? `, ${staffObj.name}` : ""}!`,
+          });
+          setTimeout(() => {
+            navigate("/dashboard", { replace: true });
+          }, 500);
+          return;
+        }
+
         const currentName = data.propertyOwner?.name?.trim();
         const isPlaceholder =
           !currentName ||
@@ -425,18 +456,20 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
         });
       }
 
-      // 2. Sync name with backend profile API
-      try {
-        const updated = await updateMe({ name: trimmed });
-        if (updated?.name) {
-          authStorage.setPropertyOwner({
-            ...(verifiedAuthData?.propertyOwner || {}),
-            ...updated,
-            name: updated.name,
-          });
+      // 2. Sync name with backend profile API (only for owners)
+      if (!authStorage.isStaff()) {
+        try {
+          const updated = await updateMe({ name: trimmed });
+          if (updated?.name) {
+            authStorage.setPropertyOwner({
+              ...(verifiedAuthData?.propertyOwner || {}),
+              ...updated,
+              name: updated.name,
+            });
+          }
+        } catch (err) {
+          console.warn("[Login] Could not sync owner name to server immediately:", err);
         }
-      } catch (err) {
-        console.warn("[Login] Could not sync owner name to server immediately:", err);
       }
 
       setShowSuccess(true);

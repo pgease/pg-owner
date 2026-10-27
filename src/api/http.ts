@@ -75,7 +75,12 @@ export const authStorage = {
     if (!token) return false;
     const payload = decodeJwtPayload(token);
     if (!payload) return false;
-    return Boolean(payload.staffId) || payload.role === "staff" || payload.userType === "staff";
+    return (
+      Boolean(payload.staffId) ||
+      payload.role === "staff" ||
+      payload.userType === "staff" ||
+      payload.type === "staff"
+    );
   },
   isOwner(): boolean {
     return !this.isStaff();
