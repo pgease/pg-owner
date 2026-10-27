@@ -257,6 +257,14 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
     } catch {}
   };
 
+  // If already authenticated, redirect to dashboard immediately
+  useEffect(() => {
+    const token = authStorage.getAccessToken();
+    if (token) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [navigate]);
+
   // Remember last phone
   useEffect(() => {
     if (phone.length === 10) {
@@ -374,12 +382,8 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
           });
 
           setTimeout(() => {
-            if (!data.hasProperties) {
-              navigate("/onboarding", { replace: true });
-            } else {
-              navigate("/dashboard", { replace: true });
-            }
-          }, 700);
+            navigate("/dashboard", { replace: true });
+          }, 500);
         }
       } catch (error: any) {
         triggerShake();
@@ -412,13 +416,29 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
 
     try {
       setIsSavingName(true);
-      const updated = await updateMe({ name: trimmed });
+
+      // 1. Immediately store the owner name in local storage session
       if (verifiedAuthData) {
         authStorage.setPropertyOwner({
           ...verifiedAuthData.propertyOwner,
-          name: updated?.name || trimmed,
+          name: trimmed,
         });
       }
+
+      // 2. Sync name with backend profile API
+      try {
+        const updated = await updateMe({ name: trimmed });
+        if (updated?.name) {
+          authStorage.setPropertyOwner({
+            ...(verifiedAuthData?.propertyOwner || {}),
+            ...updated,
+            name: updated.name,
+          });
+        }
+      } catch (err) {
+        console.warn("[Login] Could not sync owner name to server immediately:", err);
+      }
+
       setShowSuccess(true);
       toast({
         title: `Welcome, ${trimmed}!`,
@@ -426,14 +446,9 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
       });
 
       setTimeout(() => {
-        if (verifiedAuthData?.hasProperties) {
-          navigate("/dashboard", { replace: true });
-        } else {
-          navigate("/onboarding", { replace: true });
-        }
-      }, 700);
+        navigate("/dashboard", { replace: true });
+      }, 500);
     } catch {
-      // Graceful fallback: persist name in local storage session so user is not blocked
       if (verifiedAuthData) {
         authStorage.setPropertyOwner({
           ...verifiedAuthData.propertyOwner,
@@ -442,8 +457,8 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
       }
       setShowSuccess(true);
       setTimeout(() => {
-        navigate(verifiedAuthData?.hasProperties ? "/dashboard" : "/onboarding", { replace: true });
-      }, 700);
+        navigate("/dashboard", { replace: true });
+      }, 500);
     } finally {
       setIsSavingName(false);
     }

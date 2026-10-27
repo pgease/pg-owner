@@ -52,6 +52,7 @@ import ApiCatalogPage from "./pages/reference/ApiCatalogPage";
 import PublicListingPage from "./pages/property/PublicListingPage";
 import FeatureCataloguePage from "./pages/FeatureCataloguePage";
 import { TutorialProvider } from "./context/TutorialContext";
+import { authStorage } from "./api/http";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -73,10 +74,37 @@ const App = () => (
       <Sonner />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
-          {/* Auth routes (no layout) */}
-          <Route path="/" element={<Login />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Login initialMode="signup" />} />
+          {/* Auth routes (no layout) - auto-redirect to dashboard if already authenticated */}
+          <Route
+            path="/"
+            element={
+              authStorage.getAccessToken() ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <Login />
+              )
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              authStorage.getAccessToken() ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <Login />
+              )
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              authStorage.getAccessToken() ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <Login initialMode="signup" />
+              )
+            }
+          />
           <Route
             path="/onboarding"
             element={

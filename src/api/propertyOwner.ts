@@ -339,6 +339,7 @@ export async function updateMe(payload: UpdatePropertyOwnerPayload) {
   return httpRequest<PropertyOwner>(`${PROPERTY_OWNER_BASE}/me`, {
     method: "PUT",
     auth: true,
+    skipForceLogout: true,
     body: payload,
   });
 }

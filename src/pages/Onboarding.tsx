@@ -669,7 +669,7 @@ const Onboarding = () => {
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => navigate("/login", { replace: true })}
+                        onClick={() => navigate("/dashboard", { replace: true })}
                         className="flex-1 rounded-2xl border-white/10 bg-white/[0.04] text-xs text-white/70 hover:bg-white/[0.08] h-11"
                       >
                         <ArrowLeft className="h-3.5 w-3.5 mr-1" /> {T.back}

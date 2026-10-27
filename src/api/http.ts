@@ -127,7 +127,11 @@ async function attemptTokenRefresh(): Promise<boolean> {
 
 function forceLogout() {
   authStorage.clear();
-  if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+  if (
+    typeof window !== "undefined" &&
+    !window.location.pathname.startsWith("/login") &&
+    window.location.pathname !== "/"
+  ) {
     window.location.href = "/login";
   }
 }
@@ -150,6 +154,7 @@ interface RequestOptions extends Omit<RequestInit, 'body'> {
   auth?: boolean;
   body?: unknown;
   _retried?: boolean;
+  skipForceLogout?: boolean;
 }
 
 export async function httpRequest<TResponse>(path: string, options: RequestOptions = {}): Promise<TResponse> {
@@ -178,7 +183,7 @@ export async function httpRequest<TResponse>(path: string, options: RequestOptio
         : undefined;
 
   // Do not spread `options` into fetch: it carries raw `body` and custom flags (`auth`, `_retried`).
-  const { auth: _a, body: _b, _retried: _r, headers: _incomingHeaders, ...rest } = options;
+  const { auth: _a, body: _b, _retried: _r, skipForceLogout: _s, headers: _incomingHeaders, ...rest } = options;
 
   const response = await fetch(url, {
     ...rest,
@@ -190,6 +195,12 @@ export async function httpRequest<TResponse>(path: string, options: RequestOptio
   const data = isJson ? await response.json() : undefined;
 
   if (response.status === 401 && options.auth && !options._retried) {
+    if (options.skipForceLogout) {
+      const error: HttpError = new Error("Unauthorized");
+      error.status = 401;
+      error.data = data;
+      throw error;
+    }
     if (!_refreshPromise) {
       _refreshPromise = attemptTokenRefresh().finally(() => { _refreshPromise = null; });
     }
