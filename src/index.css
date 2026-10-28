@@ -1,5 +1,5 @@
 /* ✅ ALWAYS FIRST */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap');
 
 /* ✅ Design System Tokens */
 @import './styles/tokens.css';
@@ -149,6 +149,15 @@
 
 /* ===== Mobile (<768px) base — Figma iPhone shell, desktop unchanged ===== */
 @media (max-width: 767.98px) {
+  html,
+  body,
+  button,
+  input,
+  select,
+  textarea {
+    font-family: "Outfit", "Noto Sans Devanagari", sans-serif;
+  }
+
   button,
   [role="button"],
   input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),

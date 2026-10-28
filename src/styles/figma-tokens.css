@@ -41,6 +41,18 @@
   --figma-button-height: 60px;
   --figma-button-secondary: #e5e5e5;
 
+  /* Sign screens (430:12340 / 12380 / 12420, 587:3432) — sizes from Figma metadata.
+     Colours marked measured from screenshot (Inspect blocked by Figma signup wall). */
+  --figma-sign-overlay: #4f4f4f;
+  --figma-sign-sheet-radius: 24px;
+  --figma-sign-pad-x: 24px;
+  --figma-sign-chip: #f5f5f5;
+  --figma-sign-placeholder: #c8c8c8;
+  --figma-sign-btn-disabled: #7ebebe;
+  --figma-sign-name-h: 46px;
+  --figma-sign-phone-h: 56px;
+  --figma-sign-country-w: 84px;
+
   /* Splash device */
   --figma-screen-width: 390px;
   --figma-screen-height: 884px;
