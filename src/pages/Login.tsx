@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { MobileAuthSheet } from "@/components/auth/MobileAuthSheet";
 
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "@/components/ui/use-toast";
@@ -11,7 +12,7 @@ import {
   type OtpChannel,
   type VerifyOtpResponse,
 } from "@/api/propertyOwner";
-import { authStorage } from "@/api/http";
+import { authStorage, appPrefs } from "@/api/http";
 import pgeaseLogo from "@/assets/pgease-logo.png";
 import {
   Lock,
@@ -212,8 +213,14 @@ const TEXTS = {
 };
 
 /* ==================== Main Component ==================== */
-export default function Login({ initialMode: _initialMode }: { initialMode?: string } = {}) {
+function isMdUp() {
+  return typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
+}
+
+export default function Login({ initialMode }: { initialMode?: string } = {}) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isSignup = initialMode === "signup" || location.pathname === "/signup";
 
   const [lang, setLang] = useState<Lang>(() => {
     try {
@@ -234,6 +241,8 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
   });
   const [otp, setOtp] = useState("");
   const [otpError, setOtpError] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [shaking, setShaking] = useState(false);
 
   const [isSendingOtp, setIsSendingOtp] = useState(false);
@@ -246,6 +255,7 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
 
   const { secondsLeft, start, reset, canResend } = useResendTimer(30);
   const phoneValid = phone.length === 10;
+  const canSubmitPhone = phoneValid && (!isSignup || Boolean(firstTimeOwnerName.trim()));
 
   const T = TEXTS[lang];
 
@@ -304,7 +314,12 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
   }, []);
 
   const handleSendOtp = async (targetChannel: OtpChannel = channel) => {
+    if (isSignup && !firstTimeOwnerName.trim() && !isMdUp()) {
+      setNameError("Please enter your name.");
+      return;
+    }
     if (!phoneValid) {
+      setPhoneError("Please enter a valid 10-digit mobile number.");
       toast({
         title: "Invalid phone number",
         description: "Please enter a valid 10-digit mobile number.",
@@ -312,13 +327,16 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
       });
       return;
     }
+    setNameError("");
+    setPhoneError("");
 
     try {
       setIsSendingOtp(true);
       const res = await requestOtp(phone, targetChannel);
       setChannel(targetChannel);
+      setOtpError("");
       setStep("otp");
-      start(30);
+      start(isMdUp() ? 30 : 60);
 
       toast({
         title: targetChannel === "whatsapp" ? "WhatsApp Code Sent" : "SMS Code Sent",
@@ -395,9 +413,38 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
           currentName.toLowerCase() === "owner" ||
           currentName.toLowerCase().startsWith("user_");
         const isFirstTime = Boolean(data.isNewUser || isPlaceholder);
+        const collectedName = firstTimeOwnerName.trim();
+        const mobileFlow = !isMdUp();
 
-        if (isFirstTime) {
-          // First-time owner signup: prompt for their name before entering dashboard
+        if (mobileFlow || collectedName) {
+          if (collectedName) {
+            try {
+              const updated = await updateMe({ name: collectedName });
+              authStorage.setPropertyOwner({
+                ...data.propertyOwner,
+                name: updated?.name || collectedName,
+              });
+            } catch {
+              authStorage.setPropertyOwner({
+                ...data.propertyOwner,
+                name: collectedName,
+              });
+            }
+          }
+          setShowSuccess(true);
+          toast({
+            title: "Authenticated Successfully",
+            description: `Welcome${collectedName || currentName ? `, ${collectedName || currentName}` : ""}!`,
+          });
+          setTimeout(() => {
+            if (!data.hasProperties) {
+              navigate("/onboarding", { replace: true });
+            } else {
+              navigate("/dashboard", { replace: true });
+            }
+          }, 700);
+        } else if (isFirstTime) {
+          // Desktop only: first-time owner still enters name after OTP
           setVerifiedAuthData(data);
           setStep("first_time_name");
           toast({
@@ -430,7 +477,7 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
         setIsVerifyingOtp(false);
       }
     },
-    [phone, navigate, triggerShake]
+    [phone, navigate, triggerShake, firstTimeOwnerName]
   );
 
   const handleSaveFirstTimeName = async (e?: React.FormEvent) => {
@@ -517,9 +564,49 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
   };
 
   return (
-    <div className="min-h-screen lg:h-screen lg:max-h-screen lg:overflow-hidden flex flex-col justify-between bg-[#F8FAFB] text-[#18212B] select-none">
+    <>
+    <MobileAuthSheet
+      isSignup={isSignup}
+      lang={lang}
+      onLangToggle={handleLangToggle}
+      step={step}
+      showSuccess={showSuccess}
+      ownerName={firstTimeOwnerName}
+      onOwnerNameChange={(v) => {
+        setFirstTimeOwnerName(v);
+        setNameError("");
+      }}
+      nameError={nameError}
+      phone={phone}
+      onPhoneChange={(v) => {
+        setPhone(cleanPhoneInput(v));
+        setPhoneError("");
+      }}
+      phoneError={phoneError}
+      channel={channel}
+      onChannel={setChannel}
+      onSendOtp={() => handleSendOtp(channel)}
+      isSendingOtp={isSendingOtp}
+      canSubmitPhone={canSubmitPhone}
+      otp={otp}
+      onOtpChange={handleOtpChange}
+      otpError={otpError}
+      onVerify={() => handleVerifyOtp(otp)}
+      isVerifyingOtp={isVerifyingOtp}
+      onChangeNumber={() => {
+        setOtp("");
+        setOtpError("");
+        setStep("phone");
+        reset();
+      }}
+      onResend={() => handleResend(channel)}
+      secondsLeft={secondsLeft}
+      canResend={canResend}
+      shaking={shaking}
+    />
+    <div className="hidden md:flex min-h-dvh lg:h-dvh lg:max-h-dvh lg:overflow-hidden flex-col justify-between bg-[#F8FAFB] text-[#18212B] select-none overflow-x-hidden">
       {/* ================= TOP NAVBAR ================= */}
-      <header className="shrink-0 w-full bg-white border-b border-gray-100 px-3.5 sm:px-8 lg:px-10 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+      <header data-website-chrome className="shrink-0 w-full bg-white border-b border-gray-100 px-3.5 sm:px-8 lg:px-10 py-2.5 sm:py-3 flex items-center justify-between gap-2">
         {/* Logo & Portal Badge (Never Wraps) */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -1043,7 +1130,7 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
       </main>
 
       {/* ================= BOTTOM CLIENT / TRUST BAR (COMPACT 100VH) ================= */}
-      <footer className="shrink-0 w-full py-2.5 px-4 text-center border-t border-gray-100 bg-[#F4F6F8]/80 select-none">
+      <footer data-website-chrome className="shrink-0 w-full py-2.5 px-4 text-center border-t border-gray-100 bg-[#F4F6F8]/80 select-none">
         <div className="max-w-[1240px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-3 text-center sm:text-left">
           <div className="text-[10px] font-bold tracking-wider uppercase text-gray-500">
             POWERING 45,000+ BEDS ACROSS LEADING HOSTELS
@@ -1061,5 +1148,6 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
         </div>
       </footer>
     </div>
+    </>
   );
 }

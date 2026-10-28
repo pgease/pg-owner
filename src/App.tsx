@@ -23,6 +23,9 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsConditionsPage from "./pages/TermsConditionsPage";
 import ContactUsPage from "./pages/ContactUsPage";
 import Login from "./pages/Login";
+import { PublicAuthGate } from "./components/auth/PublicAuthGate";
+import { OfflineScreen } from "./components/layout/OfflineScreen";
+import NotificationsPage from "./pages/NotificationsPage";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import Structure from "./pages/Structure";
@@ -52,7 +55,6 @@ import ApiCatalogPage from "./pages/reference/ApiCatalogPage";
 import PublicListingPage from "./pages/property/PublicListingPage";
 import FeatureCataloguePage from "./pages/FeatureCataloguePage";
 import { TutorialProvider } from "./context/TutorialContext";
-import { authStorage } from "./api/http";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -72,39 +74,13 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <OfflineScreen />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
-          {/* Auth routes (no layout) - auto-redirect to dashboard if already authenticated */}
-          <Route
-            path="/"
-            element={
-              authStorage.getAccessToken() ? (
-                <Navigate to="/dashboard" replace />
-              ) : (
-                <Login />
-              )
-            }
-          />
-          <Route
-            path="/login"
-            element={
-              authStorage.getAccessToken() ? (
-                <Navigate to="/dashboard" replace />
-              ) : (
-                <Login />
-              )
-            }
-          />
-          <Route
-            path="/signup"
-            element={
-              authStorage.getAccessToken() ? (
-                <Navigate to="/dashboard" replace />
-              ) : (
-                <Login initialMode="signup" />
-              )
-            }
-          />
+          {/* Auth routes (no layout) — logged-in users go to dashboard; app shell shows splash first */}
+          <Route path="/" element={<PublicAuthGate><Login /></PublicAuthGate>} />
+          <Route path="/login" element={<PublicAuthGate><Login /></PublicAuthGate>} />
+          <Route path="/signup" element={<PublicAuthGate><Login initialMode="signup" /></PublicAuthGate>} />
           <Route
             path="/onboarding"
             element={
@@ -182,6 +158,7 @@ const App = () => (
                         <Route path="/audit-logs" element={<ActivityLogsPage />} />
                         <Route path="/settings/activity-logs" element={<ActivityLogsPage />} />
                         <Route path="/settings" element={<SettingsPage />} />
+                        <Route path="/notifications" element={<NotificationsPage />} />
                         <Route path="/settings/notifications" element={<SettingsPage />} />
                         <Route path="/support" element={<Support />} />
                         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />

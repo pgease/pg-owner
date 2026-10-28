@@ -37,7 +37,7 @@ import { authStorage } from "@/api/http";
 import { useTutorials } from "@/context/TutorialContext";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
-import { useComplaints, useRentCollectionDashboard } from "@/hooks/usePropertyOwnerQueries";
+import { useOwnerNotifications } from "@/hooks/useOwnerNotifications";
 import pgeaseIconColor from "@/assets/pgease-icon-color.png";
 import mascotRent from "@/assets/mascot/mascot-rent.png";
 import { cn } from "@/lib/utils";
@@ -153,15 +153,7 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
     localStorage.setItem("pgease_theme", isDark ? "dark" : "light");
   }, [isDark]);
 
-  const complaintsQuery = useComplaints(selectedPgId);
-  const rentPeriod = new Date();
-  const rentDashQuery = useRentCollectionDashboard(selectedPgId, rentPeriod.getMonth() + 1, rentPeriod.getFullYear());
-  const openComplaints = (Array.isArray(complaintsQuery.data) ? complaintsQuery.data : []).filter((c) => {
-    const status = String((c as { status?: string }).status || "").toLowerCase();
-    return status !== "resolved" && status !== "closed";
-  });
-  const unpaidCount = Array.isArray(rentDashQuery.data?.unpaidTenants) ? rentDashQuery.data.unpaidTenants.length : 0;
-  const unreadCount = openComplaints.length + unpaidCount;
+  const { items: notificationItems, unreadCount } = useOwnerNotifications();
 
   const handleLogout = () => {
     authStorage.clear();
@@ -225,7 +217,7 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
   return (
     <>
       {/* Header bar: fixed at the top of the app container, never scrolls */}
-      <header className="h-[64px] shrink-0 bg-gradient-to-r from-[#005555] via-[#005050] to-[#004848] text-white select-none z-20">
+      <header className="pgease-app-header hidden md:block h-[64px] shrink-0 bg-gradient-to-r from-[#005555] via-[#005050] to-[#004848] text-white select-none z-20">
         <div className="flex h-full items-center justify-between gap-1.5 sm:gap-4 px-2.5 sm:px-6">
           {/* Left section: Mobile menu + Mobile property switcher */}
           <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 shrink-0">
@@ -401,27 +393,32 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
                 </div>
                 ) : (
                 <div className="py-2 space-y-1">
-                  {openComplaints.slice(0, 3).map((c) => (
+                  {notificationItems
+                    .filter((n) => !n.read && n.id.startsWith("complaint:"))
+                    .slice(0, 3)
+                    .map((item) => (
                     <button
-                      key={c.id}
+                      key={item.id}
                       type="button"
                       onClick={() => navigate("/complaints")}
                       className="w-full text-left px-2 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
                     >
-                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">{c.subject || c.category || "Open complaint"}</p>
-                      <p className="text-[11px] text-slate-500">Complaint needs attention</p>
+                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">{item.title}</p>
+                      <p className="text-[11px] text-slate-500">{item.body}</p>
                     </button>
                   ))}
-                  {unpaidCount > 0 && (
+                  {notificationItems.some((n) => !n.read && n.id.startsWith("rent-dues:")) ? (
                     <button
                       type="button"
                       onClick={() => navigate("/rent-payments/dues")}
                       className="w-full text-left px-2 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
                     >
-                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-100">{unpaidCount} rent {unpaidCount === 1 ? "due" : "dues"}</p>
+                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-100">
+                        {notificationItems.find((n) => n.id.startsWith("rent-dues:"))?.title}
+                      </p>
                       <p className="text-[11px] text-slate-500">Open the rent register</p>
                     </button>
-                  )}
+                  ) : null}
                 </div>
                 )}
                 <div className="pt-2 border-t border-slate-100 dark:border-slate-800">

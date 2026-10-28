@@ -145,7 +145,7 @@ export const EaseBuddyAI: React.FC<{
     <>
       {/* Floating Action Button - Positioned at bottom: 24px, right: 24px */}
       {!isOpen && (
-        <div className="fixed bottom-24 right-5 z-30 hidden sm:block">
+        <div className="fixed bottom-24 right-5 z-30 hidden md:block">
           <button
             type="button"
             onClick={() => setIsOpen(true)}
