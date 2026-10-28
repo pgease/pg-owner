@@ -31,6 +31,8 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const location = useLocation();
   const { isExpired, isLoading } = useEntitlements();
   const isStaff = authStorage.isStaff();
+  const isMobileDashboardHome =
+    location.pathname === "/dashboard" || location.pathname === "/kpis" || location.pathname === "/";
 
   // If user is staff and the owner's subscription has expired, enforce full operational lockout.
   if (!isLoading && isExpired && isStaff) {
@@ -70,12 +72,15 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           onSidebarToggle={() => setCollapsed((v) => !v)}
           isSidebarCollapsed={collapsed}
         />
-        <MobileTopBar />
+        {isMobileDashboardHome ? null : <MobileTopBar />}
         <SubscriptionBanner />
         <main
           id="main-content"
           className={cn(
-            "pgease-app-main flex-1 overflow-y-auto overflow-x-hidden overscroll-contain bg-[#F8FAFC] dark:bg-slate-950 md:rounded-tl-[32px] md:shadow-xl p-3 sm:p-4 md:p-6 transition-colors",
+            "pgease-app-main flex-1 overflow-y-auto overflow-x-hidden overscroll-contain dark:bg-slate-950 md:rounded-tl-[32px] md:shadow-xl transition-colors",
+            isMobileDashboardHome
+              ? "bg-white p-0 md:bg-[#F8FAFC] md:p-6"
+              : "bg-[#F8FAFC] p-3 sm:p-4 md:p-6",
             shouldHideMobileTabBar(location.pathname)
               ? "pb-6 md:pb-28"
               : "pb-[calc(72px+var(--safe-bottom))] md:pb-28",

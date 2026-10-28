@@ -53,6 +53,13 @@
   --figma-sign-phone-h: 56px;
   --figma-sign-country-w: 84px;
 
+  /* Dashboard option 1 (1594:7237) — colours measured from prototype screenshot */
+  --figma-dash-header-bg: #f0ffff;
+  --figma-dash-banner: #184040;
+  --figma-dash-hero: #f2fefe;
+  --figma-dash-summary: #f5f6fa;
+  --figma-dash-cta-dash: #a7d5d5;
+
   /* Splash device */
   --figma-screen-width: 390px;
   --figma-screen-height: 884px;

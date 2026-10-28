@@ -20,6 +20,7 @@ import { CelebrationDialog } from "@/components/CelebrationDialog";
 import { TrialExpiredGateModal } from "@/components/common/TrialExpiredGateModal";
 import { formatInr } from "@/lib/rentDashboard";
 import { useDashboardData } from "@/components/dashboard/useDashboardData";
+import { MobileDashboard } from "@/components/dashboard/MobileDashboard";
 import { AttentionList } from "@/components/dashboard/AttentionList";
 import { OccupancyCard } from "@/components/dashboard/OccupancyCard";
 import { PendingRentCard } from "@/components/dashboard/PendingRentCard";
@@ -67,21 +68,25 @@ const Dashboard = () => {
 
   if (!selectedPgId) {
     return (
-      <div className="mx-auto max-w-lg pt-10">
-        <div className="register-card p-6">
-          <EmptyState
-            icon={<Building2 />}
-            title={list.length ? "Select a property to continue" : "Add your first property"}
-            description={
-              list.length
-                ? "Use the property switcher in the top bar to choose which PG you want to manage."
-                : "Set up your PG once — rooms, beds and tenants — and this dashboard will show what needs your attention every day."
-            }
-            action={!list.length ? <Button onClick={handleAddProperty}>Add property</Button> : undefined}
-          />
+      <CanAccessPage permission="dashboard_view">
+        <MobileDashboard />
+        <div className="mx-auto hidden max-w-lg pt-10 md:block">
+          <div className="register-card p-6">
+            <EmptyState
+              icon={<Building2 />}
+              title={list.length ? "Select a property to continue" : "Add your first property"}
+              description={
+                list.length
+                  ? "Use the property switcher in the top bar to choose which PG you want to manage."
+                  : "Set up your PG once — rooms, beds and tenants — and this dashboard will show what needs your attention every day."
+              }
+              action={!list.length ? <Button onClick={handleAddProperty}>Add property</Button> : undefined}
+            />
+          </div>
         </div>
+        <CelebrationDialog open={celebrationOpen} onClose={() => setCelebrationOpen(false)} pgName={celebrationPgName} />
         <TrialExpiredGateModal open={gateModalOpen} onOpenChange={setGateModalOpen} featureName="Add New Property" />
-      </div>
+      </CanAccessPage>
     );
   }
 
@@ -98,7 +103,8 @@ const Dashboard = () => {
 
   return (
     <CanAccessPage permission="dashboard_view">
-      <div className="space-y-6 pb-6">
+      <MobileDashboard />
+      <div className="hidden space-y-6 pb-6 md:block">
         <PageHeader
           title={selectedPg?.name ?? "Dashboard"}
           description={selectedPg?.address || `Overview for ${currentMonthName} ${rent.year}`}
@@ -195,10 +201,9 @@ const Dashboard = () => {
             <RoomGrid data={data} />
           </>
         )}
-
-        <CelebrationDialog open={celebrationOpen} onClose={() => setCelebrationOpen(false)} pgName={celebrationPgName} />
-        <TrialExpiredGateModal open={gateModalOpen} onOpenChange={setGateModalOpen} featureName="PG Management" />
       </div>
+      <CelebrationDialog open={celebrationOpen} onClose={() => setCelebrationOpen(false)} pgName={celebrationPgName} />
+      <TrialExpiredGateModal open={gateModalOpen} onOpenChange={setGateModalOpen} featureName="PG Management" />
     </CanAccessPage>
   );
 };
