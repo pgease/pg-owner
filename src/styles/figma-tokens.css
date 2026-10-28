@@ -1,0 +1,67 @@
+/* Figma "Pg Ease — Final designs" + "Color guide" tokens.
+   Source: file dVkJs0fQquOKheqeV3pshp, session 2026-10-28.
+   These variables are the Figma values. Desktop visual tokens in tokens.css stay
+   unchanged. Mobile (<768px) may consume --figma-* without rewriting desktop. */
+
+:root {
+  /* Color guide — Primary */
+  --figma-primary: #008080;
+  --figma-primary-light: #e8ffff;
+
+  /* Color guide — Gray scale (painted swatch fills) */
+  --figma-gray-900: #080808;
+  --figma-gray-800: #101010;
+  --figma-gray-700: #181818;
+  --figma-gray-600: #202020;
+  --figma-gray-500: #282828;
+  --figma-gray-400: #464646;
+  --figma-gray-300: #636363;
+  --figma-gray-200: #818181;
+  --figma-gray-100: #9e9e9e;
+  /* Swatch labelled ADADAD; node fill is #dfdfdf. Use the painted fill. */
+  --figma-gray-50: #dfdfdf;
+  --figma-white: #ffffff;
+
+  /* Color guide — Accent */
+  --figma-success: #187d3f;
+  --figma-success-light: #d2fdc0;
+  --figma-warning: #ff8800;
+  --figma-warning-light: #ffe7cc;
+  --figma-error: #ff3d00;
+  --figma-error-light: #ffefef;
+
+  /* Paint style "liner" */
+  --figma-gradient-start: #008080;
+  --figma-gradient-end: #001a1a;
+
+  /* Splash buttons (frame 430:12286) — 358×60, radius 46 */
+  --figma-radius-pill: 46px;
+  /* Form primary buttons (enter-number screens) — 342×60, radius 40 */
+  --figma-radius-button: 40px;
+  --figma-button-height: 60px;
+  --figma-button-secondary: #e5e5e5;
+
+  /* Splash device */
+  --figma-screen-width: 390px;
+  --figma-screen-height: 884px;
+
+  /* Fonts actually used on Final designs splash (430:12286):
+     title Outfit Medium 24; body/buttons Euclid Circular A Regular/Medium 14/16.
+     Color guide typescale instead lists Gilroy (display) + Satoshi (body).
+     Inter stays the applied UI font until that conflict is resolved. */
+  --figma-font-splash-title: "Outfit", sans-serif;
+  --figma-font-splash-body: "Euclid Circular A", sans-serif;
+  --figma-font-guide-display: "Gilroy", sans-serif;
+  --figma-font-guide-body: "Satoshi", sans-serif;
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+@media (max-width: 767.98px) {
+  :root {
+    --radius-button-mobile: var(--figma-radius-pill);
+  }
+}

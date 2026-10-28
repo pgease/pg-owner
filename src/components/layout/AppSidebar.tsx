@@ -827,7 +827,7 @@ const AppSidebar = ({ collapsed, onToggle, mobileOpen, onMobileClose }: AppSideb
         }}
         title={collapsed ? "Click to expand sidebar" : undefined}
         className={cn(
-          "hidden md:flex h-screen shrink-0 flex-col bg-gradient-to-b from-[#005555] via-[#004b4b] to-[#003d3d] text-white transition-[width] duration-200 shadow-xl select-none z-30",
+          "hidden md:flex h-dvh shrink-0 flex-col bg-gradient-to-b from-[#005555] via-[#004b4b] to-[#003d3d] text-white transition-[width] duration-200 shadow-xl select-none z-30",
           collapsed ? "w-[64px] cursor-pointer hover:brightness-105" : "w-[260px]",
         )}
       >

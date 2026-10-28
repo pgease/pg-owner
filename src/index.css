@@ -3,6 +3,7 @@
 
 /* ✅ Design System Tokens */
 @import './styles/tokens.css';
+@import './styles/figma-tokens.css';
 
 /* ✅ Tailwind layers */
 @tailwind base;
@@ -14,11 +15,25 @@
     @apply border-border;
   }
 
+  html {
+    height: 100%;
+    overflow-x: hidden;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', 'Noto Sans Devanagari', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     color: var(--gray-900);
     background-color: var(--gray-50);
+    min-height: 100dvh;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #root {
+    min-height: 100dvh;
+    overflow-x: hidden;
+    max-width: 100%;
   }
 
   /* Universal tabular numerals for amounts, metrics, tables, dates */
@@ -130,4 +145,37 @@
 .dark h1,
 .dark .text-page-title {
   color: #f8fafc;
+}
+
+/* ===== Mobile (<768px) base — Figma iPhone shell, desktop unchanged ===== */
+@media (max-width: 767.98px) {
+  button,
+  [role="button"],
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  select,
+  textarea {
+    min-height: 44px;
+  }
+
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  button,
+  [role="button"] {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .pgease-app-header {
+    padding-top: var(--safe-top);
+    min-height: calc(64px + var(--safe-top));
+  }
+}
+
+/* Native WebView / Capacitor wrapper (?app=1 or UA PGEaseApp) */
+html.pgease-native [data-website-chrome] {
+  display: none !important;
 }

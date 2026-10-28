@@ -23,6 +23,9 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsConditionsPage from "./pages/TermsConditionsPage";
 import ContactUsPage from "./pages/ContactUsPage";
 import Login from "./pages/Login";
+import { PublicAuthGate } from "./components/auth/PublicAuthGate";
+import { OfflineScreen } from "./components/layout/OfflineScreen";
+import NotificationsPage from "./pages/NotificationsPage";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import Structure from "./pages/Structure";
@@ -71,12 +74,13 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <OfflineScreen />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           {/* Auth routes (no layout) */}
-          <Route path="/" element={<Login />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Login initialMode="signup" />} />
+          <Route path="/" element={<PublicAuthGate><Login /></PublicAuthGate>} />
+          <Route path="/login" element={<PublicAuthGate><Login /></PublicAuthGate>} />
+          <Route path="/signup" element={<PublicAuthGate><Login initialMode="signup" /></PublicAuthGate>} />
           <Route
             path="/onboarding"
             element={
@@ -154,6 +158,7 @@ const App = () => (
                         <Route path="/audit-logs" element={<ActivityLogsPage />} />
                         <Route path="/settings/activity-logs" element={<ActivityLogsPage />} />
                         <Route path="/settings" element={<SettingsPage />} />
+                        <Route path="/notifications" element={<NotificationsPage />} />
                         <Route path="/settings/notifications" element={<SettingsPage />} />
                         <Route path="/support" element={<Support />} />
                         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />

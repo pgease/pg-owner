@@ -469,9 +469,9 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
   };
 
   return (
-    <div className="min-h-screen lg:h-screen lg:max-h-screen lg:overflow-hidden flex flex-col justify-between bg-[#F8FAFB] text-[#18212B] select-none">
+    <div className="min-h-dvh lg:h-dvh lg:max-h-dvh lg:overflow-hidden flex flex-col justify-between bg-[#F8FAFB] text-[#18212B] select-none overflow-x-hidden">
       {/* ================= TOP NAVBAR ================= */}
-      <header className="shrink-0 w-full bg-white border-b border-gray-100 px-3.5 sm:px-8 lg:px-10 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+      <header data-website-chrome className="shrink-0 w-full bg-white border-b border-gray-100 px-3.5 sm:px-8 lg:px-10 py-2.5 sm:py-3 flex items-center justify-between gap-2">
         {/* Logo & Portal Badge (Never Wraps) */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -995,7 +995,7 @@ export default function Login({ initialMode: _initialMode }: { initialMode?: str
       </main>
 
       {/* ================= BOTTOM CLIENT / TRUST BAR (COMPACT 100VH) ================= */}
-      <footer className="shrink-0 w-full py-2.5 px-4 text-center border-t border-gray-100 bg-[#F4F6F8]/80 select-none">
+      <footer data-website-chrome className="shrink-0 w-full py-2.5 px-4 text-center border-t border-gray-100 bg-[#F4F6F8]/80 select-none">
         <div className="max-w-[1240px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-3 text-center sm:text-left">
           <div className="text-[10px] font-bold tracking-wider uppercase text-gray-500">
             POWERING 45,000+ BEDS ACROSS LEADING HOSTELS
