@@ -1,6 +1,18 @@
-import { type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+export function useIsMobile() {
+  const [mobile, setMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767.98px)");
+    const apply = () => setMobile(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+  return mobile;
+}
 
 export function MobileSearch({
   value,

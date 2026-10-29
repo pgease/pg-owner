@@ -73,6 +73,7 @@ import { amountFromRow, formatInr, parseRentTenantRow } from "@/lib/rentDashboar
 import { SharePaymentLinkDialog } from "@/components/tenants/SharePaymentLinkDialog";
 import { formatDate, formatINR, formatShortDate } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import { MobileCard, useIsMobile } from "@/components/mobile/MobileUi";
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
@@ -160,6 +161,7 @@ export const RentPayments = () => {
   const location = useLocation();
   const { selectedPgId, properties } = useApp();
   const entitlements = useEntitlements();
+  const isMobile = useIsMobile();
   const [trialExpiredOpen, setTrialExpiredOpen] = useState(false);
   const [trialExpiredFeature, setTrialExpiredFeature] = useState("");
 
@@ -823,6 +825,7 @@ export const RentPayments = () => {
       <div className="space-y-5 pb-8 max-w-7xl">
         {/* Main Header */}
         <PageHeader
+          className="hidden md:block"
           title={activeTab === "history" ? "Payment History Ledger" : "Rent & Payments"}
           description={
             activeTab === "history"
@@ -998,7 +1001,7 @@ export const RentPayments = () => {
                 className="w-full sm:w-72"
               />
 
-              <div className="flex items-center gap-2 self-end sm:self-auto">
+              <div className="hidden md:flex items-center gap-2 self-end sm:self-auto">
                 {/* Density Toggle */}
                 <div className="flex rounded-md border border-[var(--gray-300)] p-0.5 bg-white">
                   <button
@@ -1041,7 +1044,68 @@ export const RentPayments = () => {
               </div>
             </div>
 
+            <div className="space-y-2.5 md:hidden">
+              {filteredRows.map((row) => (
+                <MobileCard key={row.id}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-[16px] font-semibold text-[#101010]">{row.tenantName}</p>
+                      <p className="text-[13px] text-[#636363]">
+                        Room {row.roomNumber} · {formatINR(row.monthlyRent)}
+                      </p>
+                    </div>
+                    <span
+                      className={cn(
+                        "rounded-full px-2 py-0.5 text-[11px] font-medium",
+                        row.status === "paid"
+                          ? "bg-[#D2FDC0] text-[#187D3F]"
+                          : row.status === "verification_pending"
+                            ? "bg-[#FFE7CC] text-[#FF8800]"
+                            : "bg-[#FFEFEF] text-[#B42318]",
+                      )}
+                    >
+                      {row.status === "paid"
+                        ? "Paid"
+                        : row.status === "verification_pending"
+                          ? "UTR review"
+                          : row.status === "overdue"
+                            ? `Overdue ${row.overdueDays}d`
+                            : row.amountDue > 0
+                              ? `Due ${formatINR(row.amountDue)}`
+                              : "Pending"}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    {row.status === "verification_pending" ? (
+                      <button
+                        type="button"
+                        className="flex h-11 flex-1 items-center justify-center rounded-full bg-[#FFE7CC] text-[13px] font-medium text-[#FF8800]"
+                        onClick={() => {
+                          const v = verifications.find((item) => item.tenantId === row.tenantId || item.tenantName === row.tenantName);
+                          if (v) {
+                            setActiveVerification(v);
+                            setVerificationDrawerOpen(true);
+                          }
+                        }}
+                      >
+                        Review UTR
+                      </button>
+                    ) : row.status !== "paid" ? (
+                      <button
+                        type="button"
+                        className="flex h-11 flex-1 items-center justify-center rounded-full bg-[#008080] text-[13px] font-medium text-white"
+                        onClick={() => handleOpenRecordPayment(row)}
+                      >
+                        Record
+                      </button>
+                    ) : null}
+                  </div>
+                </MobileCard>
+              ))}
+            </div>
+
             {/* Rent Register DataTable */}
+            <div className="hidden md:block">
             <DataTable
               columns={[
                 {
@@ -1238,6 +1302,7 @@ export const RentPayments = () => {
                 />
               }
             />
+            </div>
           </div>
         )}
 
@@ -1909,7 +1974,7 @@ export const RentPayments = () => {
 
         {/* Payment Verification Proof Drawer (Lite Plan UTR Approval Desk) */}
         <Sheet open={verificationDrawerOpen} onOpenChange={setVerificationDrawerOpen}>
-          <SheetContent side="right" className="w-full sm:max-w-[480px] p-0 flex flex-col bg-white border-l border-[var(--gray-200)] shadow-overlay">
+          <SheetContent side={isMobile ? "bottom" : "right"} className="w-full sm:max-w-[480px] p-0 flex flex-col bg-white border-l border-[var(--gray-200)] shadow-overlay max-h-[90dvh] rounded-t-[24px] md:rounded-none md:max-h-none">
             <SheetHeader className="p-4 sm:p-5 border-b border-[var(--gray-200)] bg-[var(--gray-50)] text-left shrink-0">
               <SheetTitle className="text-base font-semibold text-[var(--gray-900)] flex items-center gap-2">
                 <ShieldCheck className="h-5 w-5 text-amber-600" /> Payment Proof Verification
