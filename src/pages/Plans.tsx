@@ -134,8 +134,8 @@ export default function Plans() {
       "24/7 Priority Support",
     ],
     cycles: [
-      { cycle: "monthly" as const, pricePerBed: 29, strikePerBed: 49, period: "per bed / month" },
-      { cycle: "yearly" as const, pricePerBed: 290, strikePerBed: 490, period: "per bed / year", note: "2 months free" },
+      { cycle: "monthly" as const, pricePerBed: 49, period: "per bed / month" },
+      { cycle: "yearly" as const, pricePerBed: 490, period: "per bed / year", note: "2 months free" },
     ],
   };
   const catalog = plansData?.catalog?.cycles?.length ? plansData.catalog : STATIC_CATALOG;
@@ -226,7 +226,7 @@ export default function Plans() {
   return (
     <div className="max-w-xl mx-auto space-y-5 pb-16">
       <div>
-        <h1 className="text-2xl font-bold text-[#18212B]">Your plan</h1>
+        <h1 className="hidden md:block text-2xl font-bold text-[#18212B]">Your plan</h1>
         <p className="mt-1 text-sm text-[#556270]">Two steps. First pay for PG Ease. Then choose how tenants pay you.</p>
         <div className="mt-3">
           {subAccess.isTrial ? (
@@ -305,7 +305,7 @@ export default function Plans() {
         <div className="mt-2 grid grid-cols-2 gap-2">
           <button type="button" onClick={() => setBillingCycle("monthly")} className={`rounded-lg border p-3 text-left ${billingCycle === "monthly" ? "border-[#008080] bg-[#E8F4F4]" : "border-[#E2E6EA] bg-white"}`}>
             <div className="text-sm font-bold text-[#18212B]">Monthly</div>
-            <div className="text-xs text-[#556270]">₹{catalog?.cycles?.find((c) => c.cycle === "monthly")?.pricePerBed ?? 29} per bed</div>
+            <div className="text-xs text-[#556270]">₹{catalog?.cycles?.find((c) => c.cycle === "monthly")?.pricePerBed ?? 49} per bed</div>
           </button>
           <button type="button" onClick={() => setBillingCycle("annual")} className={`rounded-lg border p-3 text-left ${billingCycle === "annual" ? "border-[#008080] bg-[#E8F4F4]" : "border-[#E2E6EA] bg-white"}`}>
             <div className="text-sm font-bold text-[#18212B]">Yearly</div>
