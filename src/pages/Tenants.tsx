@@ -67,6 +67,7 @@ import {
 } from "@/lib/tenantDisplay";
 import { formatDate, formatINR } from "@/lib/formatters";
 import { TenantDetailDrawer } from "@/components/tenants/TenantDetailDrawer";
+import { MobileTenantsList } from "@/components/tenants/MobileTenantsList";
 import { cn } from "@/lib/utils";
 
 function phoneDigits(phone: string): string {
@@ -457,7 +458,19 @@ const Tenants = () => {
 
   return (
     <CanAccessPage permission="tenant_view">
-      <div className="space-y-5 pb-8">
+      <MobileTenantsList
+        searchQuery={searchQuery}
+        onSearch={setSearchQuery}
+        statusFilter={statusFilter}
+        onStatus={setStatusFilter}
+        statusCounts={statusCounts}
+        tenants={filteredTenants}
+        loading={tenantsQuery.isLoading}
+        paidThisMonth={paidThisMonth}
+        onOpenTenant={(t) => navigate(`/tenants/${t.id}`)}
+        onAddTenant={handleAddTenantClick}
+      />
+      <div className="hidden space-y-5 pb-8 md:block">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
@@ -1168,12 +1181,12 @@ const Tenants = () => {
           </DialogContent>
         </Dialog>
 
-        <TrialExpiredGateModal
-          open={trialExpiredOpen}
-          onOpenChange={setTrialExpiredOpen}
-          featureName={trialExpiredFeature}
-        />
       </div>
+      <TrialExpiredGateModal
+        open={trialExpiredOpen}
+        onOpenChange={setTrialExpiredOpen}
+        featureName={trialExpiredFeature}
+      />
     </CanAccessPage>
   );
 };
