@@ -9,7 +9,6 @@ import {
   Plus,
   Search,
   Settings,
-  Shield,
   TriangleAlert,
   UserPlus,
   Users,
@@ -257,12 +256,6 @@ export function MobileDashboard() {
             label="Complaints"
             value={dashValue(data.loading.complaints ? undefined : complaintsCount, data.loading.complaints)}
             onClick={() => navigate("/complaints")}
-          />
-          <SummaryCard
-            icon={<Shield className="h-4 w-4" />}
-            label="Pending Security"
-            value="—"
-            onClick={() => navigate("/tenants")}
           />
         </div>
       </section>

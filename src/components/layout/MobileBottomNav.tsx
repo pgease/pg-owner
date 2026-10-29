@@ -7,9 +7,9 @@ import { getActiveMobileTab, shouldHideMobileTabBar } from "@/lib/mobileRoutes";
 
 const TABS = [
   { id: "home" as const, to: "/dashboard", label: "Home", icon: Home },
+  { id: "mypg" as const, to: "/my-pgs", label: "My PG", icon: Building2 },
   { id: "tenants" as const, to: "/tenants", label: "Tenants", icon: Users },
   { id: "rent" as const, to: "/rent-payments", label: "Rent", icon: IndianRupee },
-  { id: "mypg" as const, to: "/my-pgs", label: "My PG", icon: Building2 },
 ];
 
 const MENU_LINKS = [
