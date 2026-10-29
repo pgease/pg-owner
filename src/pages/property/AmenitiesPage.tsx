@@ -188,7 +188,7 @@ export const AmenitiesPage = () => {
       <div className="space-y-6 animate-fade-in max-w-6xl pb-16">
         {/* Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/70 pb-4">
-          <div className="space-y-1">
+          <div className="hidden md:block space-y-1">
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"

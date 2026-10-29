@@ -14,7 +14,7 @@ export const BankAccountPage = () => {
   return (
     <CanAccessPage permission="room_view">
       <div className="space-y-6 animate-fade-in max-w-6xl pb-12">
-        <div className="flex items-center justify-between flex-wrap gap-4 border-b border-border/70 pb-4">
+        <div className="hidden md:flex items-center justify-between flex-wrap gap-4 border-b border-border/70 pb-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Button

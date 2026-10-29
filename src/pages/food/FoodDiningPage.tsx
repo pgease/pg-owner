@@ -312,7 +312,7 @@ export default function FoodDiningPage() {
               />
             ) : (
               <>
-                <section className="rounded-md border border-[var(--brand-100)] bg-[var(--brand-50)] p-4">
+                <section className="rounded-[16px] md:rounded-md border border-[var(--brand-100)] bg-[var(--brand-50)] p-4">
                   <p className="text-xs font-medium uppercase tracking-wide text-[var(--brand-700)]">Today · {DAYS_MAP.find((d) => d.dayOfWeek === today)?.label}</p>
                   <div className="mt-3 grid gap-3 md:grid-cols-3">
                     {MEALS.map((meal) => {
@@ -342,7 +342,7 @@ export default function FoodDiningPage() {
                   </div>
                 </section>
 
-                <section className="overflow-hidden rounded-md border border-[var(--gray-200)] bg-white">
+                <section className="overflow-hidden rounded-[16px] md:rounded-md border border-[var(--gray-200)] bg-white">
                   <div className="border-b border-[var(--gray-200)] px-4 py-3">
                     <h2 className="text-sm font-semibold text-[var(--gray-900)]">This week</h2>
                     <p className="text-xs text-[var(--gray-500)]">Tap a meal to change the menu or the time.</p>

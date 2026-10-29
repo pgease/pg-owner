@@ -16,6 +16,7 @@ export function getParentRoute(pathname: string): string {
   if (pathname.startsWith("/tenants/")) return "/tenants";
   if (pathname.startsWith("/rent-payments/")) return "/rent-payments";
   if (pathname.startsWith("/my-pgs/")) return "/my-pgs";
+  if (pathname.startsWith("/post-pg") || pathname.startsWith("/public-listing") || pathname === "/bank") return "/my-pgs";
   if (pathname.startsWith("/team/")) return "/team";
   if (pathname.startsWith("/settings")) return "/settings";
   return "/dashboard";
@@ -31,6 +32,14 @@ const TITLE_RULES: { test: (path: string) => boolean; title: string }[] = [
   { test: (p) => p.startsWith("/tenants/") && p !== "/tenants", title: "Tenant" },
   { test: (p) => p === "/tenants" || p.startsWith("/leads"), title: "Tenants" },
   { test: (p) => p.startsWith("/rent-payments"), title: "Rent" },
+  { test: (p) => p.startsWith("/my-pgs/structure") || p.startsWith("/my-pgs/rooms"), title: "Rooms & Beds" },
+  { test: (p) => p.startsWith("/my-pgs/amenities"), title: "Amenities" },
+  { test: (p) => p.startsWith("/my-pgs/restrictions"), title: "House Rules" },
+  { test: (p) => p.startsWith("/my-pgs/wifi"), title: "WiFi" },
+  { test: (p) => p.startsWith("/my-pgs/notices"), title: "Notices" },
+  { test: (p) => p.startsWith("/my-pgs/bank") || p === "/bank", title: "Bank" },
+  { test: (p) => p.startsWith("/post-pg") || p.includes("public-listing"), title: "Public Listing" },
+  { test: (p) => p.startsWith("/onboarding"), title: "Add PG" },
   { test: (p) => p.startsWith("/my-pgs"), title: "My PG" },
   { test: (p) => p.startsWith("/complaints"), title: "Complaints" },
   { test: (p) => p.startsWith("/food"), title: "Food" },

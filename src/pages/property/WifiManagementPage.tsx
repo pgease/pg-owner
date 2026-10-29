@@ -443,7 +443,7 @@ export default function WifiManagementPage() {
       <div className="w-full max-w-6xl mx-auto space-y-6 animate-fade-in pb-24">
         {/* TOP HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
-          <div>
+          <div className="hidden md:block">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400">
                 <Wifi className="h-6 w-6" />

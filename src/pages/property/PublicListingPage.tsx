@@ -761,7 +761,7 @@ export default function PublicListingPage() {
           </span>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-page-title">Public Listing</h1>
+              <h1 className="hidden md:block text-page-title">Public Listing</h1>
               <Badge
                 className={
                   isPublished
