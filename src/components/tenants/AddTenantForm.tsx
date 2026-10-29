@@ -871,7 +871,7 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
   );
 
   return (
-    <div className="space-y-6 w-full pb-6">
+    <div className="space-y-6 w-full pb-28 md:pb-6">
       {/* HEADER + STEPPER */}
       <div className="space-y-4">
         <div className="space-y-1 hidden md:block">
@@ -881,7 +881,20 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
           </p>
         </div>
 
-        <div className="flex items-center">
+        <div className="md:hidden space-y-2">
+          <p className="text-[13px] text-[#636363]">Step {step} of 3</p>
+          <p className="text-[18px] font-semibold text-[#101010]">{STEPS[step - 1].label}</p>
+          <div className="flex gap-1.5" aria-hidden>
+            {STEPS.map((s) => (
+              <div
+                key={s.number}
+                className={`h-1 flex-1 rounded-full ${step >= s.number ? "bg-[#008080]" : "bg-[#E5E5E5]"}`}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="hidden md:flex items-center">
           {STEPS.map((s, idx) => (
             <div key={s.number} className="flex items-center flex-1 last:flex-none">
               <div className="flex flex-col items-center gap-1.5 shrink-0">
@@ -914,11 +927,11 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
 
       {/* STEP 1: TENANT DETAILS */}
       {step === 1 && (
-        <Card className="border border-border/80 shadow-sm overflow-hidden">
-          <CardHeader className="pb-3 border-b bg-muted/10">
+        <Card className="border-0 shadow-none md:border md:border-border/80 md:shadow-sm overflow-hidden">
+          <CardHeader className="hidden md:block pb-3 border-b bg-muted/10">
             <CardTitle className="text-sm font-bold text-foreground">Tenant Details</CardTitle>
           </CardHeader>
-          <CardContent className="p-5 space-y-5">
+          <CardContent className="p-0 md:p-5 space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>
@@ -1580,11 +1593,11 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
 
       {/* STEP 2: STAY DETAILS */}
       {step === 2 && (
-        <Card className="border border-border/80 shadow-sm overflow-hidden">
-          <CardHeader className="pb-3 border-b bg-muted/10">
+        <Card className="border-0 shadow-none md:border md:border-border/80 md:shadow-sm overflow-hidden">
+          <CardHeader className="hidden md:block pb-3 border-b bg-muted/10">
             <CardTitle className="text-sm font-bold text-foreground">Stay Details</CardTitle>
           </CardHeader>
-          <CardContent className="p-5 space-y-5">
+          <CardContent className="p-0 md:p-5 space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Stay Type</Label>
@@ -1824,14 +1837,36 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
 
       {/* STEP 3: PAYMENT DETAILS */}
       {step === 3 && (
-        <Card className="border border-border/80 shadow-sm overflow-hidden">
-          <CardHeader className="pb-3 border-b bg-muted/10">
+        <Card className="border-0 shadow-none md:border md:border-border/80 md:shadow-sm overflow-hidden">
+          <CardHeader className="hidden md:block pb-3 border-b bg-muted/10">
             <CardTitle className="text-sm font-bold text-foreground">Payment Details</CardTitle>
           </CardHeader>
-          <CardContent className="p-5 space-y-5">
+          <CardContent className="p-0 md:p-5 space-y-5">
             <div className="space-y-3">
               <h4 className="text-sm font-bold text-foreground">Opening Balance</h4>
-              <div className="rounded-lg border overflow-hidden">
+              <div className="md:hidden space-y-3">
+                {[
+                  { label: rentDueType, dueFor: rentDueFor, due: rentDueAmt, setDue: setRentDueAmt, coll: rentCollAmt, setColl: setRentCollAmt },
+                  { label: "Security Deposit", dueFor: "One Time", due: depositDueAmt, setDue: setDepositDueAmt, coll: depositCollAmt, setColl: setDepositCollAmt },
+                  { label: "Joining Fee", dueFor: "One Time", due: joiningDueAmt, setDue: setJoiningDueAmt, coll: joiningCollAmt, setColl: setJoiningCollAmt },
+                ].map((row) => (
+                  <div key={row.label} className="rounded-[16px] border border-[#E5E5E5] bg-white p-3.5 space-y-2">
+                    <p className="text-[15px] font-semibold text-[#101010]">{row.label}</p>
+                    <p className="text-[12px] text-[#636363]">{row.dueFor}</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-[12px] text-[#636363]">Due (₹)</Label>
+                        <Input type="number" value={row.due} onChange={(e) => row.setDue(e.target.value)} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[12px] text-[#636363]">Collected (₹)</Label>
+                        <Input type="number" value={row.coll} onChange={(e) => row.setColl(e.target.value)} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="hidden md:block rounded-lg border overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-muted/50 border-b">
@@ -1971,14 +2006,14 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
       {/* WIZARD NAVIGATION */}
       {showFooter && (
         <div className="flex justify-between items-center gap-3 border-t bg-white pt-4 md:static md:bg-transparent fixed inset-x-0 bottom-0 z-30 px-4 pb-[calc(12px+var(--safe-bottom))] md:px-0 md:pb-0">
-          <div>
+          <div className="flex-1 md:flex-none">
             {step > 1 ? (
-              <Button type="button" variant="outline" onClick={goBack}>
+              <Button type="button" variant="outline" onClick={goBack} className="w-full h-14 rounded-full md:h-10 md:w-auto md:rounded-md">
                 <ChevronLeft className="h-4 w-4 mr-1" /> Back
               </Button>
             ) : (
               onCancel && (
-                <Button type="button" variant="outline" onClick={onCancel}>
+                <Button type="button" variant="outline" onClick={onCancel} className="w-full h-14 rounded-full md:h-10 md:w-auto md:rounded-md">
                   Cancel
                 </Button>
               )
@@ -1988,7 +2023,7 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
           {step < 3 ? (
             <Button
               type="button"
-              className="bg-teal-600 hover:bg-teal-700 text-white min-w-32"
+              className="flex-[2] h-14 rounded-full bg-[#008080] hover:bg-[#006666] text-white md:flex-none md:min-w-32 md:h-10 md:rounded-md md:bg-teal-600 md:hover:bg-teal-700"
               onClick={goNext}
             >
               Continue <ChevronRight className="h-4 w-4 ml-1" />
@@ -1996,7 +2031,7 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
           ) : (
             <Button
               type="button"
-              className="bg-teal-600 hover:bg-teal-700 text-white min-w-32"
+              className="flex-[2] h-14 rounded-full bg-[#008080] hover:bg-[#006666] text-white md:flex-none md:min-w-32 md:h-10 md:rounded-md md:bg-teal-600 md:hover:bg-teal-700"
               onClick={handleInviteTenant}
               disabled={submitting || !!stepOneError || !!stepTwoError}
             >
