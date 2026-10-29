@@ -28,8 +28,8 @@ export default function AddTenantPage() {
 
   return (
     <CanAccessPage permission="tenant_add">
-      <div className="w-full max-w-6xl mx-auto space-y-6 animate-fade-in pb-24">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="w-full max-w-6xl mx-auto space-y-6 animate-fade-in pb-24 md:pb-24">
+        <div className="hidden md:flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" className="shrink-0" asChild>
               <Link to="/tenants" aria-label="Back to tenants">
@@ -94,12 +94,12 @@ export default function AddTenantPage() {
             </CardContent>
           </Card>
         ) : (
-          <Card className="border-border/80 shadow-sm">
-            <CardHeader className="border-b bg-muted/30">
+          <Card className="border-0 shadow-none md:border md:border-border/80 md:shadow-sm">
+            <CardHeader className="hidden border-b bg-muted/30 md:block">
               <CardTitle className="text-lg">Tenant & allocation</CardTitle>
               <CardDescription>Contact details, rent, and room assignment for the selected property.</CardDescription>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="p-0 pt-0 md:p-6 md:pt-6">
               <AddTenantForm onSuccess={handleSuccess} onCancel={() => navigate("/tenants")} />
             </CardContent>
           </Card>

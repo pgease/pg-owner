@@ -1435,13 +1435,13 @@ export default function TenantDetailPage() {
     <CanAccessPage permission="tenant_view">
       <div className="space-y-6 pb-20 animate-fade-in">
         {/* Top bar with back button & Dropdown Options */}
-        <div className="flex items-center justify-between border-b pb-3">
-          <Button variant="ghost" size="sm" asChild className="gap-1.5 text-muted-foreground -ml-2">
+        <div className="flex items-center justify-between gap-2 border-b pb-3">
+          <Button variant="ghost" size="sm" asChild className="hidden gap-1.5 text-muted-foreground -ml-2 md:inline-flex">
             <Link to="/tenants">
               <ArrowLeft className="h-4 w-4" /> Back to Tenants
             </Link>
           </Button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 overflow-x-auto">
             {editing ? (
               <div className="flex items-center gap-2">
                 <Button

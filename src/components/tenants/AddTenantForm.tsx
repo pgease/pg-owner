@@ -874,7 +874,7 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
     <div className="space-y-6 w-full pb-6">
       {/* HEADER + STEPPER */}
       <div className="space-y-4">
-        <div className="space-y-1">
+        <div className="space-y-1 hidden md:block">
           <h2 className="text-xl font-bold text-foreground">Add Tenant</h2>
           <p className="text-sm text-muted-foreground">
             {selectedPg?.name ? `Onboarding to ${selectedPg.name}` : "Fill in a few details to onboard a new tenant."}
@@ -1970,7 +1970,7 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
 
       {/* WIZARD NAVIGATION */}
       {showFooter && (
-        <div className="flex justify-between items-center gap-3 border-t pt-4">
+        <div className="flex justify-between items-center gap-3 border-t bg-white pt-4 md:static md:bg-transparent fixed inset-x-0 bottom-0 z-30 px-4 pb-[calc(12px+var(--safe-bottom))] md:px-0 md:pb-0">
           <div>
             {step > 1 ? (
               <Button type="button" variant="outline" onClick={goBack}>
