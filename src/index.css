@@ -178,9 +178,25 @@
     -webkit-user-select: none;
   }
 
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
   .pgease-app-header {
     padding-top: var(--safe-top);
     min-height: calc(64px + var(--safe-top));
+  }
+
+  .pgease-app-main {
+    overflow-x: hidden;
+  }
+
+  .pgease-app-main table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 

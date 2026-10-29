@@ -43,9 +43,9 @@ export function PageHeader({
 }: PageHeaderProps) {
   const headerActions = actions ?? action;
   return (
-    <header className={cn("flex flex-col gap-3", className)}>
+    <header className={cn("flex flex-col gap-3", !headerActions && "hidden md:flex", className)}>
       {breadcrumbs && breadcrumbs.length > 0 ? (
-        <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs text-muted-foreground">
+        <nav aria-label="Breadcrumb" className="hidden md:flex items-center gap-1 text-xs text-muted-foreground">
           {breadcrumbs.map((crumb, idx) => {
             const isLast = idx === breadcrumbs.length - 1;
             return (
@@ -67,7 +67,7 @@ export function PageHeader({
       ) : null}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 items-start gap-2">
+        <div className="hidden md:flex min-w-0 items-start gap-2">
           {backTo ? (
             <Button variant="ghost" size="icon" className="-ml-2 mt-0.5 h-8 w-8 shrink-0" asChild>
               <Link to={backTo} aria-label={backLabel}>

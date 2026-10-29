@@ -1441,7 +1441,7 @@ export default function TenantDetailPage() {
               <ArrowLeft className="h-4 w-4" /> Back to Tenants
             </Link>
           </Button>
-          <div className="flex items-center gap-2 overflow-x-auto">
+          <div className="flex flex-wrap items-center gap-2">
             {editing ? (
               <div className="flex items-center gap-2">
                 <Button
