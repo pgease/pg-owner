@@ -1435,7 +1435,7 @@ export default function TenantDetailPage() {
     <CanAccessPage permission="tenant_view">
       <div className="space-y-6 pb-20 animate-fade-in">
         {/* Top bar with back button & Dropdown Options */}
-        <div className="flex items-center justify-between gap-2 border-b pb-3">
+        <div className="hidden md:flex items-center justify-between gap-2 border-b pb-3">
           <Button variant="ghost" size="sm" asChild className="hidden gap-1.5 text-muted-foreground -ml-2 md:inline-flex">
             <Link to="/tenants">
               <ArrowLeft className="h-4 w-4" /> Back to Tenants
@@ -1620,7 +1620,82 @@ export default function TenantDetailPage() {
           </div>
         )}
 
-        <section className="rounded-md border border-[var(--gray-200)] bg-white p-4">
+        <section className="md:hidden rounded-[16px] bg-white p-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-16 w-16 rounded-full">
+              {photo ? <AvatarImage src={photo} alt="" className="object-cover" /> : null}
+              <AvatarFallback className="rounded-full bg-[#E8FFFF] text-base font-semibold text-[#008080]">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-[18px] font-semibold text-[#101010] truncate">{name}</h1>
+                <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium", statusInfo.badgeClass)}>
+                  {statusInfo.label}
+                </span>
+              </div>
+              <p className="mt-0.5 text-[13px] text-[#636363]">
+                {effectiveRoomNo !== "—" ? `Room ${effectiveRoomNo}` : "Room not set"}
+                {effectiveBedNo !== "—" ? ` · Bed ${effectiveBedNo}` : ""}
+              </p>
+              <p className="mt-0.5 text-[15px] font-medium text-[#101010]">
+                {form.monthlyRent || tenant.monthlyRent
+                  ? `₹${Number(form.monthlyRent || tenant.monthlyRent).toLocaleString("en-IN")} / month`
+                  : rent}
+              </p>
+            </div>
+          </div>
+          {editing ? (
+            <div className="flex gap-2">
+              <Button variant="secondary" className="flex-1 h-11 rounded-full" onClick={handleCancelEditing} disabled={isSaving}>Cancel</Button>
+              <Button className="flex-[2] h-11 rounded-full bg-[#008080] hover:bg-[#006666]" onClick={handleSaveProfile} disabled={isSaving}>
+                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="flex gap-2">
+                {phone && phone !== "—" ? (
+                  <Button asChild variant="outline" className="flex-1 h-11 rounded-full">
+                    <a href={`tel:${phoneDigits(phone)}`}><Phone className="h-4 w-4 mr-1.5" /> Call</a>
+                  </Button>
+                ) : null}
+                {waLink(phone) ? (
+                  <Button asChild variant="outline" className="flex-1 h-11 rounded-full">
+                    <a href={waLink(phone)!} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4 mr-1.5" /> WhatsApp</a>
+                  </Button>
+                ) : null}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="h-11 w-11 rounded-full p-0" aria-label="More actions">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-52">
+                    <DropdownMenuItem onClick={() => setAddDuesDrawerOpen(true)} className="cursor-pointer gap-2">
+                      <Plus className="h-4 w-4" /> Add Dues
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setEditing(true)} className="cursor-pointer gap-2">
+                      <Pencil className="h-4 w-4" /> Edit profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setMoveModalOpen(true)} className="cursor-pointer gap-2">
+                      <ArrowRightLeft className="h-4 w-4" /> Move tenant
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setNoticeOpen(true)} className="cursor-pointer gap-2">
+                      <Clock className="h-4 w-4" /> Give notice
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <Button className="w-full h-12 rounded-full bg-[#008080] hover:bg-[#006666] text-white" onClick={() => setRecordPaymentOpen(true)}>
+                <IndianRupee className="h-4 w-4 mr-1.5" /> Record payment
+              </Button>
+            </>
+          )}
+        </section>
+
+        <section className="hidden md:block rounded-md border border-[var(--gray-200)] bg-white p-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <Avatar className="h-14 w-14 rounded-md">
               {photo ? <AvatarImage src={photo} alt="" className="object-cover" /> : null}
@@ -1658,16 +1733,38 @@ export default function TenantDetailPage() {
 
         {/* Tabbed Sections */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="flex h-auto w-full justify-start gap-1 rounded-md border border-[var(--gray-200)] bg-[var(--gray-50)] p-1 overflow-x-auto">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] font-medium">Joining Form</TabsTrigger>
-            <TabsTrigger value="passbook" className="data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] font-medium">Passbook</TabsTrigger>
-            <TabsTrigger value="electricity" className="data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] font-medium">Electricity</TabsTrigger>
-            <TabsTrigger value="notice" className="data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] font-medium">Notice</TabsTrigger>
-            <TabsTrigger value="agreement" className="data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] font-medium">Agreement</TabsTrigger>
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 rounded-[16px] md:rounded-md border border-[var(--gray-200)] bg-[var(--gray-50)] p-1 overflow-x-hidden md:overflow-x-auto">
+            <TabsTrigger value="overview" className="min-h-11 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] font-medium">Joining Form</TabsTrigger>
+            <TabsTrigger value="passbook" className="min-h-11 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] font-medium">Passbook</TabsTrigger>
+            <TabsTrigger value="electricity" className="min-h-11 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] font-medium">Electricity</TabsTrigger>
+            <TabsTrigger value="notice" className="min-h-11 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] font-medium">Notice</TabsTrigger>
+            <TabsTrigger value="agreement" className="min-h-11 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] font-medium">Agreement</TabsTrigger>
           </TabsList>
 
           {/* TAB 1: OVERVIEW */}
           <TabsContent value="overview" className="mt-6 space-y-6">
+            <div className="md:hidden rounded-[16px] bg-white p-4 space-y-3">
+              <p className="text-[16px] font-semibold text-[#101010]">Rent &amp; Deposit</p>
+              <div className="space-y-2 text-[14px]">
+                <div className="flex justify-between gap-3">
+                  <span className="text-[#636363]">Deposit amount</span>
+                  <span className="font-medium text-[#101010]">{form.securityDeposit ? formatINR(Number(form.securityDeposit)) : "—"}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-[#636363]">Rent per month</span>
+                  <span className="font-medium text-[#101010]">{form.monthlyRent ? `${formatINR(Number(form.monthlyRent))}/mo` : rent}</span>
+                </div>
+                {duesLabel ? (
+                  <div className="flex justify-between gap-3">
+                    <span className="text-[#636363]">Next rent due</span>
+                    <span className="font-medium text-[#101010]">{duesLabel}</span>
+                  </div>
+                ) : null}
+              </div>
+              <Button variant="outline" className="h-11 rounded-full border-[#008080] text-[#008080]" onClick={() => handleSendWhatsAppReminder("rent")}>
+                Remind to Pay
+              </Button>
+            </div>
             <div className="grid gap-6 grid-cols-1 lg:grid-cols-12 items-start">
               
               {/* Left Column (Profile & Renting Summary) - Span 4 */}
