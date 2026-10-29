@@ -19,6 +19,7 @@ import { StatCard } from "@/components/common/StatCard";
 import { CanAccess, CanAccessPage } from "@/components/PermissionGuard";
 import { formatDate } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/components/mobile/MobileUi";
 
 type StatusTab = "all" | "open" | "in_progress" | "resolved";
 
@@ -68,6 +69,7 @@ function roomLine(tenant?: PropertyTenant) {
 
 const Complaints = () => {
   const { selectedPgId, properties } = useApp();
+  const isMobile = useIsMobile();
   const selectedPg = properties.find((property) => property.id === selectedPgId);
   const [activeTab, setActiveTab] = useState<StatusTab>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
@@ -247,7 +249,7 @@ const Complaints = () => {
               </div>
             </FilterBar>
 
-            <div className="overflow-hidden rounded-md border border-[var(--gray-200)] bg-white">
+            <div className="overflow-hidden rounded-[16px] md:rounded-md border border-[var(--gray-200)] bg-white">
               {isLoading ? (
                 <div className="space-y-2 p-4">
                   {Array.from({ length: 4 }).map((_, index) => (
@@ -327,7 +329,7 @@ const Complaints = () => {
         )}
 
         <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
-          <SheetContent side="right" className="flex w-full flex-col overflow-y-auto p-0 sm:max-w-md">
+          <SheetContent side={isMobile ? "bottom" : "right"} className="flex w-full flex-col overflow-y-auto p-0 sm:max-w-md max-h-[90dvh] rounded-t-[24px] md:rounded-none">
             <SheetHeader className="border-b border-[var(--gray-200)] p-6">
               <div className="flex items-center justify-between gap-3">
                 <span className="font-mono text-xs text-[var(--gray-500)]">#{selectedComplaint?.id?.slice(0, 8)}</span>
