@@ -45,7 +45,7 @@ export default function NotificationsPage() {
                   navigate(item.to);
                 }}
                 className={cn(
-                  "w-full text-left rounded-[12px] border px-4 py-3 min-h-11",
+                  "w-full text-left rounded-[16px] border px-4 py-3 min-h-11",
                   item.read ? "bg-white border-[#E2E6EA]" : "bg-[#E8F4F4] border-[#CCE6E6]",
                 )}
               >
