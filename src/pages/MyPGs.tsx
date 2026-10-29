@@ -131,7 +131,7 @@ const MyPGs = () => {
     <CanAccessPage permission="room_view">
       <div className="space-y-8 animate-fade-in max-w-5xl pb-16">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
+          <div className="hidden md:block">
             <div className="flex items-center gap-2">
               <h1 className="text-page-title flex items-center gap-2">
                 <Building2 className="h-6 w-6 text-primary" />
@@ -151,7 +151,7 @@ const MyPGs = () => {
             <Button
               type="button"
               onClick={() => navigate("/post-pg")}
-              className="rounded-xl font-bold bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 text-white gap-2 shadow-xs shrink-0 self-start sm:self-auto"
+              className="rounded-xl font-bold bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 text-white gap-2 shadow-xs shrink-0 self-start sm:self-auto w-full md:w-auto min-h-11"
             >
               <Globe className="h-4 w-4" />
               Post PG / Search Listing
@@ -247,7 +247,7 @@ const MyPGs = () => {
                       className="rounded-2xl border-border/80 shadow-xs bg-card hover:shadow-md hover:border-border transition-all cursor-pointer group"
                       onClick={() => navigate(mod.url)}
                     >
-                      <CardContent className="p-4 flex items-center justify-between gap-3">
+                      <CardContent className="p-4 flex items-center justify-between gap-3 min-h-11">
                         <div className="flex items-center gap-3 min-w-0">
                           <div className={`h-10 w-10 rounded-xl flex items-center justify-center font-bold shrink-0 transition-transform group-hover:scale-105 ${mod.color}`}>
                             <Icon className="h-5 w-5" />

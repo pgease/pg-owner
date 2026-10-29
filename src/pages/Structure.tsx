@@ -393,7 +393,7 @@ export default function Structure() {
 
           <div className="flex items-center gap-3">
             {/* View Mode Toggle: Bed Grid vs Table */}
-            <div className="flex rounded-md border border-[var(--gray-300)] p-0.5 bg-white">
+            <div className="hidden md:flex rounded-md border border-[var(--gray-300)] p-0.5 bg-white">
               <button
                 type="button"
                 onClick={() => setViewMode("grid")}
@@ -451,7 +451,7 @@ export default function Structure() {
             </Button>
           </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          <div className="flex flex-wrap items-center gap-2 pb-1">
             {blocks.map((b) => {
               const isSelected = b.id === effectiveBlockId;
               return (
@@ -463,7 +463,7 @@ export default function Structure() {
                       setSelectedFloorId("");
                     }}
                     className={cn(
-                      "px-3.5 py-2 rounded-sm border text-xs font-medium transition-colors flex items-center gap-2",
+                      "min-h-11 px-3.5 py-2 rounded-2xl md:rounded-sm border text-xs font-medium transition-colors flex items-center gap-2",
                       isSelected
                         ? "bg-[var(--brand-50)] text-[var(--brand-700)] border-[var(--brand-100)] font-semibold"
                         : "bg-white text-[var(--gray-700)] border-[var(--gray-200)] hover:border-[var(--gray-300)]"
@@ -516,7 +516,7 @@ export default function Structure() {
               </Button>
             </div>
 
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <div className="flex flex-wrap items-center gap-2 pb-1">
               {floors.map((f) => {
                 const isSelected = f.id === effectiveFloorId;
                 return (
@@ -525,7 +525,7 @@ export default function Structure() {
                       type="button"
                       onClick={() => setSelectedFloorId(f.id)}
                       className={cn(
-                        "px-3.5 py-1.5 rounded-sm border text-xs font-medium transition-colors flex items-center gap-1.5",
+                        "min-h-11 px-3.5 py-1.5 rounded-2xl md:rounded-sm border text-xs font-medium transition-colors flex items-center gap-1.5",
                         isSelected
                           ? "bg-[var(--brand-50)] text-[var(--brand-700)] border-[var(--brand-100)] font-semibold"
                           : "bg-white text-[var(--gray-700)] border-[var(--gray-200)] hover:border-[var(--gray-300)]"
