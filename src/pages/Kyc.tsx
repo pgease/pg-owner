@@ -432,7 +432,7 @@ export default function Kyc() {
 
                     {/* Top Quota Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white rounded-lg border border-[var(--gray-200)] p-4 shadow-xs">
+              <div className="bg-white rounded-[16px] md:rounded-lg border border-[var(--gray-200)] p-4 shadow-xs">
                 <div className="flex items-center justify-between text-xs text-[var(--gray-500)] mb-1">
                   <span className="font-medium">Total Available Balance</span>
                   <Coins className="h-4 w-4 text-[var(--brand-600)]" />
@@ -445,7 +445,7 @@ export default function Kyc() {
                 </p>
               </div>
 
-              <div className="bg-white rounded-lg border border-[var(--gray-200)] p-4 shadow-xs">
+              <div className="bg-white rounded-[16px] md:rounded-lg border border-[var(--gray-200)] p-4 shadow-xs">
                 <div className="flex items-center justify-between text-xs text-[var(--gray-500)] mb-1">
                   <span className="font-medium">Free Onboarding Quota</span>
                   <Gift className="h-4 w-4 text-amber-500" />
@@ -466,7 +466,7 @@ export default function Kyc() {
                 </p>
               </div>
 
-              <div className="bg-white rounded-lg border border-[var(--gray-200)] p-4 shadow-xs">
+              <div className="bg-white rounded-[16px] md:rounded-lg border border-[var(--gray-200)] p-4 shadow-xs">
                 <div className="flex items-center justify-between text-xs text-[var(--gray-500)] mb-1">
                   <span className="font-medium">Purchased balance</span>
                   <Wallet className="h-4 w-4 text-teal-600" />
@@ -481,7 +481,7 @@ export default function Kyc() {
                 </p>
               </div>
 
-              <div className="bg-white rounded-lg border border-[var(--gray-200)] p-4 shadow-xs">
+              <div className="bg-white rounded-[16px] md:rounded-lg border border-[var(--gray-200)] p-4 shadow-xs">
                 <div className="flex items-center justify-between text-xs text-[var(--gray-500)] mb-1">
                   <span className="font-medium">Total Consumed</span>
                   <ShieldCheck className="h-4 w-4 text-emerald-600" />
@@ -498,11 +498,11 @@ export default function Kyc() {
 
 
         {/* Tabs Bar */}
-        <div className="flex items-center gap-1 border-b border-[var(--gray-200)] pb-2 overflow-x-auto">
+        <div className="flex flex-wrap items-center gap-1 border-b border-[var(--gray-200)] pb-2">
           <button
             type="button"
             onClick={() => setActiveTab("kyc")}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+            className={`min-h-11 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
               activeTab === "kyc"
                 ? "bg-[var(--brand-50)] text-[var(--brand-700)] font-semibold"
                 : "text-[var(--gray-600)] hover:text-[var(--gray-900)] hover:bg-[var(--gray-100)]"
@@ -513,7 +513,7 @@ export default function Kyc() {
           <button
             type="button"
             onClick={() => setActiveTab("agreements")}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+            className={`min-h-11 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
               activeTab === "agreements"
                 ? "bg-[var(--brand-50)] text-[var(--brand-700)] font-semibold"
                 : "text-[var(--gray-600)] hover:text-[var(--gray-900)] hover:bg-[var(--gray-100)]"
@@ -524,7 +524,7 @@ export default function Kyc() {
           <button
             type="button"
             onClick={() => setActiveTab("credits")}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${
+            className={`min-h-11 px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${
               activeTab === "credits"
                 ? "bg-[var(--brand-50)] text-[var(--brand-700)] font-semibold"
                 : "text-[var(--gray-600)] hover:text-[var(--gray-900)] hover:bg-[var(--gray-100)]"
@@ -545,7 +545,7 @@ export default function Kyc() {
 
         {/* TAB 1: KYC APPLICATIONS */}
         {activeTab === "kyc" && (
-          <div className="bg-white rounded-md border border-[var(--gray-200)] p-4 space-y-4">
+          <div className="bg-white rounded-[16px] md:rounded-md border border-[var(--gray-200)] p-4 space-y-4">
             {isKycLoading ? (
               <div className="flex justify-center py-16 text-sm text-[var(--gray-500)]">
                 <Loader2 className="h-6 w-6 animate-spin text-[var(--brand-600)] mr-2" />
@@ -669,7 +669,7 @@ export default function Kyc() {
             fallbackTitle="Digital Rental Agreements & Aadhaar e-Sign (Pro Feature)"
             fallbackDescription="Draft legally valid rental agreements, send online Aadhaar e-Sign links, and automate tenant stamp papers exclusively on the Pro plan."
           >
-            <div className="bg-white rounded-md border border-[var(--gray-200)] p-4 space-y-4">
+            <div className="bg-white rounded-[16px] md:rounded-md border border-[var(--gray-200)] p-4 space-y-4">
             <div className="flex flex-wrap gap-2" role="group" aria-label="Agreement status">
               {[
                 ["all", "All"],
@@ -804,7 +804,7 @@ export default function Kyc() {
           <div className="space-y-6">
 
             {/* Recent Transactions / Passbook Table */}
-            <div className="bg-white rounded-md border border-[var(--gray-200)] p-5 space-y-4">
+            <div className="bg-white rounded-[16px] md:rounded-md border border-[var(--gray-200)] p-5 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--gray-200)] pb-3">
                 <div>
                   <h3 className="text-sm font-semibold text-[var(--gray-900)] flex items-center gap-2">
