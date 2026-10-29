@@ -239,10 +239,10 @@ export default function SettingsPage() {
       />
 
       {isNotifications && (
-        <div className="bg-white rounded-md border border-[var(--gray-200)] p-5 space-y-3">
+        <div className="bg-white rounded-[16px] md:rounded-md border border-[var(--gray-200)] p-5 space-y-3">
           <h2 className="text-base font-semibold text-[var(--gray-900)]">Alerts</h2>
           <p className="text-xs text-[var(--gray-600)]">Each event can be sent on WhatsApp, email, or the app. Saved for this PG when the server accepts it, and kept in this browser until then.</p>
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-[var(--gray-600)]">
@@ -294,11 +294,47 @@ export default function SettingsPage() {
               </tbody>
             </table>
           </div>
+          <div className="md:hidden space-y-3">
+            {([
+              ["Rent reminder", "payments"],
+              ["Complaint update", "complaints"],
+              ["KYC update", "kyc"],
+            ] as const).map(([label, key]) => {
+              const on = key === "payments" ? notifyPayments : key === "complaints" ? notifyComplaints : notifyKyc;
+              const setOn = key === "payments" ? setNotifyPayments : key === "complaints" ? setNotifyComplaints : setNotifyKyc;
+              const storageKey = key === "payments" ? "pgease_notify_payments" : key === "complaints" ? "pgease_notify_complaints" : "pgease_notify_kyc";
+              return (
+                <div key={key} className="rounded-[16px] border border-[var(--gray-200)] p-3 flex items-center justify-between gap-3 min-h-11">
+                  <p className="text-sm font-medium text-[var(--gray-900)]">{label}</p>
+                  <button
+                    type="button"
+                    aria-pressed={on}
+                    className="min-h-11 px-3 text-sm font-semibold text-[var(--brand-700)]"
+                    onClick={() => {
+                      const next = !on;
+                      setOn(next);
+                      localStorage.setItem(storageKey, next ? "on" : "off");
+                      if (selectedPgId) {
+                        void createOps(selectedPgId, "notification_settings", {
+                          complaints: key === "complaints" ? next : notifyComplaints,
+                          payments: key === "payments" ? next : notifyPayments,
+                          kyc: key === "kyc" ? next : notifyKyc,
+                          channels: ["WhatsApp", "Email", "App"],
+                        }).catch(() => undefined);
+                      }
+                    }}
+                  >
+                    {on ? "On" : "Off"}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
       {/* SECTION 1: ACCOUNT PROFILE */}
-      <div className="bg-white rounded-md border border-[var(--gray-200)] p-5 space-y-4">
+      <div className="bg-white rounded-[16px] md:rounded-md border border-[var(--gray-200)] p-5 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[var(--gray-200)] pb-3">
           <div>
             <h2 className="text-base font-semibold text-[var(--gray-900)]">
@@ -522,7 +558,7 @@ export default function SettingsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div
             onClick={() => navigate("/my-pgs/bank")}
-            className="bg-white rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
+            className="bg-white rounded-[16px] md:rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
           >
             <div className="space-y-0.5">
               <h4 className="text-sm font-semibold text-[var(--gray-900)]">
@@ -537,7 +573,7 @@ export default function SettingsPage() {
 
           <div
             onClick={() => setManagementDrawerOpen(true)}
-            className="bg-white rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
+            className="bg-white rounded-[16px] md:rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
           >
             <div className="space-y-0.5">
               <h4 className="text-sm font-semibold text-[var(--gray-900)]">
@@ -552,7 +588,7 @@ export default function SettingsPage() {
 
           <div
             onClick={() => setBillingOpen(true)}
-            className="bg-white rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
+            className="bg-white rounded-[16px] md:rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
           >
             <div className="space-y-0.5">
               <h4 className="text-sm font-semibold text-[var(--gray-900)]">
@@ -567,7 +603,7 @@ export default function SettingsPage() {
 
           <div
             onClick={() => navigate("/my-pgs/public-listing")}
-            className="bg-white rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
+            className="bg-white rounded-[16px] md:rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
           >
             <div className="space-y-0.5">
               <h4 className="text-sm font-semibold text-[var(--gray-900)]">
@@ -590,7 +626,7 @@ export default function SettingsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div
             onClick={() => navigate("/tenants/kyc")}
-            className="bg-white rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
+            className="bg-white rounded-[16px] md:rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
           >
             <div className="space-y-0.5">
               <h4 className="text-sm font-semibold text-[var(--gray-900)]">
@@ -605,7 +641,7 @@ export default function SettingsPage() {
 
           <div
             onClick={() => setNoticeOpen(true)}
-            className="bg-white rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
+            className="bg-white rounded-[16px] md:rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
           >
             <div className="space-y-0.5">
               <h4 className="text-sm font-semibold text-[var(--gray-900)]">
@@ -620,7 +656,7 @@ export default function SettingsPage() {
 
           <div
             onClick={() => navigate("/food")}
-            className="bg-white rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
+            className="bg-white rounded-[16px] md:rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
           >
             <div className="space-y-0.5">
               <h4 className="text-sm font-semibold text-[var(--gray-900)]">
@@ -643,7 +679,7 @@ export default function SettingsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div
             onClick={() => navigate("/plans")}
-            className="bg-white rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
+            className="bg-white rounded-[16px] md:rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
           >
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
@@ -661,7 +697,7 @@ export default function SettingsPage() {
 
           <div
             onClick={() => navigate("/referrals")}
-            className="bg-white rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
+            className="bg-white rounded-[16px] md:rounded-md border border-[var(--gray-200)] hover:border-[var(--gray-300)] p-4 flex items-center justify-between cursor-pointer transition-colors"
           >
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
@@ -688,7 +724,7 @@ export default function SettingsPage() {
             <AlertTriangle className="h-4 w-4" />
             Danger Zone
           </h3>
-          <div className="bg-white rounded-md border border-red-200 p-4 space-y-4">
+          <div className="bg-white rounded-[16px] md:rounded-md border border-red-200 p-4 space-y-4">
             {deleteRequest && deleteRequest.status === "pending" ? (
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-amber-50 border border-amber-200 rounded-md p-3.5">
                 <div className="space-y-1">

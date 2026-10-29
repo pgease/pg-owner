@@ -13,6 +13,7 @@ const TABS = [
 ];
 
 const MENU_LINKS = [
+  { to: "/settings", label: "Profile" },
   { to: "/complaints", label: "Complaints" },
   { to: "/tenants/kyc", label: "KYC" },
   { to: "/food", label: "Food" },
@@ -63,7 +64,7 @@ export function MobileBottomNav() {
                   setMenuOpen(false);
                   navigate(link.to);
                 }}
-                className="flex w-full items-center min-h-11 px-3 py-3 text-left text-[16px] text-[#18212B] rounded-[12px] hover:bg-[#F6F7F8]"
+                className="flex w-full items-center min-h-11 px-3 py-3 text-left text-[16px] text-[#101010] rounded-[16px] hover:bg-[#F5F5F5]"
               >
                 {link.label}
               </button>
