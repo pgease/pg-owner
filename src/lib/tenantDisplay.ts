@@ -159,7 +159,19 @@ export function tenantRentDueLabel(t?: any): string {
 
 export function tenantVerificationLabel(t?: PropertyTenant | null): "verified" | "pending" {
   if (!t) return "pending";
-  if (t.kycVerified === true || t.aadhaarVerified === true || (t as any).isKycVerified === true) return "verified";
+  if (
+    t.kycVerified === true ||
+    t.aadhaarVerified === true ||
+    (t as any).isKycVerified === true ||
+    (t as any).kycStatus === "completed" ||
+    (t as any).kycStatus === "approved" ||
+    (t as any).kyc?.status === "completed" ||
+    (t as any).kyc?.status === "approved" ||
+    (t as any).kycInfo?.status === "completed" ||
+    (t as any).kycInfo?.status === "approved"
+  ) {
+    return "verified";
+  }
   return "pending";
 }
 
