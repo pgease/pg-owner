@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -877,6 +877,71 @@ export default function TenantDetailPage() {
   const matchingAgreement = (agreementsData?.agreements || []).find(
     (a) => a.roomTenantId === roomTenantId || a.tenantPhone === phone
   );
+
+  const [ownerSigningLoading, setOwnerSigningLoading] = useState(false);
+
+  const handleOwnerDigioSign = useCallback(() => {
+    if (!matchingAgreement?.signingDirectUrl) return;
+
+    const linkParts = matchingAgreement.signingDirectUrl.split("/");
+    const documentId = matchingAgreement.digioDocumentId || linkParts.find((p) => p.startsWith("DID"));
+    const tokenId = linkParts.find((p) => p.startsWith("GWT"));
+    const identifier = linkParts[linkParts.length - 1] || "";
+
+    const DigioWindow = (window as any).Digio;
+    if (!documentId || !DigioWindow) {
+      window.open(matchingAgreement.signingDirectUrl, "_blank");
+      return;
+    }
+
+    setOwnerSigningLoading(true);
+
+    const options = {
+      environment: "production",
+      callback: (response: any) => {
+        setOwnerSigningLoading(false);
+        if (response?.error_code) {
+          if (
+            response?.message &&
+            !response.message.toLowerCase().includes("cancel") &&
+            response?.error_code !== "cancel"
+          ) {
+            toast({
+              title: "Aadhaar eSign Error",
+              description: response.message || "Please try again",
+              variant: "destructive",
+            });
+          }
+        } else {
+          toast({
+            title: "Agreement Signed Successfully!",
+            description: "Your digital rental agreement is now fully signed and legally binding.",
+          });
+          refetchAgreements();
+        }
+      },
+      logo: "https://pgease.com/favicon.png",
+      theme: {
+        primaryColor: "#008080",
+        secondaryColor: "#0f172a",
+      },
+      is_iframe: true,
+    };
+
+    try {
+      const digio = new DigioWindow(options);
+      digio.init();
+      if (tokenId) {
+        digio.submit(documentId, identifier, tokenId);
+      } else {
+        digio.submit(documentId, identifier);
+      }
+    } catch (err: any) {
+      setOwnerSigningLoading(false);
+      console.error("Digio owner sign error:", err);
+      window.open(matchingAgreement.signingDirectUrl, "_blank");
+    }
+  }, [matchingAgreement, refetchAgreements]);
 
   const electricityDuesList = electricityData?.dues || [];
   const hasActiveNotice = Boolean(
@@ -3633,20 +3698,24 @@ export default function TenantDetailPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {matchingAgreement ? (
-                  <div className="p-4 rounded-xl border border-teal-200 bg-teal-50/40 dark:bg-teal-950/20 space-y-3">
+                  <div className="p-4 rounded-xl border border-teal-200 bg-teal-50/40 dark:bg-teal-950/20 space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="space-y-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-sm font-bold text-foreground">
                             11-Month Digital Lease Agreement
                           </span>
                           {matchingAgreement.status === "signed" ? (
-                            <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                              Signed ✓
+                            <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold border border-emerald-300">
+                              Fully Signed ✓
+                            </Badge>
+                          ) : matchingAgreement.status === "pending_owner_sign" ? (
+                            <Badge className="bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 font-bold border border-amber-300">
+                              Tenant eSigned • Action Required: Sign via Aadhaar
                             </Badge>
                           ) : (
-                            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
-                              Sent for eSign
+                            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-300">
+                              Pending Tenant eSign
                             </Badge>
                           )}
                         </div>
@@ -3657,13 +3726,34 @@ export default function TenantDetailPage() {
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {matchingAgreement.status === "pending_owner_sign" && matchingAgreement.signingDirectUrl && (
+                          <Button
+                            size="sm"
+                            className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-8 gap-1.5 text-xs shadow-xs cursor-pointer"
+                            onClick={handleOwnerDigioSign}
+                            disabled={ownerSigningLoading}
+                          >
+                            {ownerSigningLoading ? (
+                              <>
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                <span>Opening eSign…</span>
+                              </>
+                            ) : (
+                              <>
+                                <ShieldCheck className="h-3.5 w-3.5" />
+                                <span>Sign with Aadhaar (Owner)</span>
+                              </>
+                            )}
+                          </Button>
+                        )}
                         {matchingAgreement.signingDirectUrl && matchingAgreement.status !== "signed" && (
                           <Button
                             size="sm"
                             variant="outline"
                             className="h-8 gap-1 text-xs"
                             onClick={() => window.open(matchingAgreement.signingDirectUrl, "_blank")}
+                            title="Open direct Digio portal in new tab"
                           >
                             Open Sign Link
                           </Button>
@@ -3671,8 +3761,8 @@ export default function TenantDetailPage() {
                         {(matchingAgreement.signedPdfUrl || matchingAgreement.agreementPdfUrl) && (
                           <Button
                             size="sm"
-                            variant="outline"
-                            className="h-8 gap-1 text-xs"
+                            variant={matchingAgreement.status === "signed" ? "default" : "outline"}
+                            className={`h-8 gap-1 text-xs ${matchingAgreement.status === "signed" ? "bg-emerald-600 hover:bg-emerald-700 text-white font-bold" : ""}`}
                             onClick={() =>
                               window.open(
                                 matchingAgreement.signedPdfUrl || matchingAgreement.agreementPdfUrl,
@@ -3680,11 +3770,32 @@ export default function TenantDetailPage() {
                               )
                             }
                           >
-                            <Download className="h-3.5 w-3.5" /> Download PDF
+                            <Download className="h-3.5 w-3.5" />
+                            {matchingAgreement.status === "signed" ? "Download Signed PDF" : "Download PDF"}
                           </Button>
                         )}
                       </div>
                     </div>
+
+                    {/* Informative banners based on signature status */}
+                    {matchingAgreement.status === "pending_owner_sign" && (
+                      <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-900 dark:text-amber-200">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-amber-600 shrink-0" />
+                          <span>
+                            <strong>Action Required:</strong> Tenant has already eSigned with Aadhaar OTP. Please click <strong>"Sign with Aadhaar (Owner)"</strong> above to countersign via Aadhaar OTP and complete the agreement.
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {matchingAgreement.status === "signed" && (
+                      <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-lg flex items-center gap-2 text-xs text-emerald-900 dark:text-emerald-200">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                        <span>
+                          <strong>Agreement Active:</strong> Both parties have eSigned via UIDAI Aadhaar OTP. The executed legal document is active and archived.
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border p-4 rounded-xl bg-muted/20">
