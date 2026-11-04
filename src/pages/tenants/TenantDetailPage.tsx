@@ -482,6 +482,80 @@ export default function TenantDetailPage() {
     houseRules: "1. No loud music after 10 PM.\n2. Guests allowed until 8 PM.\n3. Keep common areas clean.",
   });
 
+  const [ownerSigningLoading, setOwnerSigningLoading] = useState(false);
+
+  const tenantPhoneStr = tenant ? tenantPhone(tenant) : "";
+  const matchingAgreement = useMemo(() => {
+    return (agreementsData?.agreements || []).find(
+      (a: any) =>
+        (roomTenantId && (a.roomTenantId === roomTenantId || a.room_tenant_id === roomTenantId)) ||
+        (tenantPhoneStr && (a.tenantPhone === tenantPhoneStr || a.tenant_phone === tenantPhoneStr))
+    );
+  }, [agreementsData, roomTenantId, tenantPhoneStr]);
+
+  const handleOwnerDigioSign = useCallback(() => {
+    if (!matchingAgreement?.signingDirectUrl) return;
+
+    const linkParts = matchingAgreement.signingDirectUrl.split("/");
+    const documentId = matchingAgreement.digioDocumentId || linkParts.find((p: string) => p.startsWith("DID"));
+    const tokenId = linkParts.find((p: string) => p.startsWith("GWT"));
+    const identifier = linkParts[linkParts.length - 1] || "";
+
+    const DigioWindow = (window as any).Digio;
+    if (!documentId || !DigioWindow) {
+      window.open(matchingAgreement.signingDirectUrl, "_blank");
+      return;
+    }
+
+    setOwnerSigningLoading(true);
+
+    const options = {
+      environment: "production",
+      callback: (response: any) => {
+        setOwnerSigningLoading(false);
+        if (response?.error_code) {
+          if (
+            response?.message &&
+            !response.message.toLowerCase().includes("cancel") &&
+            response?.error_code !== "cancel"
+          ) {
+            toast({
+              title: "Aadhaar eSign Error",
+              description: response.message || "Please try again",
+              variant: "destructive",
+            });
+          }
+        } else {
+          toast({
+            title: "Agreement Signed Successfully!",
+            description: "Your digital rental agreement is now fully signed and legally binding.",
+          });
+          refetchAgreements();
+        }
+      },
+      logo: "https://pgease.com/favicon.png",
+      theme: {
+        primaryColor: "#008080",
+        secondaryColor: "#0f172a",
+      },
+      is_iframe: true,
+    };
+
+    try {
+      const digio = new DigioWindow(options);
+      digio.init();
+      if (tokenId) {
+        digio.submit(documentId, identifier, tokenId);
+      } else {
+        digio.submit(documentId, identifier);
+      }
+    } catch (err: any) {
+      setOwnerSigningLoading(false);
+      console.error("Digio owner sign error:", err);
+      window.open(matchingAgreement.signingDirectUrl, "_blank");
+    }
+  }, [matchingAgreement, refetchAgreements]);
+
   const [paymentLinkOpen, setPaymentLinkOpen] = useState(false);
   const [addDuesDrawerOpen, setAddDuesDrawerOpen] = useState(false);
 
@@ -873,75 +947,6 @@ export default function TenantDetailPage() {
       });
     }
   };
-
-  const matchingAgreement = (agreementsData?.agreements || []).find(
-    (a) => a.roomTenantId === roomTenantId || a.tenantPhone === phone
-  );
-
-  const [ownerSigningLoading, setOwnerSigningLoading] = useState(false);
-
-  const handleOwnerDigioSign = useCallback(() => {
-    if (!matchingAgreement?.signingDirectUrl) return;
-
-    const linkParts = matchingAgreement.signingDirectUrl.split("/");
-    const documentId = matchingAgreement.digioDocumentId || linkParts.find((p) => p.startsWith("DID"));
-    const tokenId = linkParts.find((p) => p.startsWith("GWT"));
-    const identifier = linkParts[linkParts.length - 1] || "";
-
-    const DigioWindow = (window as any).Digio;
-    if (!documentId || !DigioWindow) {
-      window.open(matchingAgreement.signingDirectUrl, "_blank");
-      return;
-    }
-
-    setOwnerSigningLoading(true);
-
-    const options = {
-      environment: "production",
-      callback: (response: any) => {
-        setOwnerSigningLoading(false);
-        if (response?.error_code) {
-          if (
-            response?.message &&
-            !response.message.toLowerCase().includes("cancel") &&
-            response?.error_code !== "cancel"
-          ) {
-            toast({
-              title: "Aadhaar eSign Error",
-              description: response.message || "Please try again",
-              variant: "destructive",
-            });
-          }
-        } else {
-          toast({
-            title: "Agreement Signed Successfully!",
-            description: "Your digital rental agreement is now fully signed and legally binding.",
-          });
-          refetchAgreements();
-        }
-      },
-      logo: "https://pgease.com/favicon.png",
-      theme: {
-        primaryColor: "#008080",
-        secondaryColor: "#0f172a",
-      },
-      is_iframe: true,
-    };
-
-    try {
-      const digio = new DigioWindow(options);
-      digio.init();
-      if (tokenId) {
-        digio.submit(documentId, identifier, tokenId);
-      } else {
-        digio.submit(documentId, identifier);
-      }
-    } catch (err: any) {
-      setOwnerSigningLoading(false);
-      console.error("Digio owner sign error:", err);
-      window.open(matchingAgreement.signingDirectUrl, "_blank");
-    }
-  }, [matchingAgreement, refetchAgreements]);
 
   const electricityDuesList = electricityData?.dues || [];
   const hasActiveNotice = Boolean(
@@ -3720,9 +3725,9 @@ export default function TenantDetailPage() {
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Rent: ₹{matchingAgreement.monthlyRent.toLocaleString("en-IN")}/mo • Deposit: ₹
-                          {matchingAgreement.securityDeposit.toLocaleString("en-IN")} • Notice:{" "}
-                          {matchingAgreement.noticePeriodDays} Days
+                          Rent: {formatINR(matchingAgreement.monthlyRent)}/mo • Deposit:{" "}
+                          {formatINR(matchingAgreement.securityDeposit)} • Notice:{" "}
+                          {matchingAgreement.noticePeriodDays ?? 30} Days
                         </p>
                       </div>
 
