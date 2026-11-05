@@ -8,8 +8,8 @@ const env = import.meta.env as Record<string, string | undefined>;
 /** PG Ease Help Center (help-pgease project). */
 export const HELP_CENTER_URL = (env.VITE_HELP_CENTER_URL || "https://help.pgease.in").replace(/\/+$/, "");
 
-/** Public marketing website. Support and help links may still use pgease.in. */
-export const MARKETING_SITE_URL = "https://pgease.in";
+/** Public marketing website. */
+export const MARKETING_SITE_URL = "https://pgease.com";
 
 /**
  * Live public listing. pgease.in does not serve the listing (SSL fails).

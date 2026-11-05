@@ -125,7 +125,6 @@ const NAV_ITEMS: NavItem[] = [
       { title: "Food & Meals", url: "/food", permissionKey: "food_view_edit", featureKey: "food_menu_planner" },
       { title: "Night Out Logs", url: "/nightout", permissionKey: "nightout_view", featureKey: "nightout_guest_requests" },
       { title: "Guest Requests", url: "/tenants/guests", permissionKey: "guest_log", featureKey: "nightout_guest_requests" },
-      { title: "Group Chat", url: "/group-chat", badge: "Soon" },
     ],
   },
   {
