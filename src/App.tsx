@@ -50,6 +50,8 @@ import NoticePeriodPage from "./pages/tenants/NoticePeriodPage";
 import BankAccountPage from "./pages/property/BankAccountPage";
 import AmenitiesPage from "./pages/property/AmenitiesPage";
 import RestrictionsPage from "./pages/property/RestrictionsPage";
+import WhatsAppRedirectPage from "./pages/WhatsAppRedirectPage";
+import GroupChatPage from "./pages/chat/GroupChatPage";
 import ReferralsPage from "./pages/ReferralsPage";
 import ApiCatalogPage from "./pages/reference/ApiCatalogPage";
 import PublicListingPage from "./pages/property/PublicListingPage";
@@ -81,6 +83,7 @@ const App = () => (
           <Route path="/" element={<PublicAuthGate><Login /></PublicAuthGate>} />
           <Route path="/login" element={<PublicAuthGate><Login /></PublicAuthGate>} />
           <Route path="/signup" element={<PublicAuthGate><Login initialMode="signup" /></PublicAuthGate>} />
+          <Route path="/wa/*" element={<WhatsAppRedirectPage />} />
           <Route
             path="/onboarding"
             element={
@@ -108,6 +111,10 @@ const App = () => (
                         <Route path="/tenants/add" element={<AddTenantPage />} />
                         <Route path="/tenants/vacant-rooms" element={<Tenants />} />
                         <Route path="/tenants/guests" element={<GuestRequestsPage />} />
+                        <Route path="/guests" element={<Navigate to="/tenants/guests" replace />} />
+                        <Route path="/guest-requests" element={<Navigate to="/tenants/guests" replace />} />
+                        <Route path="/operations/guests" element={<Navigate to="/tenants/guests" replace />} />
+                        <Route path="/operations/guest-requests" element={<Navigate to="/tenants/guests" replace />} />
                         <Route path="/tenants/kyc" element={<Kyc />} />
                         <Route path="/tenants/notice-period" element={<NoticePeriodPage />} />
                         <Route path="/tenants/notice" element={<NoticePeriodPage />} />
@@ -119,6 +126,7 @@ const App = () => (
                         <Route path="/my-pgs" element={<MyPGs />} />
                         <Route path="/my-pgs/structure" element={<Structure />} />
                         <Route path="/my-pgs/amenities" element={<AmenitiesPage />} />
+                        <Route path="/my-pgs/facilities" element={<AmenitiesPage />} />
                         <Route path="/my-pgs/restrictions" element={<RestrictionsPage />} />
                         <Route path="/my-pgs/wifi" element={<WifiManagementPage />} />
                         <Route path="/my-pgs/notices" element={<PropertyNoticesPage />} />
@@ -133,8 +141,8 @@ const App = () => (
                         <Route path="/complaints" element={<Complaints />} />
                         <Route path="/operations/tools" element={<SprintToolsPage />} />
                         <Route path="/rent-payments/pending" element={<Navigate to="/rent-payments/dues" replace />} />
-                        <Route path="/group-chat" element={<Navigate to="/complaints" replace />} />
-                        <Route path="/chat" element={<Navigate to="/complaints" replace />} />
+                        <Route path="/group-chat" element={<GroupChatPage />} />
+                        <Route path="/chat" element={<GroupChatPage />} />
                         <Route path="/property" element={<Navigate to="/my-pgs" replace />} />
                         <Route path="/operations" element={<Navigate to="/complaints" replace />} />
                         <Route path="/account" element={<Navigate to="/settings" replace />} />

@@ -250,6 +250,17 @@ export async function updateProperty(propertyId: string, payload: UpdateProperty
   });
 }
 
+/**
+ * Permanently delete a single PG property/building.
+ * DELETE /property-owners/properties/:propertyId
+ */
+export async function deleteProperty(propertyId: string): Promise<void> {
+  return httpRequest<void>(`${PROPERTY_OWNER_BASE}/properties/${propertyId}`, {
+    method: "DELETE",
+    auth: true,
+  });
+}
+
 /** Payload for POST /properties (Public PG Search Registry) */
 export interface PostPropertyToSearchPayload {
   propertyTypeId: string;

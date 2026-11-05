@@ -18,6 +18,7 @@ import {
   Sparkles,
   Check,
   Plus,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useMemo } from "react";
@@ -81,8 +82,8 @@ const NAV_ITEMS: NavItem[] = [
     children: [
       { title: "PG Details", url: "/my-pgs", permissionKey: "room_view" },
       { title: "Rooms & Beds", url: "/my-pgs/structure", permissionKey: "room_view" },
-      { title: "Amenities", url: "/my-pgs/amenities", permissionKey: "room_view" },
-      { title: "House Rules", url: "/my-pgs/restrictions", permissionKey: "room_view" },
+      { title: "Facilities", url: "/my-pgs/amenities", permissionKey: "room_view" },
+      { title: "Restrictions", url: "/my-pgs/restrictions", permissionKey: "room_view" },
       { title: "WiFi", url: "/my-pgs/wifi", permissionKey: "room_view", featureKey: "wifi_management", badge: "Beta" },
       { title: "Notice Board", url: "/my-pgs/notices", permissionKey: "room_view", featureKey: "digital_notice_board" },
       { title: "Bank Account", url: "/my-pgs/bank", ownerOnly: true },
@@ -99,7 +100,6 @@ const NAV_ITEMS: NavItem[] = [
       { title: "Leads & Visits", url: "/leads", permissionKey: "tenant_view", featureKey: "lead_crm", badge: "Beta" },
       { title: "KYC & Agreements", url: "/tenants/kyc", permissionKey: "kyc_view", featureKey: "aadhaar_kyc" },
       { title: "Notice Period", url: "/tenants/notice-period", permissionKey: "tenant_view", featureKey: "notice_period_tracker" },
-      { title: "Guest Requests", url: "/tenants/guests", permissionKey: "guest_log", featureKey: "nightout_guest_requests" },
     ],
   },
   {
@@ -122,10 +122,17 @@ const NAV_ITEMS: NavItem[] = [
     permissionKey: "complaint_view_all",
     children: [
       { title: "Complaints", url: "/complaints", permissionKey: "complaint_view_all" },
-      { title: "Property tools", url: "/operations/tools", permissionKey: "complaint_view_all" },
       { title: "Food & Meals", url: "/food", permissionKey: "food_view_edit", featureKey: "food_menu_planner" },
-      { title: "Night Out Passes", url: "/nightout", permissionKey: "nightout_view", featureKey: "nightout_guest_requests" },
+      { title: "Night Out Logs", url: "/nightout", permissionKey: "nightout_view", featureKey: "nightout_guest_requests" },
+      { title: "Guest Requests", url: "/tenants/guests", permissionKey: "guest_log", featureKey: "nightout_guest_requests" },
+      { title: "Group Chat", url: "/group-chat", badge: "Soon" },
     ],
+  },
+  {
+    title: "Group Chat",
+    url: "/group-chat",
+    icon: MessageSquare,
+    badge: "Soon",
   },
   {
     title: "Staff",

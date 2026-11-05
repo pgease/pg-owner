@@ -21,6 +21,13 @@ import {
   Sparkles,
   AlertTriangle,
   Trash2,
+  Phone,
+  Mail,
+  MessageSquare,
+  HeartCrack,
+  AlertOctagon,
+  ArrowLeft,
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +51,7 @@ import {
   useDeleteProfilePhotoMutation,
   useUpdateMeMutation,
   useAccountDeleteRequest,
-  useCreateAccountDeleteRequestMutation,
+  useDeletePropertyMutation,
 } from "@/hooks/usePropertyOwnerQueries";
 import { toast } from "@/components/ui/use-toast";
 import { ManagementDetailsDrawer } from "@/components/settings/ManagementDetailsDrawer";
@@ -53,7 +60,7 @@ import { createOps, listOps } from "@/api/ownerOps";
 import { StatusBadge } from "@/components/common/StatusBadge";
 
 export default function SettingsPage() {
-  const { language, setLanguage, selectedPgId, properties } = useApp();
+  const { language, setLanguage, selectedPgId, properties, refreshProperties, setSelectedPgId } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -113,26 +120,43 @@ export default function SettingsPage() {
   const [ownerLanguage, setOwnerLanguage] = useState<"en-US" | "hi-IN">("en-US");
 
   const isOwner = authStorage.isOwner();
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteReason, setDeleteReason] = useState("");
   const deleteReqQuery = useAccountDeleteRequest();
-  const createDeleteReqMut = useCreateAccountDeleteRequestMutation();
   const deleteRequest = deleteReqQuery.data?.request;
 
-  const handleSubmitDeleteRequest = async () => {
+  const [supportDialogOpen, setSupportDialogOpen] = useState(false);
+  const [deleteBuildingDialogOpen, setDeleteBuildingDialogOpen] = useState(false);
+  const [deleteBuildingStep, setDeleteBuildingStep] = useState<1 | 2>(1);
+  const [deleteUnderstood, setDeleteUnderstood] = useState(false);
+  const [buildingToDelete, setBuildingToDelete] = useState<string>("");
+  const [buildingConfirmName, setBuildingConfirmName] = useState("");
+  const deletePropertyMutation = useDeletePropertyMutation();
+
+  const selectedBuildingObj = Array.isArray(properties)
+    ? properties.find((p) => p.id === buildingToDelete)
+    : null;
+
+  const handleDeleteBuilding = async () => {
+    if (!buildingToDelete || !selectedBuildingObj) return;
     try {
-      await createDeleteReqMut.mutateAsync(deleteReason.trim() || undefined);
+      await deletePropertyMutation.mutateAsync(buildingToDelete);
       toast({
-        title: "Account Deletion Request Submitted",
-        description: "Your request has been received. Our compliance team will review it within 24-48 hours.",
+        title: "Building Deleted",
+        description: `"${selectedBuildingObj.name}" has been permanently deleted.`,
       });
-      setDeleteDialogOpen(false);
-      setDeleteReason("");
-      void deleteReqQuery.refetch();
-    } catch (err: unknown) {
+      setDeleteBuildingDialogOpen(false);
+      setBuildingConfirmName("");
+      const remaining = Array.isArray(properties)
+        ? properties.filter((p) => p.id !== buildingToDelete)
+        : [];
+      if (selectedPgId === buildingToDelete) {
+        setSelectedPgId(remaining[0]?.id || null);
+      }
+      await refreshProperties();
+    } catch (e: unknown) {
       toast({
-        title: "Submission Failed",
-        description: err instanceof Error ? err.message : "Could not submit deletion request",
+        title: "Failed to delete building",
+        description:
+          e instanceof Error ? e.message : "Ensure no active residing tenants remain before deleting.",
         variant: "destructive",
       });
     }
@@ -725,7 +749,8 @@ export default function SettingsPage() {
             Danger Zone
           </h3>
           <div className="bg-white rounded-[16px] md:rounded-md border border-red-200 p-4 space-y-4">
-            {deleteRequest && deleteRequest.status === "pending" ? (
+            {/* Show any prior request status banner if present */}
+            {deleteRequest && deleteRequest.status === "pending" && (
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-amber-50 border border-amber-200 rounded-md p-3.5">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
@@ -744,124 +769,364 @@ export default function SettingsPage() {
                     {deleteRequest.reason ? ` • Reason: "${deleteRequest.reason}"` : ""}.
                   </p>
                   <p className="text-xs text-amber-600">
-                    Our compliance team is reviewing your request. Your properties and data remain accessible until approved.
-                  </p>
-                </div>
-              </div>
-            ) : deleteRequest && deleteRequest.status === "rejected" ? (
-              <div className="space-y-3">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-red-50 border border-red-200 rounded-md p-3.5">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-red-800 uppercase tracking-wider">
-                        Deletion Request Declined
-                      </span>
-                      <StatusBadge label="Rejected" tone="danger" size="sm" />
-                    </div>
-                    <p className="text-xs text-red-700">
-                      Your deletion request was declined
-                      {deleteRequest.adminNote ? `: "${deleteRequest.adminNote}"` : "."}
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-red-300 text-red-700 hover:bg-red-50 shrink-0"
-                    onClick={() => setDeleteDialogOpen(true)}
-                  >
-                    Submit New Request
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div className="space-y-0.5">
-                  <h4 className="text-sm font-semibold text-[var(--gray-900)]">
-                    Delete Property Owner Account
-                  </h4>
-                  <p className="text-xs text-[var(--gray-500)] max-w-xl">
-                    Permanently delete your account along with all properties, rooms, beds, tenant records, and payment history.
+                    Our compliance team is reviewing your request. For urgent requests, please contact support.
                   </p>
                 </div>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-400 shrink-0 gap-1.5"
-                  onClick={() => setDeleteDialogOpen(true)}
+                  className="border-amber-300 text-amber-800 hover:bg-amber-100 shrink-0 gap-1.5"
+                  onClick={() => setSupportDialogOpen(true)}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Request Deletion
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  Contact Support
                 </Button>
               </div>
             )}
+
+            {deleteRequest && deleteRequest.status === "rejected" && (
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-red-50 border border-red-200 rounded-md p-3.5">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-red-800 uppercase tracking-wider">
+                      Deletion Request Declined
+                    </span>
+                    <StatusBadge label="Declined" tone="danger" size="sm" />
+                  </div>
+                  <p className="text-xs text-red-700">
+                    Your previous request was declined
+                    {deleteRequest.adminNote ? `: "${deleteRequest.adminNote}"` : "."}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-red-300 text-red-700 hover:bg-red-50 shrink-0 gap-1.5"
+                  onClick={() => setSupportDialogOpen(true)}
+                >
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  Contact Support
+                </Button>
+              </div>
+            )}
+
+            {/* Option 1: Delete a Single PG Building */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
+              <div className="space-y-0.5">
+                <h4 className="text-sm font-semibold text-[var(--gray-900)]">
+                  Delete a Single PG Building
+                </h4>
+                <p className="text-xs text-[var(--gray-500)] max-w-xl">
+                  Permanently delete an individual PG building and its rooms. Your account, other PG buildings, and remaining data stay completely intact.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-400 shrink-0 gap-1.5"
+                onClick={() => {
+                  setBuildingToDelete(selectedPgId || (Array.isArray(properties) && properties[0]?.id) || "");
+                  setBuildingConfirmName("");
+                  setDeleteBuildingStep(1);
+                  setDeleteUnderstood(false);
+                  setDeleteBuildingDialogOpen(true);
+                }}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete a Building
+              </Button>
+            </div>
+
+            <div className="border-t border-gray-100" />
+
+            {/* Option 2: Complete Account Deletion (Contact Support Only) */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <h4 className="text-sm font-semibold text-[var(--gray-900)]">
+                  Complete Account Deletion
+                </h4>
+                <p className="text-xs text-[var(--gray-500)] max-w-xl">
+                  To permanently delete your entire owner account and purge all data, contact our support team. Complete account deletion requires identity & compliance verification.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900 shrink-0 gap-1.5"
+                onClick={() => setSupportDialogOpen(true)}
+              >
+                <Phone className="h-3.5 w-3.5" />
+                Contact Support to Delete Account
+              </Button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Account Deletion Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      {/* Delete a PG Building Dialog (2-Step with Goodbye & Irreversible Data Warning) */}
+      <Dialog
+        open={deleteBuildingDialogOpen}
+        onOpenChange={(open) => {
+          setDeleteBuildingDialogOpen(open);
+          if (!open) {
+            setDeleteBuildingStep(1);
+            setDeleteUnderstood(false);
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          {deleteBuildingStep === 1 ? (
+            /* STEP 1: SELECT BUILDING & TYPE NAME CONFIRMATION */
+            <>
+              <DialogHeader>
+                <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600">
+                  <AlertTriangle className="h-6 w-6" />
+                </div>
+                <DialogTitle className="text-center text-lg font-bold text-[var(--gray-900)]">
+                  Delete a Single PG Building
+                </DialogTitle>
+                <DialogDescription className="text-center text-xs text-[var(--gray-500)]">
+                  Step 1 of 2: Select the building you want to delete and verify its name.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3 py-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-[var(--gray-700)]">
+                    Select PG Building to Delete
+                  </Label>
+                  <select
+                    value={buildingToDelete}
+                    onChange={(e) => {
+                      setBuildingToDelete(e.target.value);
+                      setBuildingConfirmName("");
+                    }}
+                    className="w-full h-10 rounded-xl border border-gray-200 bg-white px-3 text-xs font-medium focus:border-red-500 focus:outline-none"
+                  >
+                    {Array.isArray(properties) &&
+                      properties.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} {p.address ? `(${p.address})` : ""}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                {selectedBuildingObj && (
+                  <>
+                    <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800 space-y-1">
+                      <p className="font-semibold">Notice before proceeding:</p>
+                      <ul className="list-disc pl-4 space-y-0.5">
+                        <li>Active residing tenants should be checked out or transferred first.</li>
+                        <li>Only <strong>{selectedBuildingObj.name}</strong> will be deleted; other PGs remain safe.</li>
+                      </ul>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-[var(--gray-700)]">
+                        Type <span className="font-bold text-red-600">{selectedBuildingObj.name}</span> to proceed:
+                      </Label>
+                      <Input
+                        value={buildingConfirmName}
+                        onChange={(e) => setBuildingConfirmName(e.target.value)}
+                        placeholder="Type PG name exactly..."
+                        className="text-xs h-9"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDeleteBuildingDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => setDeleteBuildingStep(2)}
+                  disabled={
+                    !selectedBuildingObj ||
+                    buildingConfirmName.trim() !== selectedBuildingObj.name.trim()
+                  }
+                  className="gap-1.5 font-bold bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <span>Proceed to Final Confirmation</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            /* STEP 2: BYE BYE WE WILL MISS YOU + DOUBLE DATA LOSS CONFIRMATION */
+            <>
+              <DialogHeader>
+                <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-rose-100 text-rose-600 shadow-xs animate-bounce">
+                  <HeartCrack className="h-7 w-7" />
+                </div>
+                <DialogTitle className="text-center text-xl font-black text-rose-950">
+                  Bye Bye, {selectedBuildingObj?.name}! 🥺
+                </DialogTitle>
+                <DialogDescription className="text-center text-xs text-rose-700 font-medium">
+                  We will miss having this property on PG Ease. Saying goodbye is never easy!
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3 py-2 text-xs">
+                {/* Critical Double-Confirmation Warning Box */}
+                <div className="rounded-2xl bg-red-50/90 border border-red-200 p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-red-900 font-extrabold text-xs">
+                    <AlertOctagon className="h-4 w-4 text-red-600 shrink-0" />
+                    <span>Are you sure you want to delete?</span>
+                  </div>
+                  <p className="font-bold text-red-800 leading-snug">
+                    You will <span className="underline decoration-red-500 font-black">NOT</span> be able to retrieve or recover this data once deleted.
+                  </p>
+                  <ul className="space-y-1 text-[11px] text-red-700 list-disc pl-4 pt-1">
+                    <li>All rooms, bed inventories, and tenant assignments will be permanently deleted.</li>
+                    <li>Past rent collection receipts, payment records, and ledger histories will be lost.</li>
+                    <li>Food meal plans, complaints, and staff logs for this PG will be permanently wiped.</li>
+                    <li>This action is 100% permanent. PG Ease support cannot restore this data.</li>
+                  </ul>
+                </div>
+
+                {/* Checkbox to confirm */}
+                <div className="rounded-xl border border-red-200 bg-white p-3 flex items-start gap-2.5 shadow-2xs">
+                  <input
+                    type="checkbox"
+                    id="settings-confirm-delete-data"
+                    checked={deleteUnderstood}
+                    onChange={(e) => setDeleteUnderstood(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-red-300 text-red-600 focus:ring-red-500 cursor-pointer"
+                  />
+                  <label
+                    htmlFor="settings-confirm-delete-data"
+                    className="text-xs text-red-950 font-medium cursor-pointer select-none leading-tight"
+                  >
+                    I understand that this property will be wiped permanently and I will <strong className="font-extrabold text-red-700">never be able to retrieve this data</strong>.
+                  </label>
+                </div>
+              </div>
+
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDeleteBuildingStep(1)}
+                  disabled={deletePropertyMutation.isPending}
+                  className="gap-1.5"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  <span>Back / Keep PG</span>
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDeleteBuilding}
+                  disabled={deletePropertyMutation.isPending || !deleteUnderstood}
+                  className="gap-1.5 font-bold bg-red-600 hover:bg-red-700 text-white shadow-xs"
+                >
+                  {deletePropertyMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Wiping & Deleting...
+                    </>
+                  ) : (
+                    "Yes, Permanently Delete & Wipe Data"
+                  )}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Contact Support for Complete Account Deletion Dialog */}
+      <Dialog open={supportDialogOpen} onOpenChange={setSupportDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600">
-              <AlertTriangle className="h-6 w-6" />
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+              <Shield className="h-6 w-6" />
             </div>
             <DialogTitle className="text-center text-lg font-bold text-[var(--gray-900)]">
-              Request Account Deletion
+              Contact Support for Account Deletion
             </DialogTitle>
             <DialogDescription className="text-center text-xs text-[var(--gray-500)]">
-              This request will be submitted to the PG Ease administrative team. Once approved, all your properties, tenant data, bed assignments, and financial records will be permanently removed.
+              To permanently delete your entire PG Ease property owner account and all associated records, please reach out to our support and compliance desk directly.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3 py-2">
-            <div className="rounded-md bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800 space-y-1">
-              <p className="font-semibold">Important Notice:</p>
-              <ul className="list-disc pl-4 space-y-0.5">
-                <li>All tenant records and lease agreements will be closed.</li>
-                <li>Any active subscription will be terminated upon approval.</li>
-                <li>This action is irreversible once processed.</li>
-              </ul>
+            <div className="rounded-xl bg-slate-50 border border-slate-200 p-3.5 space-y-2 text-xs">
+              <p className="font-semibold text-slate-900">Why Contact Support?</p>
+              <p className="text-slate-600">
+                Complete account deletion irrevocably purges all properties, rooms, tenant payment ledgers, and KYC data. Our team will verify your identity and guide you through the process within 24 hours.
+              </p>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="delete-reason" className="text-xs font-medium text-[var(--gray-700)]">
-                Reason for leaving (Optional)
-              </Label>
-              <Textarea
-                id="delete-reason"
-                rows={3}
-                placeholder="Let us know why you wish to delete your account..."
-                value={deleteReason}
-                onChange={(e) => setDeleteReason(e.target.value)}
-                className="text-xs"
-              />
+            <div className="space-y-2">
+              <a
+                href="https://wa.me/918920215953?text=Hi%20PG%20Ease%20Support,%20I%20would%20like%20to%20request%20complete%20deletion%20of%20my%20owner%20account."
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-between p-3 rounded-xl border border-emerald-200 bg-emerald-50/60 hover:bg-emerald-50 text-emerald-900 transition-all font-semibold text-xs"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center">
+                    <MessageSquare className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-bold">Chat on WhatsApp</p>
+                    <p className="text-[11px] font-normal text-emerald-700">+91 8920215953 • Instant Support</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-emerald-600" />
+              </a>
+
+              <a
+                href="mailto:support@pgease.com?subject=Owner%20Account%20Deletion%20Request"
+                className="flex items-center justify-between p-3 rounded-xl border border-blue-200 bg-blue-50/60 hover:bg-blue-50 text-blue-900 transition-all font-semibold text-xs"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center">
+                    <Mail className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-bold">Email Support Desk</p>
+                    <p className="text-[11px] font-normal text-blue-700">support@pgease.com</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-blue-600" />
+              </a>
+
+              <a
+                href="tel:+918920215953"
+                className="flex items-center justify-between p-3 rounded-xl border border-gray-200 bg-gray-50/60 hover:bg-gray-100 text-gray-900 transition-all font-semibold text-xs"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 rounded-lg bg-gray-700 text-white flex items-center justify-center">
+                    <Phone className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-bold">Call Helpline</p>
+                    <p className="text-[11px] font-normal text-gray-600">+91 8920215953 (Mon - Sat, 9am - 8pm)</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-gray-600" />
+              </a>
             </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setDeleteDialogOpen(false)}
-              disabled={createDeleteReqMut.isPending}
+              onClick={() => setSupportDialogOpen(false)}
+              className="w-full"
             >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleSubmitDeleteRequest}
-              disabled={createDeleteReqMut.isPending}
-              className="gap-1.5"
-            >
-              {createDeleteReqMut.isPending ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                "Submit Deletion Request"
-              )}
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

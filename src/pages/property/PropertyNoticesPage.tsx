@@ -36,7 +36,7 @@ export default function PropertyNoticesPage() {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [category, setCategory] = useState("maintenance");
-  const [priority, setPriority] = useState("high");
+  const [priority, setPriority] = useState<"normal" | "high" | "urgent">("normal");
   const [targetType, setTargetType] = useState("all_tenants");
   const [attachmentUrl, setAttachmentUrl] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
@@ -44,11 +44,21 @@ export default function PropertyNoticesPage() {
   const createNoticeMutation = useMutation({
     mutationFn: async () => {
       if (!selectedPgId || !title.trim() || !message.trim()) return;
+
+      // Normalize priority to allowed backend enum: 'normal' | 'high' | 'urgent'
+      const p = String(priority).toLowerCase().trim();
+      const validPriority: "normal" | "high" | "urgent" =
+        p === "urgent" || p === "critical"
+          ? "urgent"
+          : p === "high"
+          ? "high"
+          : "normal";
+
       const payload: CreateNoticePayload = {
         title: title.trim(),
         message: message.trim(),
         category,
-        priority,
+        priority: validPriority,
         targetType,
         attachmentUrl: attachmentUrl.trim() || undefined,
         expiresAt: expiresAt ? new Date(expiresAt).toISOString() : undefined,
@@ -145,7 +155,9 @@ export default function PropertyNoticesPage() {
               <div className="space-y-3">
                 {notices.map((notice: any, idx: number) => {
                   const noticeId = notice.id || notice._id || String(idx);
-                  const isHighPriority = String(notice.priority).toLowerCase() === "high";
+                  const p = String(notice.priority || "normal").toLowerCase();
+                  const isUrgent = p === "urgent";
+                  const isHigh = p === "high";
 
                   return (
                     <div
@@ -161,8 +173,14 @@ export default function PropertyNoticesPage() {
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[var(--gray-100)] text-[var(--gray-700)] border border-[var(--gray-200)] capitalize">
                               {notice.category || "General"}
                             </span>
-                            {isHighPriority && (
-                              <StatusBadge label="High Priority" tone="error" size="sm" />
+                            {isUrgent && (
+                              <StatusBadge label="Urgent" tone="error" size="sm" />
+                            )}
+                            {isHigh && (
+                              <StatusBadge label="High Priority" tone="warning" size="sm" />
+                            )}
+                            {!isUrgent && !isHigh && (
+                              <StatusBadge label="Normal" tone="neutral" size="sm" />
                             )}
                           </div>
                           <p className="text-sm text-[var(--gray-700)] leading-relaxed whitespace-pre-wrap">
@@ -244,14 +262,14 @@ export default function PropertyNoticesPage() {
 
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-[var(--gray-700)]">Priority</Label>
-                  <Select value={priority} onValueChange={setPriority}>
+                  <Select value={priority} onValueChange={(val: "normal" | "high" | "urgent") => setPriority(val)}>
                     <SelectTrigger className="h-9 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="urgent">Urgent</SelectItem>
                       <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="normal">Normal</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

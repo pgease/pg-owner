@@ -247,10 +247,10 @@ export default function PublicListingPage() {
     );
   };
 
-  // Property configured amenities & restrictions
+  // Property configured amenities & restrictions (only actively linked ones)
   const propertyConfiguredAmenities = useMemo(() => {
     if (Array.isArray(serverAmenities) && serverAmenities.length > 0) {
-      return serverAmenities.map((a: any) => a.name);
+      return serverAmenities.filter((a: any) => a.linked).map((a: any) => a.name);
     }
     if (currentProperty?.facilities && Array.isArray(currentProperty.facilities)) {
       return currentProperty.facilities;
@@ -260,7 +260,7 @@ export default function PublicListingPage() {
 
   const propertyConfiguredRestrictions = useMemo(() => {
     if (Array.isArray(serverRestrictions) && serverRestrictions.length > 0) {
-      return serverRestrictions.map((r: any) => r.name);
+      return serverRestrictions.filter((r: any) => r.linked).map((r: any) => r.name);
     }
     const propRestrictions = (currentProperty as any)?.restrictions;
     if (Array.isArray(propRestrictions) && propRestrictions.length > 0) {

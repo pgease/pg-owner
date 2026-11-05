@@ -50,6 +50,7 @@ import {
   updateComplaintStatus,
   updateDiningSchedule,
   updateProperty,
+  deleteProperty,
   updateStaffPermissions,
   uploadPhoto,
   uploadOwnerProfilePhoto,
@@ -486,6 +487,17 @@ export function useUpdatePropertyMutation() {
   return useMutation({
     mutationFn: ({ propertyId, payload }: { propertyId: string; payload: UpdatePropertyPayload }) =>
       updateProperty(propertyId, payload),
+  });
+}
+
+export function useDeletePropertyMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (propertyId: string) => deleteProperty(propertyId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["properties"] });
+      qc.invalidateQueries({ queryKey: ["owner", "properties"] });
+    },
   });
 }
 

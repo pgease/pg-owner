@@ -19,7 +19,9 @@ import {
   Pencil,
   MessageSquare,
   ArrowRight,
+  Shield,
   ShieldCheck,
+  Smartphone,
   Check,
   Globe,
   ChevronDown,
@@ -153,8 +155,8 @@ const TEXTS = {
     phoneLabel: "MOBILE NUMBER",
     otpNote: "We will send a 4-digit one-time password (OTP)",
     sendVia: "Send verification code via:",
-    sendOtpWhatsapp: "Get OTP on WhatsApp",
-    sendOtpSms: "Get OTP via SMS",
+    sendOtpWhatsapp: "Get Verification Code on WhatsApp",
+    sendOtpSms: "Get Verification Code on SMS",
     sending: "Sending code...",
     trialPill: "New Property Owner? 45-Day Free Pro Plan Trial Auto-Activated",
     verifyTitle: "Verify Mobile Number",
@@ -191,8 +193,8 @@ const TEXTS = {
     phoneLabel: "मोबाइल नंबर",
     otpNote: "हम आपके नंबर पर 4-अंकीय ओटीपी कोड भेजेंगे",
     sendVia: "सत्यापन कोड माध्यम चुनें:",
-    sendOtpWhatsapp: "व्हाट्सएप पर ओटीपी पाएं",
-    sendOtpSms: "एसएमएस द्वारा ओटीपी पाएं",
+    sendOtpWhatsapp: "व्हाट्सएप पर वेरिफिकेशन कोड पाएं",
+    sendOtpSms: "एसएमएस द्वारा वेरिफिकेशन कोड पाएं",
     sending: "भेज रहे हैं...",
     trialPill: "नए पीजी मालिक? 45 दिनों का मुफ़्त Pro ट्रायल सक्रिय",
     verifyTitle: "मोबाइल नंबर सत्यापित करें",
@@ -267,13 +269,20 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
     } catch {}
   };
 
-  // If already authenticated, redirect to dashboard immediately
+  const getPostLoginDestination = useCallback((defaultPath = "/dashboard"): string => {
+    const queryRedirect = new URLSearchParams(location.search).get("redirect");
+    const storedRedirect = sessionStorage.getItem("pgease_post_login_redirect");
+    sessionStorage.removeItem("pgease_post_login_redirect");
+    return queryRedirect || storedRedirect || defaultPath;
+  }, [location.search]);
+
+  // If already authenticated, redirect to destination or dashboard immediately
   useEffect(() => {
     const token = authStorage.getAccessToken();
     if (token) {
-      navigate("/dashboard", { replace: true });
+      navigate(getPostLoginDestination("/dashboard"), { replace: true });
     }
-  }, [navigate]);
+  }, [navigate, getPostLoginDestination]);
 
   // Remember last phone
   useEffect(() => {
@@ -402,7 +411,7 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
             description: `Welcome back${staffObj?.name ? `, ${staffObj.name}` : ""}!`,
           });
           setTimeout(() => {
-            navigate("/dashboard", { replace: true });
+            navigate(getPostLoginDestination("/dashboard"), { replace: true });
           }, 500);
           return;
         }
@@ -440,7 +449,7 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
             if (!data.hasProperties) {
               navigate("/onboarding", { replace: true });
             } else {
-              navigate("/dashboard", { replace: true });
+              navigate(getPostLoginDestination("/dashboard"), { replace: true });
             }
           }, 700);
         } else if (isFirstTime) {
@@ -460,7 +469,7 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
           });
 
           setTimeout(() => {
-            navigate("/dashboard", { replace: true });
+            navigate(getPostLoginDestination("/dashboard"), { replace: true });
           }, 500);
         }
       } catch (error: any) {
@@ -526,7 +535,7 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
       });
 
       setTimeout(() => {
-        navigate("/dashboard", { replace: true });
+        navigate(getPostLoginDestination("/dashboard"), { replace: true });
       }, 500);
     } catch {
       if (verifiedAuthData) {
@@ -537,7 +546,7 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
       }
       setShowSuccess(true);
       setTimeout(() => {
-        navigate("/dashboard", { replace: true });
+        navigate(getPostLoginDestination("/dashboard"), { replace: true });
       }, 500);
     } finally {
       setIsSavingName(false);
@@ -600,6 +609,7 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
         reset();
       }}
       onResend={() => handleResend(channel)}
+      onResendChannel={(ch) => handleSendOtp(ch)}
       secondsLeft={secondsLeft}
       canResend={canResend}
       shaking={shaking}
@@ -857,90 +867,53 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
                   </p>
                 </div>
 
-                {/* Mobile Input Section */}
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-gray-600 uppercase tracking-wider block">
-                    {T.phoneLabel}
-                  </label>
-                  <div className="flex rounded-lg border border-gray-300 bg-white overflow-hidden focus-within:border-[#008080] focus-within:ring-2 focus-within:ring-[#CCE6E6] h-11 sm:h-12 transition-all">
-                    <div className="flex items-center gap-1.5 bg-gray-50 px-3 text-xs font-bold text-gray-700 border-r border-gray-200 select-none">
-                      <span>🇮🇳</span>
-                      <span>+91</span>
-                    </div>
-                    <input
-                      value={phone}
-                      onChange={(e) => setPhone(cleanPhoneInput(e.target.value))}
-                      onKeyDown={handlePhoneKeyDown}
-                      placeholder="98765 43210"
-                      inputMode="numeric"
-                      autoComplete="tel"
-                      className="flex-1 h-full px-3 text-sm font-semibold text-gray-900 placeholder:text-gray-400 outline-none tabular-nums"
-                    />
+                {/* Phone Input Box */}
+                <div className="flex items-center rounded-2xl border border-gray-200 bg-white px-3 py-2 shadow-sm focus-within:border-[#008080] focus-within:ring-2 focus-within:ring-[#008080]/10 transition-all">
+                  {/* Flag + Country Code Pill */}
+                  <div className="flex items-center gap-1.5 rounded-xl bg-gray-50 border border-gray-200/80 px-2.5 py-1.5 text-xs font-bold text-gray-800 mr-2.5 flex-shrink-0">
+                    <span className="text-sm">🇮🇳</span>
+                    <span>+91</span>
                   </div>
-                  <p className="text-[10.5px] sm:text-[11px] text-gray-400">
-                    {T.otpNote}
-                  </p>
+
+                  <input
+                    value={phone}
+                    onChange={(e) => setPhone(cleanPhoneInput(e.target.value))}
+                    onKeyDown={handlePhoneKeyDown}
+                    placeholder="Enter 10-digit number"
+                    inputMode="numeric"
+                    autoComplete="tel"
+                    className="w-full bg-transparent text-sm font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none tracking-wide"
+                  />
                 </div>
 
-                {/* Channel Selector: Radio-style Pill Buttons */}
-                <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-gray-600 block">
-                    {T.sendVia}
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {/* WhatsApp Option */}
+                {/* Channel Selector with Official WhatsApp Logo */}
+                <div className="flex items-center justify-between text-xs pt-0.5 px-0.5">
+                  <span className="text-gray-400 font-medium">Receive OTP via:</span>
+                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => setChannel("whatsapp")}
-                      className={`flex items-center gap-1.5 sm:gap-2 rounded-lg px-2.5 sm:px-3 py-2 text-xs font-semibold border transition-all text-left ${
+                      className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
                         channel === "whatsapp"
-                          ? "border-[#008080] bg-[#F0FAF7] text-gray-900 ring-1 ring-[#008080]"
-                          : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                          ? "bg-emerald-50 text-emerald-800 border border-emerald-400 font-bold shadow-xs"
+                          : "text-gray-500 hover:bg-gray-100 border border-transparent"
                       }`}
                     >
-                      {/* Radio Circle */}
-                      <span
-                        className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 ${
-                          channel === "whatsapp"
-                            ? "border-[#008080] bg-[#008080]"
-                            : "border-gray-300"
-                        }`}
-                      >
-                        {channel === "whatsapp" && (
-                          <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                        )}
-                      </span>
-                      <WhatsAppIcon size={15} />
-                      <span className="font-bold text-[11px] sm:text-xs">WhatsApp</span>
-                      <span className="ml-auto text-[8.5px] sm:text-[9px] font-extrabold px-1 py-0.2 rounded bg-emerald-100 text-emerald-800 uppercase">
-                        FASTEST
-                      </span>
+                      <WhatsAppIcon className="h-3.5 w-3.5" size={14} />
+                      <span>WhatsApp</span>
                     </button>
 
-                    {/* SMS Option */}
                     <button
                       type="button"
                       onClick={() => setChannel("sms")}
-                      className={`flex items-center gap-1.5 sm:gap-2 rounded-lg px-2.5 sm:px-3 py-2 text-xs font-semibold border transition-all text-left ${
+                      className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
                         channel === "sms"
-                          ? "border-[#008080] bg-[#F0FAF7] text-gray-900 ring-1 ring-[#008080]"
-                          : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                          ? "bg-teal-50 text-teal-800 border border-teal-400 font-bold shadow-xs"
+                          : "text-gray-500 hover:bg-gray-100 border border-transparent"
                       }`}
                     >
-                      {/* Radio Circle */}
-                      <span
-                        className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 ${
-                          channel === "sms"
-                            ? "border-[#008080] bg-[#008080]"
-                            : "border-gray-300"
-                        }`}
-                      >
-                        {channel === "sms" && (
-                          <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                        )}
-                      </span>
-                      <MessageSquare className="h-3.5 w-3.5 text-gray-500 shrink-0" />
-                      <span className="text-[11px] sm:text-xs">Regular SMS</span>
+                      <Smartphone className="h-3.5 w-3.5 text-[#008080]" />
+                      <span>SMS</span>
                     </button>
                   </div>
                 </div>
@@ -950,20 +923,31 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
                   type="button"
                   disabled={!phoneValid || isSendingOtp}
                   onClick={() => handleSendOtp(channel)}
-                  className="w-full h-11 sm:h-12 rounded-lg bg-[#007A78] hover:bg-[#006866] active:bg-[#005755] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 rounded-2xl bg-[#008080] py-3.5 text-sm font-bold text-white shadow-md shadow-[#008080]/25 hover:bg-[#006b6b] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none tap-target"
                 >
                   {isSendingOtp ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin text-white" />
                       <span>{T.sending}</span>
                     </>
                   ) : (
                     <>
+                      {channel === "whatsapp" ? (
+                        <WhatsAppIcon size={16} />
+                      ) : (
+                        <Smartphone className="h-4 w-4 text-white" />
+                      )}
                       <span>{channel === "whatsapp" ? T.sendOtpWhatsapp : T.sendOtpSms}</span>
                       <ArrowRight className="h-4 w-4" />
                     </>
                   )}
                 </button>
+
+                {/* Security Guarantee Note */}
+                <div className="flex items-center justify-center gap-1.5 text-[11px] text-gray-500 pt-1">
+                  <Shield className="h-3.5 w-3.5 text-gray-400" />
+                  <span>Your information is strictly protected</span>
+                </div>
 
                 {/* Consent Note */}
                 <p className="text-[10.5px] text-center text-gray-400 leading-normal">
@@ -1097,31 +1081,29 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
                     </button>
                   </div>
 
-                  {canResend && (
-                    <div className="text-center pt-1">
-                      <button
-                        type="button"
-                        onClick={() => handleResend(channel === "whatsapp" ? "sms" : "whatsapp")}
-                        disabled={isSendingOtp}
-                        className="text-[11px] text-gray-500 hover:text-gray-800 transition-colors inline-flex items-center gap-1 font-medium"
-                      >
-                        <span>{T.switchChannelPrompt}</span>
-                        <span className="text-[#008080] underline font-semibold inline-flex items-center gap-1">
-                          {channel === "whatsapp" ? (
-                            <>
-                              <MessageSquare className="h-3 w-3" />
-                              {T.resendSms}
-                            </>
-                          ) : (
-                            <>
-                              <WhatsAppIcon size={13} />
-                              {T.resendWhatsapp}
-                            </>
-                          )}
-                        </span>
-                      </button>
-                    </div>
-                  )}
+                  <div className="text-center pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleSendOtp(channel === "whatsapp" ? "sms" : "whatsapp")}
+                      disabled={isSendingOtp}
+                      className="text-[11px] text-gray-500 hover:text-gray-800 transition-colors inline-flex items-center gap-1 font-medium"
+                    >
+                      <span>{T.switchChannelPrompt}</span>
+                      <span className="text-[#008080] underline font-semibold inline-flex items-center gap-1">
+                        {channel === "whatsapp" ? (
+                          <>
+                            <MessageSquare className="h-3 w-3" />
+                            {T.resendSms}
+                          </>
+                        ) : (
+                          <>
+                            <WhatsAppIcon size={13} />
+                            {T.resendWhatsapp}
+                          </>
+                        )}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

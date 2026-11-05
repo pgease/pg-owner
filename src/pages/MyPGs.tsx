@@ -23,13 +23,15 @@ import { useApp } from "@/context/AppContext";
 import { toast } from "@/components/ui/use-toast";
 import { useUpdatePropertyMutation } from "@/hooks/usePropertyOwnerQueries";
 import { DEFAULT_PROPERTY_TYPE_ID } from "@/api/propertyOwner";
+import { authStorage } from "@/api/http";
 import { CanAccess, CanAccessPage } from "@/components/PermissionGuard";
 
 const MyPGs = () => {
   const navigate = useNavigate();
-  const { selectedPgId, properties, refreshProperties } = useApp();
+  const { selectedPgId, properties, refreshProperties, setSelectedPgId } = useApp();
   const selectedPg = Array.isArray(properties) ? properties.find((p) => p.id === selectedPgId) : null;
   const updatePropertyMutation = useUpdatePropertyMutation();
+  const isOwner = authStorage.isOwner();
 
   const [pgName, setPgName] = useState("");
   const [pgAddress, setPgAddress] = useState("");
@@ -91,14 +93,14 @@ const MyPGs = () => {
       color: "text-blue-600 bg-blue-50 dark:bg-blue-950/40",
     },
     {
-      title: "Amenities",
+      title: "Facilities",
       desc: "Configure WiFi, AC, Geyser, Power backup & resident perks",
       url: "/my-pgs/amenities",
       icon: Sparkles,
       color: "text-teal-600 bg-teal-50 dark:bg-teal-950/40",
     },
     {
-      title: "House Rules & Restrictions",
+      title: "Restrictions",
       desc: "Set entry curfew, guest policies, smoking & sound rules",
       url: "/my-pgs/restrictions",
       icon: Ban,

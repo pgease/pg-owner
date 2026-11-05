@@ -50,7 +50,7 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
   const entitlements = useEntitlements();
   const isProUser = !entitlements.isLoading && (entitlements.isPro || entitlements.isTrial);
 
-  const [hisaabModalOpen, setHisaabModalOpen] = useState(false);
+  const [statementModalOpen, setStatementModalOpen] = useState(false);
 
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState<number>(now.getMonth() + 1);
@@ -75,13 +75,19 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* ─── Top Bar: Month Context & PG ka Hisaab CTA ───────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-[#E2E6EA] dark:border-slate-800 rounded-lg p-3 sm:px-4 shadow-sm">
-        <div className="flex flex-wrap items-center gap-2">
-          <Calendar className="h-4 w-4 text-[#008080]" />
-          <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-            KPI Snapshot:
-          </span>
+      {/* ─── Top Bar: Month Context & Financial Statement CTA ───────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3 sm:px-4 shadow-xs">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-lg bg-teal-50 dark:bg-teal-950/50 text-[#008080] flex items-center justify-center">
+              <Calendar className="h-4 w-4" />
+            </div>
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
+              Monthly Overview
+            </span>
+          </div>
+
+          <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block" />
           
           {/* Month & Year Selectors */}
           <div className="flex items-center gap-1.5">
@@ -89,7 +95,7 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
               aria-label="Select KPI Month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              className="h-8 px-2 py-1 text-xs font-semibold rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#008080]"
+              className="h-8 px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 hover:bg-slate-100/70 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-[#008080]/30 transition-colors cursor-pointer"
             >
               {MONTH_NAMES.map((m, idx) => (
                 <option key={m} value={idx + 1}>{m}</option>
@@ -100,7 +106,7 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
               aria-label="Select KPI Year"
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="h-8 px-2 py-1 text-xs font-semibold rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#008080]"
+              className="h-8 px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 hover:bg-slate-100/70 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-[#008080]/30 transition-colors cursor-pointer"
             >
               {YEARS.map((y) => (
                 <option key={y} value={y}>{y}</option>
@@ -108,11 +114,11 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
             </select>
           </div>
 
-          <span className="text-xs text-slate-500 hidden sm:inline">
-            ({period?.daysInMonth ?? 31} days)
+          <span className="text-[11px] font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md hidden sm:inline">
+            {period?.daysInMonth ?? 30} days
           </span>
           {headline && (headline.moveIns.count > 0 || headline.moveOuts.count > 0) && (
-            <Badge variant="outline" className="text-[11px] font-normal border-slate-200">
+            <Badge variant="outline" className="text-[11px] font-normal border-slate-200 bg-slate-50/50">
               {headline.moveIns.count} Move-ins · {headline.moveOuts.count} Move-outs
             </Badge>
           )}
@@ -122,15 +128,15 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
           <Button
             size="sm"
             variant="outline"
-            className="text-xs h-8 gap-1.5 border-[#008080] text-[#008080] hover:bg-[#E8F4F4]"
-            onClick={() => setHisaabModalOpen(true)}
+            className="text-xs h-8 gap-1.5 border-teal-600/30 text-teal-800 dark:text-teal-300 bg-teal-50/60 hover:bg-teal-100/70 font-semibold shadow-2xs rounded-lg transition-colors"
+            onClick={() => setStatementModalOpen(true)}
           >
-            <FileSpreadsheet className="h-3.5 w-3.5" />
-            PG ka Hisaab (Month-End)
+            <FileSpreadsheet className="h-3.5 w-3.5 text-teal-700" />
+            Month-End Statement
           </Button>
           {!isProUser && (
-            <Badge className="bg-amber-100 text-amber-800 border-amber-300 gap-1 text-[11px]">
-              <Lock className="h-3 w-3" /> Free Plan
+            <Badge className="bg-amber-50 text-amber-800 border-amber-200/80 gap-1 text-[11px] font-medium">
+              <Lock className="h-3 w-3 text-amber-600" /> Free Plan
             </Badge>
           )}
         </div>
@@ -324,11 +330,11 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
 
         {/* Pro Cards Grid */}
         <div className={cn("grid grid-cols-1 md:grid-cols-3 gap-4", !isProUser && "filter blur-[1.5px] select-none pointer-events-none")}>
-          {/* Card 1: Overdue Ageing Buckets (R6) */}
+          {/* Card 1: Overdue Ageing Analysis */}
           <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Overdue Ageing Buckets (R6)
+                Overdue Ageing Analysis
               </span>
               <Clock className="h-3.5 w-3.5 text-slate-400" />
             </div>
@@ -365,11 +371,11 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
             )}
           </div>
 
-          {/* Card 2: Revenue Lost to Vacancy (O12) */}
+          {/* Card 2: Revenue Lost to Vacancy */}
           <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Revenue Lost to Vacancy (O12)
+                Revenue Lost to Vacancy
               </span>
               <BedDouble className="h-3.5 w-3.5 text-slate-400" />
             </div>
@@ -386,11 +392,11 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
             </div>
           </div>
 
-          {/* Card 3: Payment Mode Split (R13) */}
+          {/* Card 3: Payment Method Breakdown */}
           <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Payment Mode Split (R13)
+                Payment Method Breakdown
               </span>
               <CreditCard className="h-3.5 w-3.5 text-slate-400" />
             </div>
@@ -446,16 +452,16 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
         )}
       </div>
 
-      {/* ─── Section 9c: "PG ka Hisaab" Month-End Report Modal ─────────────── */}
-      <Dialog open={hisaabModalOpen} onOpenChange={setHisaabModalOpen}>
+      {/* ─── Section 9c: Month-End Financial Statement Modal ─────────────── */}
+      <Dialog open={statementModalOpen} onOpenChange={setStatementModalOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
+            <DialogTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100 text-base font-bold">
               <FileSpreadsheet className="h-5 w-5 text-[#008080]" />
-              PG ka Hisaab — {period?.monthName} {period?.year}
+              Month-End Financial Statement — {period?.monthName} {period?.year}
             </DialogTitle>
-            <DialogDescription>
-              Verified month-end summary for {propertyName || "Your Property"}.
+            <DialogDescription className="text-xs text-slate-500">
+              Verified monthly reconciliation and occupancy report for {propertyName || "Your Property"}.
             </DialogDescription>
           </DialogHeader>
 
@@ -468,31 +474,31 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
                 </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-800">
-                <span className="text-slate-600">Pending Dues This Month:</span>
+                <span className="text-slate-600">Pending Collections (Current Month):</span>
                 <span className="font-semibold text-amber-600 text-sm">
                   {headline?.pendingThisMonth.formatted ?? "—"}
                 </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-800">
-                <span className="text-slate-600">Total Outstanding (All Cycles):</span>
+                <span className="text-slate-600">Total Outstanding Dues (All Cycles):</span>
                 <span className="font-semibold text-red-600 text-sm">
                   {headline?.totalOutstanding.formatted ?? "—"}
                 </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-800">
-                <span className="text-slate-600">Collection Efficiency:</span>
+                <span className="text-slate-600">Collection Efficiency Rate:</span>
                 <span className="font-semibold text-slate-900 dark:text-slate-100">
                   {headline?.collectionPercentage.formatted ?? "—"}
                 </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-800">
-                <span className="text-slate-600">Occupancy Snapshot:</span>
+                <span className="text-slate-600">Occupancy & Bed Inventory:</span>
                 <span className="font-semibold text-slate-900 dark:text-slate-100">
                   {headline ? `${headline.occupancy.occupiedBeds} occupied / ${headline.occupancy.vacantBeds} vacant (${headline.occupancy.formattedPct})` : "—"}
                 </span>
               </div>
               <div className="flex justify-between py-1">
-                <span className="text-slate-600">Security Deposit Liability:</span>
+                <span className="text-slate-600">Security Deposit Liability Held:</span>
                 <span className="font-semibold text-slate-900 dark:text-slate-100">
                   {headline?.depositsHeld.formatted ?? "—"}
                 </span>
@@ -500,11 +506,11 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
             </div>
 
             <div className="text-center text-[11px] text-slate-500">
-              Powered by PG Ease · Generated on {new Date().toLocaleDateString("en-IN")}
+              Powered by PG Ease Property Operations · Generated on {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
             </div>
 
             <div className="flex gap-2 justify-end pt-2">
-              <Button variant="outline" size="sm" onClick={() => setHisaabModalOpen(false)}>
+              <Button variant="outline" size="sm" onClick={() => setStatementModalOpen(false)}>
                 Close
               </Button>
               <Button

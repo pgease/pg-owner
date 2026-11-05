@@ -22,6 +22,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   BadgeAlert,
+  X,
 } from "lucide-react";
 import { CreditTransaction } from "@/api/propertyOwner";
 import { Button } from "@/components/ui/button";
@@ -242,6 +243,73 @@ export default function Kyc() {
   const purchasedCredits = purchasedFromLedger > 0
     ? purchasedFromLedger
     : Math.max(0, paidCreditsBalance - grantedCredits);
+
+  // Resolve standard plans from API or fallback (₹49 KYC Only & ₹99 KYC + Agreement)
+  const aadharPackFromApi = creditPacks.find(
+    (p: any) =>
+      Number(p.price) === 49 ||
+      (p.name?.toLowerCase().includes("aadhar") && !p.name?.toLowerCase().includes("agreement"))
+  );
+  const agreementPackFromApi = creditPacks.find(
+    (p: any) =>
+      Number(p.price) === 99 ||
+      p.name?.toLowerCase().includes("agreement")
+  );
+
+  const standardPlans = [
+    {
+      id: aadharPackFromApi?.id || "aadhar-verification-49",
+      apiPackId: aadharPackFromApi?.id,
+      name: aadharPackFromApi?.name || "Aadhar Verification",
+      price: Number(aadharPackFromApi?.price ?? 49),
+      originalPrice: null,
+      coinLabel: `${freeCreditsRemaining}/${freeCreditsGiven}`,
+      description: "Instant DigiLocker Aadhaar KYC verification",
+      actionLabel: "Buy Now",
+      buttonVariant: "solid" as const,
+    },
+    {
+      id: agreementPackFromApi?.id || "aadhar-agreement-99",
+      apiPackId: agreementPackFromApi?.id,
+      name: agreementPackFromApi?.name || "Aadhar Verification + Agreement",
+      price: Number(agreementPackFromApi?.price ?? 99),
+      originalPrice: 149,
+      coinLabel: `${paidCreditsBalance > 0 ? paidCreditsBalance : "0/0"}`,
+      description: "Aadhaar KYC + digital rental agreement drafting & eSign",
+      actionLabel: "Upgrade",
+      buttonVariant: "outline" as const,
+    },
+  ];
+
+  const otherCreditPacks = creditPacks.filter(
+    (p: any) => p.id !== aadharPackFromApi?.id && p.id !== agreementPackFromApi?.id
+  );
+
+  const handleBuyPlan = async (plan: (typeof standardPlans)[0]) => {
+    if (plan.apiPackId) {
+      await handleTopupCheckout(plan.apiPackId);
+      return;
+    }
+    if (creditPacks.length > 0) {
+      const matchingPack =
+        creditPacks.find((p: any) => Number(p.price) === plan.price) ||
+        creditPacks.find((p: any) =>
+          plan.price === 49
+            ? p.name?.toLowerCase().includes("aadhar") && !p.name?.toLowerCase().includes("agreement")
+            : p.name?.toLowerCase().includes("agreement")
+        );
+      if (matchingPack) {
+        await handleTopupCheckout(matchingPack.id);
+        return;
+      }
+      await handleTopupCheckout(creditPacks[0].id);
+      return;
+    }
+    toast({
+      title: "Plan is being configured",
+      description: "Standard KYC plans are being configured in the Admin Panel. Please initialize them or contact support.",
+    });
+  };
 
   // Top-up Razorpay Checkout
   const handleTopupCheckout = async (packId: string) => {
@@ -803,6 +871,64 @@ export default function Kyc() {
         {activeTab === "credits" && (
           <div className="space-y-6">
 
+            {/* KYC Top-up Plans */}
+            <div className="bg-white rounded-[16px] md:rounded-lg border border-[var(--gray-200)] p-5 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--gray-200)] pb-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-[var(--gray-900)] flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-[#2563EB]" />
+                    KYC & Agreement Top-Up Plans
+                  </h3>
+                  <p className="text-xs text-[var(--gray-500)] mt-0.5">
+                    Select a verification package to recharge your credits immediately via UPI or Cards.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {standardPlans.map((plan) => (
+                  <div
+                    key={plan.id}
+                    className="rounded-xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between space-y-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h4 className="font-semibold text-slate-900 text-base sm:text-lg leading-snug">
+                          {plan.name}
+                        </h4>
+                        <p className="text-xs text-slate-500 mt-1">{plan.description}</p>
+                      </div>
+                      <div className="text-right whitespace-nowrap">
+                        {plan.originalPrice && (
+                          <div className="text-xs sm:text-sm text-slate-400 line-through font-normal">
+                            ₹{plan.originalPrice}
+                          </div>
+                        )}
+                        <div className="text-xl sm:text-2xl font-bold text-slate-900">
+                          ₹{plan.price}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                      <div className="flex items-center gap-1.5 text-sm font-medium text-slate-700">
+                        <span className="text-base">🪙</span>
+                        <span className="tabular-nums">{plan.coinLabel}</span>
+                      </div>
+
+                      <Button
+                        onClick={() => handleBuyPlan(plan)}
+                        disabled={topupOrderMut.isPending}
+                        className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold px-5 sm:px-6 py-2 h-9 rounded-lg text-sm shadow-xs transition-colors"
+                      >
+                        {topupOrderMut.isPending ? "Processing..." : plan.actionLabel}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Recent Transactions / Passbook Table */}
             <div className="bg-white rounded-[16px] md:rounded-md border border-[var(--gray-200)] p-5 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--gray-200)] pb-3">
@@ -894,74 +1020,102 @@ export default function Kyc() {
           </div>
         )}
 
-        {/* DIALOG 1: CREDIT TOP-UP MODAL */}
+        {/* DIALOG 1: CREDIT TOP-UP MODAL (RentOk KYC Credits Design) */}
         <Dialog open={topupOpen} onOpenChange={setTopupOpen}>
-          <DialogContent className="max-w-lg p-6 space-y-4">
-            <DialogHeader>
-              <DialogTitle className="text-base font-semibold text-[var(--gray-900)]">
-                Top-up Verification Credits
+          <DialogContent className="max-w-md sm:max-w-lg p-6 sm:p-7 rounded-2xl border border-slate-200 bg-white space-y-4">
+            <DialogHeader className="space-y-0 pb-1">
+              <DialogTitle className="text-2xl font-bold text-slate-900 tracking-tight">
+                KYC Credits
               </DialogTitle>
-              <DialogDescription className="text-xs text-[var(--gray-500)]">
-                Verification credits enable instant DigiLocker Aadhaar KYC and digital agreement drafting. WhatsApp messages remain completely free.
+              <DialogDescription className="sr-only">
+                Choose a plan for instant Aadhaar verification and digital rental agreements.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-2">
-              {creditPacks.map((pack) => {
-                const isSelected = selectedPackId === pack.id;
-                return (
-                  <div
-                    key={pack.id}
-                    onClick={() => setSelectedPackId(pack.id)}
-                    className={`cursor-pointer rounded-md border p-3 transition-colors ${
-                      isSelected
-                        ? "border-[var(--brand-600)] bg-[var(--brand-50)]"
-                        : "border-[var(--gray-200)] hover:border-[var(--gray-300)] bg-white"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-sm text-[var(--gray-900)]">{pack.name}</span>
-                      {pack.popular && (
-                        <span className="text-[10px] font-semibold bg-[var(--brand-600)] text-white px-1.5 py-0.5 rounded">
-                          POPULAR
-                        </span>
+            <div className="space-y-4 pt-1">
+              {standardPlans.map((plan) => (
+                <div
+                  key={plan.id}
+                  className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 hover:border-slate-300 transition-all space-y-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="font-semibold text-slate-900 text-base sm:text-lg leading-snug">
+                      {plan.name}
+                    </span>
+                    <div className="text-right whitespace-nowrap">
+                      {plan.originalPrice && (
+                        <div className="text-xs sm:text-sm text-slate-400 line-through font-normal">
+                          ₹{plan.originalPrice}
+                        </div>
                       )}
-                    </div>
-                    <div className="text-xl font-bold text-[var(--gray-900)] my-1 tabular-nums">
-                      {pack.credits} <span className="text-xs font-normal text-[var(--gray-500)]">Credits</span>
-                    </div>
-                    <div className="text-xs font-medium text-[var(--gray-700)] tabular-nums">
-                      {formatINR(pack.price)}{" "}
-                      <span className="text-[var(--gray-500)] font-normal">
-                        ({formatINR(Math.round(pack.price / pack.credits))}/credit)
-                      </span>
+                      <div className="text-2xl sm:text-[26px] font-bold text-slate-900 tracking-tight">
+                        ₹{plan.price}
+                      </div>
                     </div>
                   </div>
-                );
-              })}
+
+                  <div className="flex items-center justify-between pt-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-[#EAB308] border border-[#CA8A04] flex items-center justify-center text-white text-[11px] font-bold leading-none shadow-xs select-none">
+                        ₹
+                      </div>
+                      <span className="text-sm font-medium text-slate-800 tabular-nums">
+                        {plan.coinLabel}
+                      </span>
+                    </div>
+
+                    {plan.buttonVariant === "outline" ? (
+                      <Button
+                        variant="outline"
+                        onClick={() => handleBuyPlan(plan)}
+                        disabled={topupOrderMut.isPending}
+                        className="border-2 border-[#2563EB] text-[#2563EB] hover:bg-blue-50/60 font-semibold px-6 py-2 h-9 rounded-lg text-sm shadow-xs transition-colors"
+                      >
+                        {topupOrderMut.isPending ? "Processing..." : plan.actionLabel}
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => handleBuyPlan(plan)}
+                        disabled={topupOrderMut.isPending}
+                        className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold px-6 py-2 h-9 rounded-lg text-sm shadow-xs transition-colors"
+                      >
+                        {topupOrderMut.isPending ? "Processing..." : plan.actionLabel}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
 
-            <DialogFooter className="flex sm:justify-between items-center gap-2 pt-2">
-              <span className="text-xs text-[var(--gray-500)]">Recharge via UPI or Cards</span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setTopupOpen(false)}
-                  className="border-[var(--gray-300)]"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  className="bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white font-medium"
-                  disabled={!selectedPackId || topupOrderMut.isPending}
-                  onClick={() => handleTopupCheckout(selectedPackId)}
-                >
-                  {topupOrderMut.isPending ? "Processing..." : "Recharge credits"}
-                </Button>
+            {otherCreditPacks.length > 0 && (
+              <div className="pt-3 border-t border-slate-100 space-y-2">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  Bulk Quota Packages
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {otherCreditPacks.map((pack: any) => (
+                    <div
+                      key={pack.id}
+                      className="rounded-lg border border-slate-200 p-2.5 flex items-center justify-between bg-slate-50/50"
+                    >
+                      <div>
+                        <p className="text-xs font-semibold text-slate-800">{pack.name}</p>
+                        <p className="text-[11px] text-slate-500">{pack.credits} Credits · ₹{pack.price}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleTopupCheckout(pack.id)}
+                        disabled={topupOrderMut.isPending}
+                        className="h-7 text-xs font-semibold text-blue-600 border-blue-200 hover:bg-blue-50"
+                      >
+                        Buy
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </DialogFooter>
+            )}
           </DialogContent>
         </Dialog>
 

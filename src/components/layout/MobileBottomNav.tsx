@@ -14,6 +14,7 @@ const TABS = [
 
 const MENU_LINKS = [
   { to: "/settings", label: "Profile" },
+  { to: "/group-chat", label: "Group Chat (Soon)" },
   { to: "/complaints", label: "Complaints" },
   { to: "/tenants/kyc", label: "KYC" },
   { to: "/food", label: "Food" },

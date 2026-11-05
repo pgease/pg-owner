@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   UserCheck,
@@ -13,6 +14,7 @@ import {
   User,
   Users,
   Trash2,
+  Eye,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,13 +35,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useApp } from "@/context/AppContext";
 import {
   getGuestRequests,
-  updateGuestRequestStatus,
   createGuestRequest,
   GuestDetailItem,
 } from "@/api/propertyOwner";
 import { usePropertyTenants } from "@/hooks/usePropertyOwnerQueries";
 import { CanAccessPage } from "@/components/PermissionGuard";
 import { toast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
 
 interface GuestFormItem {
   name: string;
@@ -55,16 +57,44 @@ const defaultGuestItem: GuestFormItem = {
   relationship: "Friend",
 };
 
+export type VisitorTimelineFilter = "all" | "today" | "upcoming" | "past";
+
+function getVisitorState(req: any): "today" | "upcoming" | "past" {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const todayTs = now.getTime();
+
+  const arrStr = req.expectedArrival || req.arrivalDate || req.createdAt;
+  const depStr = req.expectedDeparture || req.departureDate;
+  if (!arrStr) return "today";
+
+  const arrDate = new Date(arrStr);
+  arrDate.setHours(0, 0, 0, 0);
+  const arrTs = arrDate.getTime();
+
+  const depDate = depStr ? new Date(depStr) : null;
+  if (depDate) depDate.setHours(23, 59, 59, 999);
+  const depTs = depDate ? depDate.getTime() : null;
+
+  if (depTs && todayTs > depTs) {
+    return "past";
+  }
+  if (arrTs > todayTs) {
+    return "upcoming";
+  }
+  return "today";
+}
+
 export default function GuestRequestsPage() {
   const { selectedPgId, properties } = useApp();
+  const [searchParams] = useSearchParams();
+  const deepLinkedGuestId = searchParams.get("id") || searchParams.get("guestId");
   const queryClient = useQueryClient();
   const selectedPg = properties.find((p) => p.id === selectedPgId);
 
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [timelineFilter, setTimelineFilter] = useState<VisitorTimelineFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
-  const [actionType, setActionType] = useState<"approved" | "rejected">("approved");
-  const [remarks, setRemarks] = useState("");
 
   // Add Guest Log modal on behalf of tenant
   const [addGuestModalOpen, setAddGuestModalOpen] = useState(false);
@@ -78,8 +108,8 @@ export default function GuestRequestsPage() {
   const tenantsList = Array.isArray(tenantsData) ? tenantsData : (tenantsData as any)?.tenants || [];
 
   const { data: requestsData, isLoading } = useQuery({
-    queryKey: ["guestRequests", selectedPgId, statusFilter],
-    queryFn: () => (selectedPgId ? getGuestRequests(selectedPgId, statusFilter) : null),
+    queryKey: ["guestRequests", selectedPgId],
+    queryFn: () => (selectedPgId ? getGuestRequests(selectedPgId) : null),
     enabled: Boolean(selectedPgId),
   });
 
@@ -113,26 +143,6 @@ export default function GuestRequestsPage() {
     setDepartureDate("");
     setPurpose("");
   };
-
-  const updateStatusMutation = useMutation({
-    mutationFn: async () => {
-      if (!selectedPgId || !selectedRequest) return;
-      const reqId = selectedRequest.id || selectedRequest._id;
-      return updateGuestRequestStatus(selectedPgId, reqId, actionType, remarks);
-    },
-    onSuccess: () => {
-      toast({
-        title: actionType === "approved" ? "Request Approved" : "Request Rejected",
-        description: `Guest arrival request updated to ${actionType}.`,
-      });
-      setSelectedRequest(null);
-      setRemarks("");
-      queryClient.invalidateQueries({ queryKey: ["guestRequests", selectedPgId] });
-    },
-    onError: (e: any) => {
-      toast({ title: "Failed to update request", description: e?.message, variant: "destructive" });
-    },
-  });
 
   const createGuestMutation = useMutation({
     mutationFn: async () => {
@@ -188,23 +198,54 @@ export default function GuestRequestsPage() {
     ? requestsData
     : (requestsData as any)?.data || (requestsData as any)?.requests || [];
 
+  // Deep-linked guest item selection from WhatsApp notification URL
+  useEffect(() => {
+    if (deepLinkedGuestId && requests.length > 0) {
+      const match = requests.find((r: any) => (r.id || r._id) === deepLinkedGuestId);
+      if (match) {
+        setSelectedRequest(match);
+      }
+    }
+  }, [deepLinkedGuestId, requests]);
+
   // Summary Metrics
   const metrics = useMemo(() => {
-    const total = requests.length;
-    const pending = requests.filter((r) => (r.status || "").toLowerCase() === "pending").length;
-    const approved = requests.filter((r) => (r.status || "").toLowerCase() === "approved").length;
-    const totalHeadcount = requests.reduce((sum, r) => {
-      const count = Array.isArray(r.guests) && r.guests.length > 0 ? r.guests.length : Number(r.numberOfGuests) || 1;
-      return sum + count;
-    }, 0);
-    return { total, pending, approved, totalHeadcount };
+    let visitingToday = 0;
+    let upcoming = 0;
+    let past = 0;
+    let totalHeadcount = 0;
+
+    requests.forEach((r: any) => {
+      const state = getVisitorState(r);
+      if (state === "today") visitingToday++;
+      else if (state === "upcoming") upcoming++;
+      else if (state === "past") past++;
+
+      const count =
+        Array.isArray(r.guests) && r.guests.length > 0
+          ? r.guests.length
+          : Number(r.numberOfGuests) || 1;
+      totalHeadcount += count;
+    });
+
+    return {
+      total: requests.length,
+      visitingToday,
+      upcoming,
+      past,
+      totalHeadcount,
+    };
   }, [requests]);
 
-  // Filter requests by search query
+  // Filter requests by timeline and search query
   const filteredRequests = useMemo(() => {
-    if (!searchQuery.trim()) return requests;
+    let list = requests;
+    if (timelineFilter !== "all") {
+      list = list.filter((req) => getVisitorState(req) === timelineFilter);
+    }
+    if (!searchQuery.trim()) return list;
     const q = searchQuery.toLowerCase().trim();
-    return requests.filter((req: any) => {
+    return list.filter((req: any) => {
       const gName = (req.guestName || req.name || "").toLowerCase();
       const gPhone = (req.guestPhone || req.phone || "").toLowerCase();
       const tName = (req.tenantName || req.tenant?.name || "").toLowerCase();
@@ -229,7 +270,7 @@ export default function GuestRequestsPage() {
         matchesGuestInList
       );
     });
-  }, [requests, searchQuery]);
+  }, [requests, timelineFilter, searchQuery]);
 
   // Group requests by Month and Date
   const groupedRequests = useMemo(() => {
@@ -290,10 +331,10 @@ export default function GuestRequestsPage() {
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-page-title flex items-center gap-2">
-              <UserCheck className="h-6 w-6 text-teal-600" /> Guest Requests & Visitor Log
+              <UserCheck className="h-6 w-6 text-teal-600" /> Visitor Movement Register
             </h1>
             <p className="text-sm text-muted-foreground">
-              Track, log, and approve visitor arrival requests for {selectedPg?.name || "your property"}.
+              Recorded resident guest arrivals and visitor log entries for {selectedPg?.name || "your property"}.
             </p>
           </div>
 
@@ -312,35 +353,44 @@ export default function GuestRequestsPage() {
             <div className="text-2xl font-black text-slate-800 mt-1">{metrics.total}</div>
           </Card>
           <Card className="p-3.5 border-border shadow-xs">
-            <div className="text-xs text-amber-700 font-medium">Pending Approvals</div>
-            <div className="text-2xl font-black text-amber-600 mt-1">{metrics.pending}</div>
-          </Card>
-          <Card className="p-3.5 border-border shadow-xs">
-            <div className="text-xs text-emerald-700 font-medium">Approved Visitors</div>
-            <div className="text-2xl font-black text-emerald-600 mt-1">{metrics.approved}</div>
-          </Card>
-          <Card className="p-3.5 border-border shadow-xs">
             <div className="text-xs text-indigo-700 font-medium flex items-center gap-1">
               <Users className="h-3.5 w-3.5" /> Total Headcount
             </div>
             <div className="text-2xl font-black text-indigo-600 mt-1">{metrics.totalHeadcount}</div>
           </Card>
+          <Card className="p-3.5 border-border shadow-xs">
+            <div className="text-xs text-emerald-700 font-medium flex items-center gap-1">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Visiting Today
+            </div>
+            <div className="text-2xl font-black text-emerald-600 mt-1">{metrics.visitingToday}</div>
+          </Card>
+          <Card className="p-3.5 border-border shadow-xs">
+            <div className="text-xs text-blue-700 font-medium flex items-center gap-1">
+              <Calendar className="h-3.5 w-3.5" /> Upcoming Visits
+            </div>
+            <div className="text-2xl font-black text-blue-600 mt-1">{metrics.upcoming}</div>
+          </Card>
         </div>
 
-        {/* CONTROLS: STATUS FILTER & SEARCH */}
+        {/* CONTROLS: TIMELINE FILTER & SEARCH */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-3">
-          <div className="flex gap-2">
-            {["all", "pending", "approved", "rejected"].map((st) => (
+          <div className="flex flex-wrap gap-2">
+            {[
+              { key: "all", label: `All Entries (${metrics.total})` },
+              { key: "today", label: `Visiting Today (${metrics.visitingToday})` },
+              { key: "upcoming", label: `Upcoming (${metrics.upcoming})` },
+              { key: "past", label: `Past Visits (${metrics.past})` },
+            ].map(({ key, label }) => (
               <Button
-                key={st}
-                variant={statusFilter === st ? "default" : "outline"}
+                key={key}
+                variant={timelineFilter === key ? "default" : "outline"}
                 size="sm"
-                onClick={() => setStatusFilter(st)}
-                className={`capitalize font-bold text-xs ${
-                  statusFilter === st ? "bg-teal-600 text-white hover:bg-teal-700" : ""
+                onClick={() => setTimelineFilter(key as VisitorTimelineFilter)}
+                className={`font-bold text-xs ${
+                  timelineFilter === key ? "bg-teal-600 text-white hover:bg-teal-700" : ""
                 }`}
               >
-                {st}
+                {label}
               </Button>
             ))}
           </div>
@@ -394,7 +444,7 @@ export default function GuestRequestsPage() {
                           <TableHead className="font-bold min-w-[280px]">Guest Roster & Details</TableHead>
                           <TableHead className="font-bold">Resident Tenant</TableHead>
                           <TableHead className="font-bold">Relation & Purpose</TableHead>
-                          <TableHead className="font-bold">Status</TableHead>
+                          <TableHead className="font-bold">Schedule Status</TableHead>
                           <TableHead className="font-bold text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -417,8 +467,20 @@ export default function GuestRequestsPage() {
                                 },
                               ];
 
+                          const isDeepLinked = Boolean(
+                            deepLinkedGuestId &&
+                            (req.id === deepLinkedGuestId || req._id === deepLinkedGuestId)
+                          );
+
                           return (
-                            <TableRow key={req.id || idx} className="hover:bg-slate-50/60">
+                            <TableRow
+                              key={req.id || idx}
+                              id={`guest-row-${req.id || idx}`}
+                              className={cn(
+                                "hover:bg-slate-50/60 transition-colors",
+                                isDeepLinked && "bg-teal-50/90 ring-2 ring-teal-500 rounded-md"
+                              )}
+                            >
                               {/* STAY SCHEDULE */}
                               <TableCell className="font-medium text-slate-900 text-xs align-top pt-3">
                                 <div>
@@ -491,50 +553,43 @@ export default function GuestRequestsPage() {
                                 </span>
                               </TableCell>
 
-                              {/* STATUS */}
+                              {/* SCHEDULE STATUS */}
                               <TableCell className="align-top pt-3">
-                                <Badge
-                                  className={
-                                    isPending
-                                      ? "bg-amber-100 text-amber-900 border-amber-300 font-bold"
-                                      : isApproved
-                                      ? "bg-emerald-100 text-emerald-900 border-emerald-300 font-bold"
-                                      : "bg-red-100 text-red-900 border-red-300 font-bold"
+                                {(() => {
+                                  const state = getVisitorState(req);
+                                  if (state === "today") {
+                                    return (
+                                      <Badge variant="outline" className="text-[11px] font-bold text-emerald-800 bg-emerald-50 border-emerald-300">
+                                        ● Visiting Today
+                                      </Badge>
+                                    );
                                   }
-                                >
-                                  {req.status || "Pending"}
-                                </Badge>
+                                  if (state === "upcoming") {
+                                    return (
+                                      <Badge variant="outline" className="text-[11px] font-semibold text-blue-800 bg-blue-50 border-blue-200">
+                                        Upcoming Visit
+                                      </Badge>
+                                    );
+                                  }
+                                  return (
+                                    <Badge variant="outline" className="text-[11px] font-medium text-slate-600 bg-slate-50 border-slate-200">
+                                      Past Visit
+                                    </Badge>
+                                  );
+                                })()}
                               </TableCell>
 
                               {/* ACTIONS */}
                               <TableCell className="text-right align-top pt-3">
-                                {isPending ? (
-                                  <div className="flex items-center justify-end gap-1.5">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="text-red-700 border-red-300 hover:bg-red-50 h-7 text-[11px] px-2"
-                                      onClick={() => {
-                                        setSelectedRequest(req);
-                                        setActionType("rejected");
-                                      }}
-                                    >
-                                      Reject
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 text-[11px] px-2 font-bold"
-                                      onClick={() => {
-                                        setSelectedRequest(req);
-                                        setActionType("approved");
-                                      }}
-                                    >
-                                      Approve
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <span className="text-xs text-slate-400 font-medium">Logged</span>
-                                )}
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 text-[11px] px-2.5 font-semibold text-slate-700 hover:text-teal-700 hover:border-teal-300 gap-1"
+                                  onClick={() => setSelectedRequest(req)}
+                                >
+                                  <Eye className="h-3 w-3 text-slate-500" />
+                                  View Details
+                                </Button>
                               </TableCell>
                             </TableRow>
                           );
@@ -735,71 +790,122 @@ export default function GuestRequestsPage() {
           </DialogContent>
         </Dialog>
 
-        {/* APPROVE / REJECT MODAL */}
+        {/* VISITOR LOG DETAILS MODAL */}
         <Dialog open={Boolean(selectedRequest)} onOpenChange={(open) => !open && setSelectedRequest(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 font-bold text-foreground">
-                {actionType === "approved" ? (
-                  <span className="text-emerald-700 flex items-center gap-1.5">
-                    <CheckCircle2 className="h-5 w-5" /> Approve Guest Request
-                  </span>
-                ) : (
-                  <span className="text-red-700 flex items-center gap-1.5">
-                    <XCircle className="h-5 w-5" /> Reject Guest Request
-                  </span>
-                )}
+              <DialogTitle className="flex items-center gap-2 font-bold text-slate-900">
+                <UserCheck className="h-5 w-5 text-teal-600" />
+                Visitor Log Details
               </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Recorded visitor entry details for {selectedPg?.name || "your property"}.
+              </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-3 py-2 text-sm">
-              <p className="text-slate-700">
-                Are you sure you want to {actionType === "approved" ? "approve" : "reject"} visitor arrival for:
-              </p>
-
-              {Array.isArray(selectedRequest?.guests) && selectedRequest.guests.length > 0 ? (
-                <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 space-y-1.5">
-                  <div className="font-bold text-xs text-slate-800 flex items-center gap-1">
-                    <Users className="h-3.5 w-3.5 text-teal-600" />
-                    {selectedRequest.guests.length} Guest{selectedRequest.guests.length > 1 ? "s" : ""}:
+            {selectedRequest && (
+              <div className="space-y-3.5 py-2 text-xs">
+                {/* Stay Schedule */}
+                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-1.5">
+                  <div className="text-slate-500 font-semibold uppercase text-[10px] tracking-wider">Stay Schedule</div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Expected Arrival:</span>
+                    <span className="font-bold text-slate-800">
+                      {selectedRequest.expectedArrival || selectedRequest.arrivalDate
+                        ? new Date(selectedRequest.expectedArrival || selectedRequest.arrivalDate).toLocaleString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })
+                        : "N/A"}
+                    </span>
                   </div>
-                  {selectedRequest.guests.map((g: any, i: number) => (
-                    <div key={i} className="text-xs text-slate-700 flex items-center gap-1.5 flex-wrap">
-                      <span className="font-semibold">• {g.name}</span>
-                      {renderGenderBadge(g.gender)}
-                      {g.phone && <span className="text-[11px] text-slate-500">({g.phone})</span>}
+                  {selectedRequest.expectedDeparture && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Expected Departure:</span>
+                      <span className="font-semibold text-slate-800">
+                        {new Date(selectedRequest.expectedDeparture).toLocaleString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                      </span>
                     </div>
-                  ))}
+                  )}
                 </div>
-              ) : (
-                <div className="font-bold text-slate-900">{selectedRequest?.guestName || "Guest"}</div>
-              )}
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">Remarks / Instructions for Guard Desk</label>
-                <Textarea
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
-                  placeholder="e.g. Approved. Deposit original ID copy at security desk upon check-in."
-                  rows={3}
-                />
+                {/* Resident Tenant */}
+                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
+                  <div className="text-slate-500 font-semibold uppercase text-[10px] tracking-wider">Resident Tenant</div>
+                  <div className="font-bold text-sm text-slate-900">
+                    {selectedRequest.tenantName || selectedRequest.tenant?.name || "Registered Tenant"}
+                  </div>
+                  <div className="text-slate-600">
+                    Room {selectedRequest.roomNumber || selectedRequest.room?.roomNumber || "N/A"}
+                    {selectedRequest.tenantPhone && ` · ${selectedRequest.tenantPhone}`}
+                  </div>
+                </div>
+
+                {/* Guest Roster */}
+                <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
+                  <div className="text-slate-500 font-semibold uppercase text-[10px] tracking-wider flex items-center justify-between">
+                    <span>Guest Roster</span>
+                    <span>
+                      {Array.isArray(selectedRequest.guests) && selectedRequest.guests.length > 0
+                        ? `${selectedRequest.guests.length} Visitor(s)`
+                        : "1 Visitor"}
+                    </span>
+                  </div>
+
+                  {Array.isArray(selectedRequest.guests) && selectedRequest.guests.length > 0 ? (
+                    <div className="space-y-1.5 pt-1">
+                      {selectedRequest.guests.map((g: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between p-2 rounded bg-white border border-slate-200/80">
+                          <div>
+                            <span className="font-bold text-slate-800">{g.name}</span>
+                            {g.phone && <span className="text-slate-500 ml-1.5">({g.phone})</span>}
+                          </div>
+                          {renderGenderBadge(g.gender)}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between p-2 rounded bg-white border border-slate-200/80">
+                      <div>
+                        <span className="font-bold text-slate-800">{selectedRequest.guestName || "Guest"}</span>
+                        {selectedRequest.guestPhone && <span className="text-slate-500 ml-1.5">({selectedRequest.guestPhone})</span>}
+                      </div>
+                      {renderGenderBadge(selectedRequest.guestGender)}
+                    </div>
+                  )}
+                </div>
+
+                {/* Relation & Purpose */}
+                {(selectedRequest.relationship || selectedRequest.purpose) && (
+                  <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
+                    <div className="text-slate-500 font-semibold uppercase text-[10px] tracking-wider">Relationship & Purpose</div>
+                    {selectedRequest.relationship && (
+                      <div className="text-slate-700">
+                        <span className="font-medium text-slate-500">Relation:</span> {selectedRequest.relationship}
+                      </div>
+                    )}
+                    {selectedRequest.purpose && (
+                      <div className="text-slate-700">
+                        <span className="font-medium text-slate-500">Purpose:</span> {selectedRequest.purpose}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            </div>
+            )}
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setSelectedRequest(null)}>
-                Cancel
-              </Button>
-              <Button
-                className={
-                  actionType === "approved"
-                    ? "bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-                    : "bg-red-600 hover:bg-red-700 text-white font-bold"
-                }
-                onClick={() => updateStatusMutation.mutate()}
-                disabled={updateStatusMutation.isPending}
-              >
-                {updateStatusMutation.isPending ? "Updating..." : `Confirm ${actionType.toUpperCase()}`}
+              <Button className="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold" onClick={() => setSelectedRequest(null)}>
+                Close
               </Button>
             </DialogFooter>
           </DialogContent>

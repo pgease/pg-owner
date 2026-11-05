@@ -1,82 +1,87 @@
 import { Link } from "react-router-dom";
-import { Check, ChevronDown, Globe, Loader2, MessageSquare } from "lucide-react";
+import {
+  Check,
+  Globe,
+  Loader2,
+  Smartphone,
+  Shield,
+  ArrowRight,
+  ArrowLeft,
+  RotateCcw,
+  Lock,
+} from "lucide-react";
 import type { OtpChannel } from "@/api/propertyOwner";
 
 type Lang = "en" | "hi";
 
-const PEEK = {
-  title: "Run Your PG Without the Hassle",
-  body: "Manage tenants, payments, and updates from a single dashboard.",
-};
-
 const COPY = {
   en: {
-    signupTitle: "Hi there, lets Login",
-    signupBody: "Log in with your phone number to manage your PG effortlessly.",
-    loginTitle: "Welcome back",
-    loginBody: "Log in with your phone number to manage your PG effortlessly.",
-    name: "Name",
-    nameOptional: "Name ( optional )",
-    namePlaceholder: "Enter your name",
-    phoneLabel: "Enter phone number",
-    phonePlaceholder: "Enter your number",
-    getOtp: "Get OTP",
-    sending: "Sending...",
-    whatsapp: "WhatsApp",
-    sms: "SMS",
-    otpTitleSms: "We just sent you an SMS",
-    otpTitleWa: "We just sent you a WhatsApp",
-    otpSent: "OTP sent to",
-    changeNumber: "change number",
-    enterOtp: "Enter OTP",
-    didntReceive: "Didn't receive it yet ?",
-    resend: "Resend",
-    continue: "Continue",
+    welcomeTitle: "Welcome Back 👋",
+    welcomeSubtitle: "Enter your mobile number to sign in or register",
+    mobileNumber: "Mobile Number",
+    phonePlaceholder: "10-digit number",
+    receiveVia: "Receive OTP via:",
+    getOtpWhatsapp: "Get Verification Code on WhatsApp",
+    getOtpSms: "Get Verification Code on SMS",
+    sending: "Sending code...",
+    didntReceiveWa: "Didn't receive code on WhatsApp?",
+    getOtpViaSms: "Get OTP via SMS",
+    preferWa: "Prefer WhatsApp instead?",
+    getOtpViaWa: "Get OTP on WhatsApp",
+    verifyTitle: "Verify 4-Digit Code",
+    verifySubtitleWa: "Enter the 4-digit verification code sent via WhatsApp to",
+    verifySubtitleSms: "Enter the 4-digit verification code sent via SMS to",
+    editNumber: "Edit Number",
+    resendIn: "Resend in",
+    resendCode: "Resend Code",
+    verifyContinue: "Verify & Continue",
     verifying: "Verifying...",
-    terms: "By continuing you agree to",
-    termsLink: "Terms",
-    privacyLink: "Privacy",
+    safeBadge: "100% Safe & Instant Verification",
+    termsPrefix: "By continuing, you agree to our",
+    termsLink: "Terms & Conditions",
+    and: "and",
+    privacyLink: "Privacy Policy",
     successTitle: "Authenticated Successfully",
     successBody: "Connecting to your property portfolio...",
   },
   hi: {
-    signupTitle: "नमस्ते, लॉगिन करें",
-    signupBody: "अपना फ़ोन नंबर दर्ज करें और पीजी आसानी से मैनेज करें।",
-    loginTitle: "वापसी पर स्वागत है",
-    loginBody: "अपना फ़ोन नंबर दर्ज करें और पीजी आसानी से मैनेज करें।",
-    name: "नाम",
-    nameOptional: "नाम ( वैकल्पिक )",
-    namePlaceholder: "अपना नाम दर्ज करें",
-    phoneLabel: "फ़ोन नंबर दर्ज करें",
-    phonePlaceholder: "अपना नंबर दर्ज करें",
-    getOtp: "ओटीपी पाएं",
+    welcomeTitle: "वापसी पर स्वागत है 👋",
+    welcomeSubtitle: "साइन इन या रजिस्टर करने के लिए मोबाइल नंबर दर्ज करें",
+    mobileNumber: "मोबाइल नंबर",
+    phonePlaceholder: "10-अंकीय नंबर दर्ज करें",
+    receiveVia: "ओटीपी माध्यम चुनें:",
+    getOtpWhatsapp: "व्हाट्सएप पर वेरिफिकेशन कोड पाएं",
+    getOtpSms: "एसएमएस द्वारा वेरिफिकेशन कोड पाएं",
     sending: "भेज रहे हैं...",
-    whatsapp: "व्हाट्सएप",
-    sms: "एसएमएस",
-    otpTitleSms: "हमने आपको एसएमएस भेजा है",
-    otpTitleWa: "हमने आपको व्हाट्सएप भेजा है",
-    otpSent: "ओटीपी भेजा गया",
-    changeNumber: "नंबर बदलें",
-    enterOtp: "ओटीपी दर्ज करें",
-    didntReceive: "कोड नहीं मिला ?",
-    resend: "पुनः भेजें",
-    continue: "जारी रखें",
-    verifying: "सत्यापन...",
-    terms: "जारी रखकर आप सहमत हैं",
-    termsLink: "नियम",
-    privacyLink: "गोपनीयता",
+    didntReceiveWa: "व्हाट्सएप पर कोड नहीं मिला?",
+    getOtpViaSms: "एसएमएस द्वारा ओटीपी पाएं",
+    preferWa: "व्हाट्सएप पर मंगाना चाहते हैं?",
+    getOtpViaWa: "व्हाट्सएप पर ओटीपी पाएं",
+    verifyTitle: "4-अंकीय कोड सत्यापित करें",
+    verifySubtitleWa: "व्हाट्सएप पर भेजा गया 4-अंकीय कोड दर्ज करें",
+    verifySubtitleSms: "एसएमएस द्वारा भेजा गया 4-अंकीय कोड दर्ज करें",
+    editNumber: "नंबर बदलें",
+    resendIn: "पुनः भेजें",
+    resendCode: "कोड पुनः भेजें",
+    verifyContinue: "सत्यापित करें और आगे बढ़ें",
+    verifying: "सत्यापन जारी है...",
+    safeBadge: "100% सुरक्षित और त्वरित सत्यापन",
+    termsPrefix: "आगे बढ़कर आप सहमत हैं",
+    termsLink: "नियम और शर्तें",
+    and: "और",
+    privacyLink: "गोपनीयता नीति",
     successTitle: "लॉगिन सफल",
     successBody: "आपके प्रॉपर्टी पोर्टफोलियो से जुड़ रहे हैं...",
   },
 };
 
-function WhatsAppIcon({ size = 14 }: { size?: number }) {
+function WhatsAppIcon({ size = 16, className = "" }: { size?: number; className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
       width={size}
       height={size}
-      className="shrink-0"
+      className={`shrink-0 ${className}`}
       fill="none"
       aria-hidden="true"
     >
@@ -92,26 +97,15 @@ function WhatsAppIcon({ size = 14 }: { size?: number }) {
   );
 }
 
-function fieldBorder(error: boolean) {
-  return error
-    ? "border-[1.5px] border-[#DC2626]"
-    : "border-[1.5px] border-transparent focus-within:border-[#008080]";
-}
-
-function maskPhone(phone: string) {
-  if (phone.length < 4) return `+91 ${phone}`;
-  return `+91 *****${phone.slice(-4)}`;
-}
-
 export function MobileAuthSheet({
-  isSignup,
+  isSignup: _isSignup,
   lang,
   onLangToggle,
   step,
   showSuccess,
-  ownerName,
-  onOwnerNameChange,
-  nameError,
+  ownerName: _ownerName,
+  onOwnerNameChange: _onOwnerNameChange,
+  nameError: _nameError,
   phone,
   onPhoneChange,
   phoneError,
@@ -127,6 +121,7 @@ export function MobileAuthSheet({
   isVerifyingOtp,
   onChangeNumber,
   onResend,
+  onResendChannel,
   secondsLeft,
   canResend,
   shaking,
@@ -154,236 +149,335 @@ export function MobileAuthSheet({
   isVerifyingOtp: boolean;
   onChangeNumber: () => void;
   onResend: () => void;
+  onResendChannel?: (channel: OtpChannel) => void;
   secondsLeft: number;
   canResend: boolean;
   shaking: boolean;
 }) {
   const t = COPY[lang];
-  const greetingTitle = isSignup ? t.signupTitle : t.loginTitle;
-  const greetingBody = isSignup ? t.signupBody : t.loginBody;
   const onOtpStep = step === "otp";
 
   return (
-    <div className="md:hidden relative min-h-dvh w-full overflow-hidden bg-[#4F4F4F] text-black">
-      <div
-        className="px-4 text-center"
-        style={{ paddingTop: "calc(66px + var(--safe-top))" }}
-      >
-        <h1 className="text-[24px] font-medium leading-[30px] tracking-tight text-white">{PEEK.title}</h1>
-        <p className="mt-1 text-[14px] leading-[18px] text-white/80">{PEEK.body}</p>
+    <div className="md:hidden relative min-h-[100dvh] bg-[#F8FAFC] flex flex-col justify-between overflow-x-hidden">
+      {/* Top Deep Teal Curved Header */}
+      <div className="relative bg-gradient-to-b from-[#004D4D] via-[#006060] to-[#008080] pt-7 pb-20 px-6 text-white overflow-hidden">
+        {/* Soft Decorative Ambient Circles */}
+        <div className="absolute -top-12 -right-12 h-44 w-44 rounded-full bg-white/10 blur-xl pointer-events-none" />
+        <div className="absolute top-24 -left-14 h-40 w-40 rounded-full bg-white/5 blur-lg pointer-events-none" />
+
+        {/* Top Header Row with Back Button and Language Pill */}
+        <div className="relative z-10 flex items-center justify-between mb-4">
+          <button
+            type="button"
+            onClick={() => {
+              if (onOtpStep) onChangeNumber();
+            }}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md hover:bg-white/25 active:scale-95 transition-all tap-target"
+            title="Go Back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+
+          <button
+            type="button"
+            onClick={onLangToggle}
+            className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs text-white backdrop-blur-md hover:bg-white/25 transition-all font-semibold"
+          >
+            <Globe className="h-3.5 w-3.5 text-white/90" />
+            <span>{lang === "en" ? "हिंदी" : "English"}</span>
+          </button>
+        </div>
+
+        {/* Brand App Icon & Title & Owner App Badge */}
+        <div className="relative z-10 flex flex-col items-center text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#008080] border-2 border-white/20 shadow-lg p-2.5 mb-2.5">
+            <img
+              src="/favicon.png"
+              alt="PG Ease"
+              className="h-full w-full object-contain filter drop-shadow"
+            />
+          </div>
+
+          <h1 className="text-xl font-bold tracking-tight text-white">PG Ease</h1>
+          <span className="mt-1 inline-flex items-center rounded-full bg-white/20 px-3 py-0.5 text-[11px] font-semibold text-white/95 backdrop-blur-md">
+            Owner App
+          </span>
+        </div>
       </div>
 
-      <div
-        className="absolute inset-x-0 bottom-0 flex flex-col bg-white"
-        style={{
-          top: "125px",
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-          paddingBottom: "var(--safe-bottom)",
-        }}
-      >
-        <button
-          type="button"
-          onClick={onLangToggle}
-          aria-label={lang === "en" ? "Switch to Hindi" : "Switch to English"}
-          className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center text-[#636363]"
-        >
-          <Globe className="h-5 w-5" />
-        </button>
-
-        {showSuccess ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-            <div className="flex h-13 w-13 items-center justify-center rounded-full border border-[#B4E5C5] bg-[#ECFAF1] text-[#157F3D]">
-              <Check className="h-7 w-7 stroke-[2.5]" />
+      {/* Floating White Card */}
+      <div className="relative z-20 -mt-10 px-5 flex-1 flex flex-col justify-between">
+        <div className={`rounded-3xl bg-white p-6 shadow-xl border border-gray-100/80 space-y-4 animate-fade-in ${shaking ? "animate-shake" : ""}`}>
+          {showSuccess ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#B4E5C5] bg-[#ECFAF1] text-[#157F3D]">
+                <Check className="h-7 w-7 stroke-[2.5]" />
+              </div>
+              <h3 className="text-lg font-bold text-[#18212B]">{t.successTitle}</h3>
+              <p className="text-xs text-gray-500">{t.successBody}</p>
             </div>
-            <h3 className="text-[18px] font-bold text-[#18212B]">{t.successTitle}</h3>
-            <p className="text-[12px] text-[#636363]">{t.successBody}</p>
-          </div>
-        ) : (
-          <div className={`flex min-h-0 flex-1 flex-col px-6 pt-[54px] ${shaking ? "animate-shake" : ""}`}>
-            {onOtpStep ? (
-              <>
-                <h2 className="text-center text-[24px] font-medium leading-[30px] text-black">
-                  {channel === "whatsapp" ? t.otpTitleWa : t.otpTitleSms}
+          ) : onOtpStep ? (
+            /* ================= OTP VERIFICATION ================= */
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-lg font-bold tracking-tight text-gray-900">
+                  {t.verifyTitle}
                 </h2>
-                <p className="mt-1 text-center text-[14px] leading-[21px] text-[#636363]">
-                  {t.otpSent} {maskPhone(phone)}{" "}
-                  <button
-                    type="button"
-                    onClick={onChangeNumber}
-                    className="inline !h-auto !min-h-0 p-0 text-[14px] font-medium text-[#008080] underline"
-                  >
-                    {t.changeNumber}
-                  </button>
+                <p className="mt-1 text-xs text-gray-500 leading-relaxed">
+                  {channel === "whatsapp" ? t.verifySubtitleWa : t.verifySubtitleSms}{" "}
+                  <strong className="text-gray-800 tabular-nums">+91 {phone}</strong>
                 </p>
+              </div>
 
-                <label className="mt-6 text-[14px] font-medium leading-5 text-black">{t.enterOtp}</label>
-                <input
-                  value={otp}
-                  onChange={(e) => onOtpChange(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && otp.length === 4 && !isVerifyingOtp) {
-                      e.preventDefault();
-                      onVerify();
-                    }
-                  }}
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={4}
-                  autoFocus
-                  aria-invalid={Boolean(otpError)}
-                  className={`mt-[6px] h-14 w-full rounded-[40px] bg-[#F5F5F5] px-4 text-[16px] font-medium tabular-nums text-black outline-none ${fieldBorder(Boolean(otpError))}`}
-                  style={{ letterSpacing: "0.45em" }}
-                />
-                {otpError ? (
-                  <p className="mt-1 text-[12px] text-[#DC2626]" role="alert">
-                    {otpError}
-                  </p>
-                ) : null}
+              {/* 4 Digit Boxes */}
+              <div className="flex justify-center items-center gap-2.5 sm:gap-3 py-1">
+                {[0, 1, 2, 3].map((index) => (
+                  <input
+                    key={index}
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={otp[index] || ""}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "").slice(-1);
+                      const newOtpArr = (otp || "").split("");
+                      newOtpArr[index] = val;
+                      const newOtp = newOtpArr.join("");
+                      onOtpChange(newOtp);
+                      if (val && index < 3) {
+                        const nextEl = document.getElementById(`owner-sheet-otp-${index + 1}`);
+                        nextEl?.focus();
+                      }
+                      if (val && index === 3 && newOtp.length === 4) {
+                        onVerify();
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Backspace" && !otp[index] && index > 0) {
+                        const prevEl = document.getElementById(`owner-sheet-otp-${index - 1}`);
+                        prevEl?.focus();
+                      }
+                    }}
+                    id={`owner-sheet-otp-${index}`}
+                    className="h-14 w-12 sm:w-14 rounded-2xl border-2 border-gray-200 bg-gray-50/50 text-center text-xl font-black text-gray-900 focus:border-[#008080] focus:bg-white focus:outline-none transition-all shadow-sm"
+                  />
+                ))}
+              </div>
 
-                <div className="mt-3 flex min-h-11 items-center gap-2 text-[14px] leading-[21px] text-black">
-                  <span>{t.didntReceive}</span>
+              {otpError && (
+                <p className="text-center text-xs font-medium text-red-600">{otpError}</p>
+              )}
+
+              {/* Resend Controls */}
+              <div className="flex items-center justify-between text-xs pt-1 px-1">
+                <button
+                  type="button"
+                  onClick={onChangeNumber}
+                  className="font-medium text-gray-500 hover:text-gray-800"
+                >
+                  {t.editNumber}
+                </button>
+
+                {canResend ? (
                   <button
                     type="button"
                     onClick={onResend}
-                    disabled={!canResend || isSendingOtp}
-                    className={`h-11 min-h-11 px-1 font-medium underline ${
-                      canResend && !isSendingOtp ? "text-black" : "text-[#9E9E9E]"
-                    }`}
+                    disabled={isSendingOtp}
+                    className="flex items-center gap-1 font-bold text-[#008080] hover:underline"
                   >
-                    {t.resend}
+                    <RotateCcw className="h-3 w-3" />
+                    <span>{t.resendCode}</span>
                   </button>
-                  {!canResend ? (
-                    <span className="inline-flex h-5 min-h-0 items-center rounded-full bg-[#F5F5F5] px-2 text-[10px] leading-[14px] text-[#636363] tabular-nums">
-                      {secondsLeft} sec
-                    </span>
-                  ) : null}
-                </div>
+                ) : (
+                  <span className="text-gray-400">
+                    {t.resendIn} <strong className="text-gray-700">{secondsLeft}s</strong>
+                  </span>
+                )}
+              </div>
 
-                <div className="mt-10 pb-6">
-                  <button
-                    type="button"
-                    disabled={otp.length !== 4 || isVerifyingOtp}
-                    onClick={onVerify}
-                    className="flex h-[60px] w-full items-center justify-center gap-2 rounded-[40px] bg-[#008080] text-[16px] font-medium text-white disabled:bg-[#7EBEBE]"
-                  >
-                    {isVerifyingOtp ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
-                    {isVerifyingOtp ? t.verifying : t.continue}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <h2 className="text-center text-[24px] font-medium leading-[30px] text-black">
-                  {greetingTitle}
+              {/* Verify Button */}
+              <button
+                type="button"
+                onClick={onVerify}
+                disabled={otp.length !== 4 || isVerifyingOtp}
+                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-[#008080] py-3.5 text-sm font-bold text-white shadow-md shadow-[#008080]/25 hover:bg-[#006b6b] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none tap-target"
+              >
+                {isVerifyingOtp ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                    <span>{t.verifying}</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{t.verifyContinue}</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </button>
+
+              {/* On-Demand Fallback (Switch to SMS or WhatsApp) */}
+              <div className="pt-2.5 border-t border-gray-100 text-center">
+                <button
+                  type="button"
+                  onClick={() =>
+                    onResendChannel
+                      ? onResendChannel(channel === "whatsapp" ? "sms" : "whatsapp")
+                      : onResend()
+                  }
+                  disabled={isSendingOtp}
+                  className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 font-medium transition-colors"
+                >
+                  <span>{channel === "whatsapp" ? t.didntReceiveWa : t.preferWa}</span>
+                  <span className="font-bold text-[#008080] underline flex items-center gap-1">
+                    {channel === "whatsapp" ? (
+                      <>
+                        <Smartphone className="h-3.5 w-3.5" />
+                        {t.getOtpViaSms}
+                      </>
+                    ) : (
+                      <>
+                        <WhatsAppIcon size={14} />
+                        {t.getOtpViaWa}
+                      </>
+                    )}
+                  </span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* ================= PHONE INPUT FORM ================= */
+            <div className="space-y-4">
+              {/* Card Title & Subtitle */}
+              <div>
+                <h2 className="text-xl font-bold tracking-tight text-gray-900 flex items-center gap-1.5">
+                  {t.welcomeTitle}
                 </h2>
-                <p className="mt-1 text-center text-[14px] leading-[21px] text-[#636363]">{greetingBody}</p>
+                <p className="mt-1 text-xs text-gray-500 leading-relaxed">
+                  {t.welcomeSubtitle}
+                </p>
+              </div>
 
-                <label className="mt-8 text-[14px] font-medium leading-5 text-black">
-                  {isSignup ? t.name : t.nameOptional}
+              {/* Mobile Number Input */}
+              <div className="space-y-1.5 pt-0.5">
+                <label className="text-xs font-bold text-gray-700">
+                  {t.mobileNumber}
                 </label>
-                <input
-                  value={ownerName}
-                  onChange={(e) => onOwnerNameChange(e.target.value)}
-                  placeholder={t.namePlaceholder}
-                  autoComplete="name"
-                  aria-invalid={Boolean(nameError)}
-                  className={`mt-[6px] h-[46px] w-full rounded-[40px] bg-[#F5F5F5] px-4 text-[16px] text-black outline-none placeholder:text-[#C8C8C8] ${fieldBorder(Boolean(nameError))}`}
-                />
-                {nameError ? (
-                  <p className="mt-1 text-[12px] text-[#DC2626]" role="alert">
-                    {nameError}
-                  </p>
-                ) : null}
+                <div className="flex items-center rounded-2xl border border-gray-200 bg-white px-3 py-2 shadow-sm focus-within:border-[#008080] focus-within:ring-2 focus-within:ring-[#008080]/10 transition-all">
+                  {/* Flag + Country Code Pill */}
+                  <div className="flex items-center gap-1.5 rounded-xl bg-gray-50 border border-gray-200/80 px-2.5 py-1.5 text-xs font-bold text-gray-800 mr-2.5 flex-shrink-0 select-none">
+                    <span className="text-sm">🇮🇳</span>
+                    <span>+91</span>
+                  </div>
 
-                <label className="mt-6 text-[14px] font-medium leading-5 text-black">{t.phoneLabel}</label>
-                <div className="mt-2 flex gap-1">
-                  <div className="flex h-14 w-[84px] shrink-0 items-center justify-center gap-0.5 rounded-[40px] bg-[#F5F5F5]">
-                    <span className="text-[20px] leading-none" aria-hidden>
-                      🇮🇳
-                    </span>
-                    <ChevronDown className="h-4 w-4 text-[#636363]" />
-                  </div>
-                  <div
-                    className={`flex h-14 min-w-0 flex-1 items-center rounded-[40px] bg-[#F5F5F5] px-4 ${fieldBorder(Boolean(phoneError))}`}
-                  >
-                    <span className="shrink-0 text-[16px] font-medium text-black">+91</span>
-                    <span className="mx-2 inline-block h-6 w-[3px] shrink-0 bg-[#DFDFDF]" />
-                    <input
-                      value={phone}
-                      onChange={(e) => onPhoneChange(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && canSubmitPhone && !isSendingOtp) {
-                          e.preventDefault();
-                          onSendOtp();
-                        }
-                      }}
-                      placeholder={t.phonePlaceholder}
-                      inputMode="numeric"
-                      autoComplete="tel"
-                      aria-invalid={Boolean(phoneError)}
-                      className="h-full min-h-0 min-w-0 flex-1 bg-transparent text-[16px] tabular-nums text-black outline-none placeholder:text-[#C8C8C8]"
-                    />
-                  </div>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    value={phone}
+                    onChange={(e) => onPhoneChange(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && canSubmitPhone && !isSendingOtp) {
+                        e.preventDefault();
+                        onSendOtp();
+                      }
+                    }}
+                    placeholder={t.phonePlaceholder}
+                    autoFocus
+                    className="w-full bg-transparent text-sm font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none tracking-wide"
+                  />
                 </div>
-                {phoneError ? (
-                  <p className="mt-1 text-[12px] text-[#DC2626]" role="alert">
-                    {phoneError}
-                  </p>
-                ) : null}
+                {phoneError && (
+                  <p className="text-xs text-red-600 font-medium pt-0.5">{phoneError}</p>
+                )}
+              </div>
 
-                <div className="mt-3 grid grid-cols-2 gap-2">
+              {/* Channel Selector with Official WhatsApp Logo */}
+              <div className="flex items-center justify-between text-xs pt-1 px-0.5">
+                <span className="text-gray-400 font-medium">{t.receiveVia}</span>
+                <div className="flex items-center gap-1.5">
                   <button
                     type="button"
                     onClick={() => onChannel("whatsapp")}
-                    className={`flex h-11 items-center justify-center gap-1.5 rounded-[40px] text-[12px] font-medium ${
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
                       channel === "whatsapp"
-                        ? "border-[1.5px] border-[#008080] bg-[#E8FFFF] text-black"
-                        : "border-[1.5px] border-transparent bg-[#F5F5F5] text-[#636363]"
+                        ? "bg-emerald-50 text-emerald-800 border border-emerald-400 font-bold shadow-xs"
+                        : "text-gray-500 hover:bg-gray-100 border border-transparent"
                     }`}
                   >
-                    <WhatsAppIcon />
-                    {t.whatsapp}
+                    <WhatsAppIcon size={14} />
+                    <span>WhatsApp</span>
                   </button>
+
                   <button
                     type="button"
                     onClick={() => onChannel("sms")}
-                    className={`flex h-11 items-center justify-center gap-1.5 rounded-[40px] text-[12px] font-medium ${
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
                       channel === "sms"
-                        ? "border-[1.5px] border-[#008080] bg-[#E8FFFF] text-black"
-                        : "border-[1.5px] border-transparent bg-[#F5F5F5] text-[#636363]"
+                        ? "bg-teal-50 text-teal-800 border border-teal-400 font-bold shadow-xs"
+                        : "text-gray-500 hover:bg-gray-100 border border-transparent"
                     }`}
                   >
-                    <MessageSquare className="h-3.5 w-3.5" />
-                    {t.sms}
+                    <Smartphone className="h-3.5 w-3.5 text-[#008080]" />
+                    <span>SMS</span>
                   </button>
                 </div>
+              </div>
 
-                <div className="mt-10 pb-6">
-                  <button
-                    type="button"
-                    disabled={!canSubmitPhone || isSendingOtp}
-                    onClick={onSendOtp}
-                    className="flex h-[60px] w-full items-center justify-center gap-2 rounded-[40px] bg-[#008080] text-[16px] font-medium text-white disabled:bg-[#7EBEBE]"
-                  >
-                    {isSendingOtp ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
-                    {isSendingOtp ? t.sending : t.getOtp}
-                  </button>
-                  <p className="mt-3 text-center text-[12px] leading-4 text-[#636363]">
-                    {t.terms}{" "}
-                    <Link to="/terms-and-conditions" className="underline">
-                      {t.termsLink}
-                    </Link>
-                    {" & "}
-                    <Link to="/privacy-policy" className="underline">
-                      {t.privacyLink}
-                    </Link>
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-        )}
+              {/* Submit Button */}
+              <button
+                type="button"
+                disabled={!canSubmitPhone || isSendingOtp}
+                onClick={onSendOtp}
+                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-[#008080] py-3.5 text-sm font-bold text-white shadow-md shadow-[#008080]/25 hover:bg-[#006b6b] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none tap-target"
+              >
+                {isSendingOtp ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                    <span>{t.sending}</span>
+                  </>
+                ) : (
+                  <>
+                    {channel === "whatsapp" ? (
+                      <WhatsAppIcon size={16} />
+                    ) : (
+                      <Smartphone className="h-4 w-4 text-white" />
+                    )}
+                    <span>
+                      {channel === "whatsapp" ? t.getOtpWhatsapp : t.getOtpSms}
+                    </span>
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </button>
+
+              {/* 100% Safe Verification Trust Badge */}
+              <div className="flex items-center justify-center gap-1.5 rounded-full bg-gray-50 border border-gray-200/60 py-2 px-3 text-xs text-gray-500 font-medium">
+                <Lock className="h-3.5 w-3.5 text-gray-400" />
+                <span>{t.safeBadge}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Terms & Conditions */}
+        <div className="py-6 text-center space-y-3">
+          <p className="text-[11px] text-gray-400 leading-relaxed px-4">
+            {t.termsPrefix}{" "}
+            <Link
+              to="/terms"
+              className="text-[#008080] underline font-medium hover:text-[#006060]"
+            >
+              {t.termsLink}
+            </Link>{" "}
+            {t.and}{" "}
+            <Link
+              to="/privacy"
+              className="text-[#008080] underline font-medium hover:text-[#006060]"
+            >
+              {t.privacyLink}
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

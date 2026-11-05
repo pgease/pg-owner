@@ -26,6 +26,7 @@ import { OccupancyCard } from "@/components/dashboard/OccupancyCard";
 import { PendingRentCard } from "@/components/dashboard/PendingRentCard";
 import { RoomGrid } from "@/components/dashboard/RoomGrid";
 import { MonthlyKpiDashboard } from "@/components/dashboard/MonthlyKpiDashboard";
+import { OwnerSupportCommunityCards } from "@/components/dashboard/OwnerSupportCommunityCards";
 import { cn } from "@/lib/utils";
 
 const Dashboard = () => {
@@ -199,6 +200,9 @@ const Dashboard = () => {
 
             {/* Rooms Structure / Bed Grid */}
             <RoomGrid data={data} />
+
+            {/* Owner Support, WhatsApp Community, Video Tutorials & Dedicated Manager */}
+            <OwnerSupportCommunityCards />
           </>
         )}
       </div>

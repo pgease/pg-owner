@@ -13,6 +13,7 @@ import {
   UserPlus,
   Users,
   Wallet,
+  MessageSquare,
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { useDashboardData } from "@/components/dashboard/useDashboardData";
@@ -20,6 +21,7 @@ import { useMonthlyOwnerKpis } from "@/hooks/usePropertyOwnerQueries";
 import { useOwnerNotifications } from "@/hooks/useOwnerNotifications";
 import { formatInr } from "@/lib/rentDashboard";
 import { cn } from "@/lib/utils";
+import { OwnerSupportCommunityCards } from "@/components/dashboard/OwnerSupportCommunityCards";
 
 const MONTHS = [
   "January",
@@ -40,6 +42,7 @@ const QUICK_ACTIONS = [
   { label: "Add tenant", to: "/tenants/add" },
   { label: "Record rent payment", to: "/rent-payments" },
   { label: "View tenants", to: "/tenants" },
+  { label: "Group Chat (Soon)", to: "/group-chat" },
   { label: "Complaints", to: "/complaints" },
   { label: "Verify KYC", to: "/tenants/kyc" },
   { label: "My PG", to: "/my-pgs" },
@@ -258,6 +261,42 @@ export function MobileDashboard() {
             onClick={() => navigate("/complaints")}
           />
         </div>
+      </section>
+
+      {/* Owner Community & Support Blocks */}
+      <section className="bg-[var(--figma-dash-summary,#F5F6FA)] px-4 pb-8 pt-1 space-y-4">
+        {/* Resident Group Chat Coming Soon Teaser */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => navigate("/group-chat")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") navigate("/group-chat");
+          }}
+          className="flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-teal-900 via-[#005555] to-emerald-950 p-4 text-white shadow-md cursor-pointer transition-all active:scale-[0.99] border border-teal-500/30"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-400/20 text-teal-300 border border-teal-400/30">
+              <MessageSquare className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-[14px] font-bold text-white truncate">Resident Group Chat</span>
+                <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[9px] font-black uppercase text-slate-950 shrink-0">
+                  Coming Soon
+                </span>
+              </div>
+              <p className="text-[11.5px] text-teal-100/85 truncate">
+                Connect owner, staff & residents at one place
+              </p>
+            </div>
+          </div>
+          <span className="shrink-0 text-xs font-semibold text-teal-200 underline underline-offset-2">
+            View →
+          </span>
+        </div>
+
+        <OwnerSupportCommunityCards />
       </section>
     </div>
   );
