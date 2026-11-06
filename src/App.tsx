@@ -184,6 +184,9 @@ const App = () => (
                         <Route path="/billing" element={<RequireOwner><Plans /></RequireOwner>} />
                         <Route path="/subscription" element={<RequireOwner><Plans /></RequireOwner>} />
                         <Route path="/nightout" element={<NightOutRequestsPage />} />
+                        <Route path="/night-out" element={<NightOutRequestsPage />} />
+                        <Route path="/tenants/night-out" element={<NightOutRequestsPage />} />
+                        <Route path="/operations/night-out" element={<NightOutRequestsPage />} />
                         <Route
                           path="/eviction"
                           element={<FeaturePlaceholder title="Eviction" permission="eviction_approve" />}

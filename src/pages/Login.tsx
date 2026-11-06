@@ -137,12 +137,12 @@ function WhatsAppIcon({ size = 16, className = "" }: { size?: number; className?
 /* ---------- i18n Dictionary ---------- */
 const TEXTS = {
   en: {
-    trustedPill: "Trusted by 2,500+ PG & Hostel Owners Across India",
+    trustedPill: "Smart Operating Platform for PGs & Hostels Across India",
     headlineHighlight: "without the chaos.",
     subHeadline: "Automate rent collections, room allocations, and digital KYC in one unified dashboard.",
     bullet1: "Instant UPI Collections & WhatsApp Receipts",
     bullet2: "Real-Time Bed Occupancy & Multi-Branch View",
-    bullet3: "Paperless Aadhaar KYC & Police Verification",
+    bullet3: "Paperless Aadhaar KYC & Digital Agreements",
     tabSignIn: "Sign In",
     tabSignUp: "New Owner Sign Up",
     titleSignIn: "Sign in to PG Ease",
@@ -175,7 +175,7 @@ const TEXTS = {
     firstTimeSaving: "Setting up your account...",
   },
   hi: {
-    trustedPill: "भारत भर में 2,500+ पीजी और हॉस्टल मालिकों का भरोसा",
+    trustedPill: "भारत भर में पीजी और हॉस्टल के लिए आधुनिक स्मार्ट ऑपरेटिंग प्लेटफ़ॉर्म",
     headlineHighlight: "बिना किसी झंझट के।",
     subHeadline: "किराया संग्रह, कमरों का आवंटन और डिजिटल केवाईसी एक ही सुरक्षित डैशबोर्ड में।",
     bullet1: "तत्काल यूपीआई संग्रह और व्हाट्सएप रसीदें",
@@ -722,7 +722,7 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
                     <span className="text-xs sm:text-[13px] font-bold text-white tracking-wide">
-                      Emerald Stays — Koramangala Hub
+                      Live Property Overview
                     </span>
                   </div>
                   <span className="px-2 py-0.5 rounded-full border border-emerald-400/40 bg-emerald-400/10 text-emerald-300 text-[8.5px] sm:text-[10px] font-bold uppercase tracking-wider shrink-0 whitespace-nowrap">
@@ -850,11 +850,11 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
                     <span className="text-[11px] font-bold text-white truncate">
-                      Trusted by 2,500+ PG Owners
+                      Smart Operating System for PGs
                     </span>
                   </div>
                   <span className="text-[10px] text-[#5CE1E6] font-bold shrink-0 bg-white/10 px-2 py-0.5 rounded-full">
-                    ★ 4.9 / 5
+                    ★ PG Ease
                   </span>
                 </div>
 
@@ -967,7 +967,7 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
                 {/* Security Note */}
                 <div className="flex items-center justify-center gap-1.5 text-[10.5px] sm:text-[11px] text-gray-400 pt-0.5">
                   <Lock className="h-3 w-3 text-gray-400 shrink-0" />
-                  <span>256-Bit Bank Grade SSL • ISO 27001 Certified Hostels</span>
+                  <span>256-Bit SSL Encrypted • Private & Secure Owner Data</span>
                 </div>
               </div>
             ) : (

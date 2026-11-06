@@ -22,6 +22,7 @@ import {
   Users,
   IndianRupee,
   Wrench,
+  HelpCircle,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -62,6 +63,8 @@ const SEARCH_COMMANDS = [
   { title: "WiFi Settings", category: "Property", icon: Building2, url: "/my-pgs/wifi", keywords: "internet router password wifi ssid" },
   { title: "Notice Board", category: "Property", icon: Building2, url: "/my-pgs/notices", keywords: "announcement circular broadcast notice" },
   { title: "Complaints & Maintenance", category: "Operations", icon: Wrench, url: "/complaints", keywords: "issues repair ticket plumber electrician" },
+  { title: "Guest Requests & Check-in", category: "Operations", icon: Users, url: "/tenants/guests", keywords: "guest visitor checkin arrival visitor log stay" },
+  { title: "Night Out Logs & Permissions", category: "Operations", icon: Wrench, url: "/nightout", keywords: "night out permission inform late night leave curfew" },
   { title: "Food & Meal Timings", category: "Operations", icon: Sparkles, url: "/food", keywords: "mess breakfast lunch dinner menu kitchen" },
   { title: "Staff & Permissions", category: "Management", icon: User, url: "/team", keywords: "manager warden security cook team staff roles" },
   { title: "Financial Reports", category: "Reports", icon: Building2, url: "/reports", keywords: "profit loss report analytics revenue" },
@@ -219,8 +222,21 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
       {/* Header bar: fixed at the top of the app container, never scrolls */}
       <header className="pgease-app-header hidden md:block h-[64px] shrink-0 bg-gradient-to-r from-[#005555] via-[#005050] to-[#004848] text-white select-none z-20">
         <div className="flex h-full items-center justify-between gap-1.5 sm:gap-4 px-2.5 sm:px-6">
-          {/* Left section: Mobile menu + Mobile property switcher */}
+          {/* Left section: Mobile menu + Mobile property switcher + Desktop sidebar toggle */}
           <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 shrink-0">
+            {/* Desktop / Tablet Sidebar Toggle */}
+            {onSidebarToggle ? (
+              <button
+                type="button"
+                onClick={onSidebarToggle}
+                className="hidden md:flex items-center justify-center h-9 w-9 rounded-xl text-teal-100 hover:bg-white/10 hover:text-white transition-colors shrink-0 cursor-pointer border border-white/10"
+                aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                <Menu className="h-4 w-4" />
+              </button>
+            ) : null}
+
             {/* Mobile-only menu toggle */}
             <button
               type="button"
@@ -354,6 +370,25 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
               </TooltipTrigger>
               <TooltipContent className="text-xs bg-slate-900 text-white border-slate-700">
                 Watch step-by-step video guide on YouTube
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Help Center (Canonical: https://help.pgease.com) */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <a
+                  href="https://help.pgease.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 px-3 text-xs font-bold text-white transition-all hover:scale-105 shadow-xs shrink-0 cursor-pointer"
+                  aria-label="PG Ease Help & Documentation Center"
+                >
+                  <HelpCircle className="h-4 w-4 text-teal-200" />
+                  <span>Help</span>
+                </a>
+              </TooltipTrigger>
+              <TooltipContent className="text-xs bg-slate-900 text-white border-slate-700">
+                PG Ease Help & Guides (help.pgease.com)
               </TooltipContent>
             </Tooltip>
 

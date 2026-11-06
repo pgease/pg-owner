@@ -135,6 +135,11 @@ export default function NoticePeriodPage() {
         daysRemaining = Math.ceil((vDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       }
 
+      const reason =
+        t.notice?.reason || (t as any).noticeReason || (t as any).reason || (t as any).vacateReason || "";
+      const remarks =
+        t.notice?.remarks || (t as any).noticeRemarks || (t as any).remarks || (t as any).vacateRemarks || "";
+
       return {
         ...t,
         computedRoomTenantId: roomTenantId,
@@ -142,6 +147,8 @@ export default function NoticePeriodPage() {
         computedNoticeStartedAt: noticeStartedAt,
         computedVacateOn: vacateOn,
         computedDaysRemaining: daysRemaining,
+        computedReason: reason,
+        computedRemarks: remarks,
       };
     });
   }, [tenants]);
@@ -365,12 +372,7 @@ export default function NoticePeriodPage() {
   };
 
   return (
-    <FeatureGuard
-      feature="notice_period_tracker"
-      fallbackTitle="Notice Period is Locked"
-      fallbackDescription="Notice Period Tracking is a premium capability not currently enabled on your subscription plan. Please enable it in the Admin Panel or upgrade your plan to unlock."
-    >
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Top Header */}
         <PageHeader
           title="Notice Period"
@@ -567,11 +569,23 @@ export default function NoticePeriodPage() {
                             </TableCell>
 
                             {/* Scheduled Move Out */}
-                            <TableCell className="py-2.5 px-3 text-xs tabular-nums whitespace-nowrap">
+                            <TableCell className="py-2.5 px-3 text-xs tabular-nums">
                               {t.computedVacateOn ? (
-                                <span className="font-semibold text-[var(--gray-900)]">
-                                  {vacateDate}
-                                </span>
+                                <div>
+                                  <span className="font-semibold text-[var(--gray-900)] block">
+                                    {vacateDate}
+                                  </span>
+                                  {t.computedReason && (
+                                    <span className="text-[11px] text-[var(--gray-600)] block truncate max-w-[220px]" title={t.computedReason}>
+                                      Reason: {t.computedReason}
+                                    </span>
+                                  )}
+                                  {t.computedRemarks && (
+                                    <span className="text-[11px] text-[var(--gray-500)] block truncate max-w-[220px]" title={t.computedRemarks}>
+                                      Note: {t.computedRemarks}
+                                    </span>
+                                  )}
+                                </div>
                               ) : (
                                 <span className="text-[var(--gray-400)] italic">Not set</span>
                               )}
@@ -955,6 +969,5 @@ export default function NoticePeriodPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </FeatureGuard>
   );
 }

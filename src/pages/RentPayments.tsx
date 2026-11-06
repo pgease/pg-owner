@@ -205,31 +205,23 @@ export const RentPayments = () => {
   };
 
   const handleSendWhatsAppReminder = async (row: RentDashboardTenantRow) => {
-    if (entitlements.isExpired) {
-      setTrialExpiredFeature("WhatsApp Reminders");
-      setTrialExpiredOpen(true);
-      return;
-    }
-    if (!entitlements.hasFeature("whatsapp_notifications")) {
-      toast({
-        title: "Pro Feature: WhatsApp Reminders",
-        description: "Automated WhatsApp rent reminders are available exclusively on the Pro plan. Please upgrade to Pro to enable this feature.",
-        variant: "destructive",
-      });
-      navigate("/plans");
-      return;
-    }
     if (selectedPgId && row.roomTenantId) {
       try {
         const res = await sendWhatsAppRentReminder(selectedPgId, row.roomTenantId, { customAmount: row.amountDue });
-        toast({ title: "WhatsApp reminder sent", description: res?.message });
+        toast({ title: "WhatsApp reminder sent", description: res?.message || "Reminder sent successfully via WhatsApp." });
         return;
-      } catch {}
+      } catch (err: any) {
+        // Fallback to wa.me link directly
+      }
     }
     const text = encodeURIComponent(
       `Hi ${row.tenantName}, gentle reminder that your PG rent of ${formatINR(row.amountDue)} is pending for ${MONTH_NAMES[month - 1]} ${year}. Please pay via UPI.`
     );
     const cleanPhone = String(row.phone || "").replace(/\D/g, "");
+    if (!cleanPhone) {
+      toast({ title: "No phone number", description: "Tenant phone number is not available.", variant: "destructive" });
+      return;
+    }
     window.open(`https://wa.me/91${cleanPhone}?text=${text}`, "_blank");
   };
 
@@ -323,6 +315,9 @@ export const RentPayments = () => {
   const [selectedReceipt, setSelectedReceipt] = useState<RentCollectionHistoryItem | null>(null);
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
 
+  const isDuesRoute = location.pathname.endsWith("/dues");
+  const isHistoryRoute = location.pathname.endsWith("/history");
+
   // Synchronize status filter and active tab when arriving via sub-routes
   useEffect(() => {
     if (location.pathname.endsWith("/history")) {
@@ -330,7 +325,7 @@ export const RentPayments = () => {
     } else {
       setActiveTab("register");
       if (location.pathname.endsWith("/dues")) {
-        setStatusFilter("pending");
+        setStatusFilter("dues_all");
       }
     }
   }, [location.pathname]);
@@ -584,12 +579,17 @@ export const RentPayments = () => {
   // Filtered register
   const filteredRows = useMemo(() => {
     return registerRows.filter((r) => {
-      // Status filter
-      if (statusFilter === "paid" && r.status !== "paid") return false;
-      if (statusFilter === "partial" && r.status !== "partial") return false;
-      if (statusFilter === "pending" && r.status !== "pending") return false;
-      if (statusFilter === "overdue" && r.status !== "overdue") return false;
-      if (statusFilter === "verification_pending" && r.status !== "verification_pending") return false;
+      // Dues & Pending view: if on /dues and filter is "all" or "dues_all", show all unpaid (pending, overdue, partial)
+      if (isDuesRoute && (statusFilter === "all" || statusFilter === "dues_all")) {
+        if (r.status !== "pending" && r.status !== "overdue" && r.status !== "partial") return false;
+      } else {
+        // Status filter
+        if (statusFilter === "paid" && r.status !== "paid") return false;
+        if (statusFilter === "partial" && r.status !== "partial") return false;
+        if (statusFilter === "pending" && r.status !== "pending") return false;
+        if (statusFilter === "overdue" && r.status !== "overdue") return false;
+        if (statusFilter === "verification_pending" && r.status !== "verification_pending") return false;
+      }
 
       // Search filter
       if (searchQuery.trim()) {
@@ -599,7 +599,7 @@ export const RentPayments = () => {
       }
       return true;
     });
-  }, [registerRows, statusFilter, searchQuery]);
+  }, [registerRows, statusFilter, searchQuery, isDuesRoute]);
 
   // Operational metrics
   const totalCollected = useMemo(() => {
@@ -826,11 +826,19 @@ export const RentPayments = () => {
         {/* Main Header */}
         <PageHeader
           className="hidden md:block"
-          title={activeTab === "history" ? "Payment History Ledger" : "Rent & Payments"}
+          title={
+            activeTab === "history"
+              ? "Payment History Ledger"
+              : isDuesRoute
+                ? "Dues & Pending Rent"
+                : "Rent & Payments"
+          }
           description={
             activeTab === "history"
               ? `Complete historical audit log of all rent and dues transactions collected for ${selectedPg?.name || "your PG"}.`
-              : `Rent register, verification queue and payment ledger for ${MONTH_NAMES[month - 1]} ${year}.`
+              : isDuesRoute
+                ? `Dedicated ledger of unpaid, overdue, and pending rent collections for ${MONTH_NAMES[month - 1]} ${year}.`
+                : `Rent register, verification queue and payment ledger for ${MONTH_NAMES[month - 1]} ${year}.`
           }
           actions={
             <Button
@@ -844,25 +852,53 @@ export const RentPayments = () => {
           }
         />
 
-        {/* View Switcher Tabs: Monthly Register vs Historical Ledger */}
+        {/* View Switcher Tabs: Monthly Register vs Dues & Pending vs Historical Ledger */}
         <div className="flex items-center gap-1 border-b border-[var(--gray-200)]">
           <button
             type="button"
-            onClick={() => handleTabChange("register")}
+            onClick={() => {
+              navigate("/rent-payments");
+              setActiveTab("register");
+            }}
             className={cn(
               "flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 -mb-[1px] transition-all",
-              activeTab === "register"
+              activeTab === "register" && !isDuesRoute
                 ? "border-[var(--brand-600)] text-[var(--brand-700)] font-semibold"
                 : "border-transparent text-[var(--gray-500)] hover:text-[var(--gray-800)] hover:border-[var(--gray-300)]"
             )}
           >
             <FileText className="h-4 w-4" />
-            <span>Monthly Register & Dues</span>
+            <span>Monthly Register</span>
           </button>
 
           <button
             type="button"
-            onClick={() => handleTabChange("history")}
+            onClick={() => {
+              navigate("/rent-payments/dues");
+              setActiveTab("register");
+            }}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 -mb-[1px] transition-all",
+              isDuesRoute
+                ? "border-[var(--brand-600)] text-[var(--brand-700)] font-semibold"
+                : "border-transparent text-[var(--gray-500)] hover:text-[var(--gray-800)] hover:border-[var(--gray-300)]"
+            )}
+          >
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <span>Dues & Pending</span>
+            {counts.pending + counts.overdue + counts.partial > 0 && (
+              <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-semibold">
+                {counts.pending + counts.overdue + counts.partial}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              navigate("/rent-payments/history");
+              setActiveTab("history");
+            }}
             className={cn(
               "flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 -mb-[1px] transition-all",
               activeTab === "history"
@@ -884,7 +920,7 @@ export const RentPayments = () => {
         {activeTab === "register" && (
           <div className="space-y-5">
             {/* Operational Metrics */}
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-2 lg:grid-cols-4">
               <MetricDisplay
                 label={`Collected (${MONTH_NAMES[month - 1].slice(0, 3)})`}
                 value={formatINR(totalCollected)}
@@ -967,14 +1003,22 @@ export const RentPayments = () => {
             {/* Status Filter Chips */}
             <div className="flex flex-wrap items-center gap-1.5 pb-1">
               {(
-                [
-                  ["all", `All (${counts.all})`],
-                  ["paid", `Paid (${counts.paid})`],
-                  ["partial", `Partially Paid (${counts.partial})`],
-                  ["pending", `Pending (${counts.pending})`],
-                  ["overdue", `Overdue (${counts.overdue})`],
-                  ["verification_pending", `Verification Queue (${counts.verification})`],
-                ] as const
+                isDuesRoute
+                  ? [
+                      ["dues_all", `All Unpaid Dues (${counts.pending + counts.overdue + counts.partial})`],
+                      ["pending", `Pending (${counts.pending})`],
+                      ["overdue", `Overdue (${counts.overdue})`],
+                      ["partial", `Partially Paid (${counts.partial})`],
+                      ["all", `Show All Tenants (${counts.all})`],
+                    ]
+                  : [
+                      ["all", `All (${counts.all})`],
+                      ["paid", `Paid (${counts.paid})`],
+                      ["partial", `Partially Paid (${counts.partial})`],
+                      ["pending", `Pending (${counts.pending})`],
+                      ["overdue", `Overdue (${counts.overdue})`],
+                      ["verification_pending", `Verification Queue (${counts.verification})`],
+                    ]
               ).map(([key, label]) => (
                 <button
                   key={key}
@@ -982,7 +1026,7 @@ export const RentPayments = () => {
                   onClick={() => setStatusFilter(key)}
                   className={cn(
                     "px-3 py-1.5 text-xs font-medium rounded-sm transition-colors tabular-nums whitespace-nowrap",
-                    statusFilter === key
+                    (statusFilter === key || (isDuesRoute && statusFilter === "all" && key === "dues_all"))
                       ? "bg-[var(--brand-50)] text-[var(--brand-700)] font-semibold border border-[var(--brand-100)]"
                       : "text-[var(--gray-600)] hover:bg-[var(--gray-100)] hover:text-[var(--gray-900)]",
                   )}
@@ -1293,9 +1337,9 @@ export const RentPayments = () => {
                       : "All tenants are settled or there are no records for this status."
                   }
                   action={
-                    statusFilter !== "all" ? (
-                      <Button variant="secondary" size="sm" onClick={() => setStatusFilter("all")}>
-                        Show all tenants
+                    statusFilter !== "all" && statusFilter !== "dues_all" ? (
+                      <Button variant="secondary" size="sm" onClick={() => setStatusFilter(isDuesRoute ? "dues_all" : "all")}>
+                        Show all {isDuesRoute ? "dues" : "tenants"}
                       </Button>
                     ) : undefined
                   }
@@ -1310,7 +1354,7 @@ export const RentPayments = () => {
         {activeTab === "history" && (
           <div className="space-y-4">
             {/* Historical Summary Metrics */}
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-2 lg:grid-cols-4">
               <MetricDisplay
                 label="Total collected"
                 value={formatINR(historyQuery.data?.summary?.totalAmountCollected || 0)}

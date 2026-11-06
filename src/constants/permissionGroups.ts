@@ -492,7 +492,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     id: "kyc",
     label: "KYC & Verification",
     category: "verification",
-    description: "Aadhaar verification, government photo IDs, and police verification assist",
+    description: "Aadhaar verification, government photo IDs, and digital tenant agreements",
     permissions: [
       {
         key: "kyc_view",

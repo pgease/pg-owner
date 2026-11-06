@@ -59,7 +59,7 @@ export function useSubscriptionAccess(): SubscriptionAccessInfo {
     const ownerNameSlug = (owner?.name || "pg")
       .toLowerCase()
       .replace(/[^a-z0-9]/g, "");
-    const subdomainUrl = `${ownerNameSlug}.pgease.in`;
+    const subdomainUrl = `${ownerNameSlug}.pgease.com`;
 
     return {
       currentPlan,

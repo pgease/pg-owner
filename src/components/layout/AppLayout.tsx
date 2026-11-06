@@ -19,7 +19,15 @@ const COLLAPSE_KEY = "pgease_sidebar_collapsed";
 
 function readCollapsed(): boolean {
   try {
-    return localStorage.getItem(COLLAPSE_KEY) === "true";
+    const saved = localStorage.getItem(COLLAPSE_KEY);
+    if (saved !== null) {
+      return saved === "true";
+    }
+    // Auto-collapse on tablet screens (< 1024px) so content has ample room
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      return true;
+    }
+    return false;
   } catch {
     return false;
   }
@@ -38,6 +46,20 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   if (!isLoading && isExpired && isStaff) {
     return <StaffExpiredLockout />;
   }
+
+  // Auto-collapse sidebar on tablet width on resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768 && window.innerWidth < 1024) {
+        setCollapsed(true);
+      }
+    };
+    if (window.innerWidth >= 768 && window.innerWidth < 1024 && localStorage.getItem(COLLAPSE_KEY) === null) {
+      setCollapsed(true);
+    }
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Persist the collapse preference and close the mobile drawer on navigation.
   useEffect(() => {

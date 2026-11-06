@@ -37,15 +37,15 @@ const TUTORIALS = [
   },
   {
     id: "website",
-    title: "How to Setup Your PG Website ({pgname}.pgease.in)",
-    plan: "Pro Plan",
+    title: "How to Setup Your PG Website ({pgname}.pgease.com)",
+    plan: "Lite & Pro",
     duration: "3 min guide",
     icon: Globe,
     steps: [
-      "Upgrade or activate your Pro Plan (₹49/bed/mo).",
+      "Activate your Lite or Pro plan.",
       "In Property Settings, enter your desired subdomain (e.g. madhavpg).",
       "Upload PG photos, food menu, rules and amenities.",
-      "Your live public site (e.g. madhavpg.pgease.in) goes live with direct tenant booking form!",
+      "Your live public site (e.g. madhavpg.pgease.com) goes live with direct tenant booking form!",
     ],
   },
 ];

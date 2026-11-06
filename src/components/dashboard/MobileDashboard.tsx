@@ -219,12 +219,16 @@ export function MobileDashboard() {
         <button
           type="button"
           onClick={() => navigate(selectedPgId ? "/tenants/add" : "/onboarding")}
-          className="mt-6 flex h-[52px] w-full items-center justify-center gap-2 rounded-[40px] border border-dashed border-[#A7D5D5] bg-transparent text-[16px] font-medium text-[#101010]"
+          className="mt-6 flex h-[52px] w-full items-center justify-center gap-2 rounded-[40px] border border-dashed border-[#A7D5D5] bg-transparent text-[16px] font-medium text-[#101010] hover:border-[#008080] hover:text-[#008080] transition-colors cursor-pointer"
         >
           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#101010] text-white">
             <Plus className="h-3 w-3" strokeWidth={3} />
           </span>
-          {selectedPgId ? "Add Your First Resident" : "Add your first property"}
+          {!selectedPgId
+            ? "Add your first property"
+            : (tenantTotal ?? 0) > 0
+              ? "Add New Resident"
+              : "Add Your First Resident"}
         </button>
       </section>
 
@@ -325,7 +329,7 @@ function SummaryCard({
         </span>
         {label}
       </span>
-      <span className="mt-3 text-[22px] font-semibold leading-7 tabular-nums text-[#101010]">{value}</span>
+      <span className="mt-3 text-[17px] sm:text-[22px] font-semibold leading-tight tabular-nums text-[#101010] truncate max-w-full block" title={String(value)}>{value}</span>
     </button>
   );
 }

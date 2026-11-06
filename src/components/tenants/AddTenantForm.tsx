@@ -247,7 +247,7 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
     { id: "rent", label: "Rent", mode: "consumption", amount: "" },
     { id: "deposit", label: "Security Deposit", mode: "consumption", amount: "" },
     { id: "electricity_meter", label: "Electricity Meter", mode: "consumption", amount: "" },
-    { id: "police", label: "Police Verification", mode: "consumption", amount: "" },
+    { id: "kyc", label: "KYC Verification", mode: "consumption", amount: "" },
     { id: "mess", label: "Mess", mode: "consumption", amount: "" },
     { id: "electricity_bill", label: "Electricity Bill", mode: "consumption", amount: "" },
     { id: "fine", label: "Manual Late Fine", mode: "consumption", amount: "" },

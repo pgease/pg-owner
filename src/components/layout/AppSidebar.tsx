@@ -19,6 +19,9 @@ import {
   Check,
   Plus,
   MessageSquare,
+  Crown,
+  CheckCircle2,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useMemo } from "react";
@@ -38,6 +41,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { TrialExpiredGateModal } from "@/components/common/TrialExpiredGateModal";
 
 interface NavChild {
@@ -47,6 +58,7 @@ interface NavChild {
   permissionKey?: string;
   featureKey?: string;
   ownerOnly?: boolean;
+  isExternal?: boolean;
 }
 
 interface NavItem {
@@ -85,7 +97,7 @@ const NAV_ITEMS: NavItem[] = [
       { title: "Facilities", url: "/my-pgs/amenities", permissionKey: "room_view" },
       { title: "Restrictions", url: "/my-pgs/restrictions", permissionKey: "room_view" },
       { title: "WiFi", url: "/my-pgs/wifi", permissionKey: "room_view", featureKey: "wifi_management", badge: "Beta" },
-      { title: "Notice Board", url: "/my-pgs/notices", permissionKey: "room_view", featureKey: "digital_notice_board" },
+      { title: "Notice Board", url: "/my-pgs/notices", permissionKey: "room_view" },
       { title: "Bank Account", url: "/my-pgs/bank", ownerOnly: true },
       { title: "Public Listing", url: "/post-pg", permissionKey: "room_view", badge: "Live" },
     ],
@@ -99,7 +111,7 @@ const NAV_ITEMS: NavItem[] = [
       { title: "All Tenants", url: "/tenants", permissionKey: "tenant_view" },
       { title: "Leads & Visits", url: "/leads", permissionKey: "tenant_view", featureKey: "lead_crm", badge: "Beta" },
       { title: "KYC & Agreements", url: "/tenants/kyc", permissionKey: "kyc_view", featureKey: "aadhaar_kyc" },
-      { title: "Notice Period", url: "/tenants/notice-period", permissionKey: "tenant_view", featureKey: "notice_period_tracker" },
+      { title: "Notice Period", url: "/tenants/notice-period", permissionKey: "tenant_view" },
     ],
   },
   {
@@ -122,9 +134,9 @@ const NAV_ITEMS: NavItem[] = [
     permissionKey: "complaint_view_all",
     children: [
       { title: "Complaints", url: "/complaints", permissionKey: "complaint_view_all" },
-      { title: "Food & Meals", url: "/food", permissionKey: "food_view_edit", featureKey: "food_menu_planner" },
-      { title: "Night Out Logs", url: "/nightout", permissionKey: "nightout_view", featureKey: "nightout_guest_requests" },
-      { title: "Guest Requests", url: "/tenants/guests", permissionKey: "guest_log", featureKey: "nightout_guest_requests" },
+      { title: "Food & Meals", url: "/food", permissionKey: "food_view_edit" },
+      { title: "Night Out Logs", url: "/nightout", permissionKey: "nightout_view" },
+      { title: "Guest Requests", url: "/tenants/guests", permissionKey: "guest_log" },
     ],
   },
   {
@@ -162,6 +174,7 @@ const NAV_ITEMS: NavItem[] = [
       { title: "Settings", url: "/settings" },
       { title: "Plans & Billing", url: "/plans", ownerOnly: true },
       { title: "Refer & Earn", url: "/referrals", ownerOnly: true },
+      { title: "Help & Documentation", url: "https://help.pgease.com", isExternal: true },
       { title: "Activity Logs", url: "/activity-logs", featureKey: "audit_logs" },
     ],
   },
@@ -181,6 +194,64 @@ interface SidebarContentProps {
   onMobileClose?: () => void;
 }
 
+const PRO_FEATURE_DESCRIPTIONS: Record<string, { title: string; desc: string; highlights: string[] }> = {
+  wifi_management: {
+    title: "WiFi & Network Management",
+    desc: "Automate WiFi password distribution to active tenants and rotate network credentials securely.",
+    highlights: ["Automatic credentials sharing on check-in", "Bandwidth and router allocation", "Revoke credentials upon move-out"],
+  },
+  digital_notice_board: {
+    title: "Digital Notice Board & Broadcasts",
+    desc: "Post digital announcements and broadcast notices directly to tenant mobile apps and WhatsApp.",
+    highlights: ["Push notifications to all or specific rooms", "Read receipts and tenant acknowledgments", "Emergency maintenance alerts"],
+  },
+  lead_crm: {
+    title: "Leads & Inquiry Management",
+    desc: "Track prospective tenant inquiries, scheduled room visits, and follow-ups in a centralized CRM.",
+    highlights: ["Public inquiry lead capture", "Scheduled visits reminder", "1-click convert inquiry to tenant"],
+  },
+  aadhaar_kyc: {
+    title: "Instant Digital KYC & Rental Agreements",
+    desc: "Verify resident identity seamlessly with DigiLocker Aadhaar e-KYC and execute digital rent agreements.",
+    highlights: ["Instant Government-verified Aadhaar verification", "Digital signature rental agreements", "Secure paperless record storage"],
+  },
+  notice_period_tracker: {
+    title: "Notice Period & Vacancy Pipeline",
+    desc: "Track move-out notices, auto-calculate notice periods, and mark upcoming vacant beds for early booking.",
+    highlights: ["Automated 30-day notice countdown", "Upcoming bed vacancy calendar", "Deposit refund checklist integration"],
+  },
+  expense_tracking: {
+    title: "Comprehensive Expense & Bill Tracking",
+    desc: "Log daily operational costs, utility bills, caretaker salaries, and generate real-time monthly profit reports.",
+    highlights: ["Category-wise expense breakdown (Electricity, Mess, WiFi)", "Vendor invoice attachment", "Automated Net Profit/Loss calculations"],
+  },
+  food_menu_planner: {
+    title: "Food Menu & Mess Timings",
+    desc: "Publish daily breakfast, lunch, and dinner menus to tenants with meal feedback and holiday skip alerts.",
+    highlights: ["Weekly dynamic meal planner", "Tenant meal preferences and skip counts", "Kitchen mess headcount forecasting"],
+  },
+  nightout_guest_requests: {
+    title: "Night Out Logs & Guest Check-in Approval",
+    desc: "Automate tenant night-out permissions and visitor check-ins with security approval workflows.",
+    highlights: ["Digital gate register and visitor verification", "Night-out curfew approvals with parent SMS alerts", "Searchable historical security log"],
+  },
+  staff_roles_permissions: {
+    title: "Staff Members & Granular Access Control",
+    desc: "Empower managers, wardens, cooks, and security guards with custom roles without sharing owner credentials.",
+    highlights: ["Granular role presets (Manager, Warden, Accountant, Caretaker)", "Hide financial dues and revenue from operational staff", "Staff action audit tracking"],
+  },
+  advanced_reports: {
+    title: "Advanced Financial Reports & Analytics",
+    desc: "Export detailed Excel and PDF ledgers, revenue ageing buckets, and annual tax summaries.",
+    highlights: ["12-month revenue trend analysis", "Overdue ageing buckets (0-30, 30-60, 60+ days)", "One-click CA/Auditor Excel export"],
+  },
+  audit_logs: {
+    title: "Security Audit & Activity Logs",
+    desc: "Track every staff and owner action, payment modification, tenant allocation, and room update with timestamps.",
+    highlights: ["Immutable audit trail with user identity and timestamp", "Track payment edits and receipt deletions", "Security peace of mind"],
+  },
+};
+
 const SidebarContent = ({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarContentProps) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -189,6 +260,32 @@ const SidebarContent = ({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   const { properties, selectedPgId, setSelectedPgId } = useApp();
   const subAccess = useSubscriptionAccess();
   const [trialExpiredOpen, setTrialExpiredOpen] = useState(false);
+  const [proModalFeature, setProModalFeature] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    highlights?: string[];
+  }>({
+    open: false,
+    title: "",
+    description: "",
+  });
+
+  const handleLockedFeatureClick = (title: string, featureKey?: string) => {
+    const info = featureKey && PRO_FEATURE_DESCRIPTIONS[featureKey]
+      ? PRO_FEATURE_DESCRIPTIONS[featureKey]
+      : {
+          title,
+          desc: `${title} is an automated feature included with PG Ease Pro. Upgrade to unlock full access for your PG.`,
+          highlights: ["Automated operations workflows", "Priority support manager", "Multi-platform access"],
+        };
+    setProModalFeature({
+      open: true,
+      title: info.title,
+      description: info.desc,
+      highlights: info.highlights,
+    });
+  };
 
   const selectedPg = useMemo(
     () => (Array.isArray(properties) ? properties.find((p) => p.id === selectedPgId) : null),
@@ -277,28 +374,33 @@ const SidebarContent = ({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
       return null;
     }
 
+    if (child.isExternal) {
+      return (
+        <a
+          href={child.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-[36px] items-center justify-between gap-2 rounded-lg px-2.5 text-[14px] font-medium text-teal-100/80 transition-all duration-150 hover:bg-white/10 hover:text-white"
+          onClick={onMobileClose}
+        >
+          <span className="truncate">{child.title}</span>
+          <span className="rounded-full bg-teal-400/20 border border-teal-300/30 px-1.5 py-0.5 text-[10px] font-bold text-teal-100">
+            ↗
+          </span>
+        </a>
+      );
+    }
+
     const permLocked = isLockedByPermission(child.permissionKey);
     const featLocked = isLockedByFeature(child.featureKey);
 
     if (featLocked) {
-      if (!isOwner) {
-        return (
-          <div
-            className="flex h-[36px] w-full cursor-not-allowed items-center justify-between gap-2 rounded-lg px-2.5 text-[14.5px] text-teal-200/40"
-            title="This feature is not included in the PG's plan."
-            aria-disabled
-          >
-            <span className="truncate">{child.title}</span>
-            <Lock className="h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden />
-          </div>
-        );
-      }
       return (
         <button
           type="button"
-          onClick={goToPlans}
-          className="flex h-[36px] w-full items-center justify-between gap-2 rounded-lg px-2.5 text-left text-[14.5px] text-teal-100/75 transition-colors hover:bg-white/10 hover:text-white"
-          title="Available on the Pro plan. Click to view plans."
+          onClick={() => handleLockedFeatureClick(child.title, child.featureKey)}
+          className="flex h-[36px] w-full items-center justify-between gap-2 rounded-lg px-2.5 text-left text-[14.5px] text-teal-100/75 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
+          title="Available on the Pro plan. Click to view details."
         >
           <span className="truncate">{child.title}</span>
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-400/20 border border-amber-300/30 px-1.5 py-0.5 text-[10.5px] font-black text-amber-200">
@@ -434,25 +536,12 @@ const SidebarContent = ({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
     }
 
     if (featLocked) {
-      if (!isOwner) {
-        return (
-          <div
-            className="flex h-[44px] w-full cursor-not-allowed items-center gap-2.5 rounded-xl px-3 text-[16px] font-medium text-teal-200/40"
-            title="This feature is not included in the PG's plan."
-            aria-disabled
-          >
-            <Icon className="h-5 w-5 shrink-0 opacity-60" aria-hidden />
-            <span className="flex-1 text-left truncate">{item.title}</span>
-            <Lock className="h-4 w-4 shrink-0 opacity-60" aria-hidden />
-          </div>
-        );
-      }
       return (
         <button
           type="button"
-          onClick={goToPlans}
-          className="flex h-[44px] w-full items-center gap-2.5 rounded-xl px-3 text-[16px] font-medium text-teal-100/75 transition-colors hover:bg-white/10 hover:text-white"
-          title="Available on the Pro plan. Click to view plans."
+          onClick={() => handleLockedFeatureClick(item.title, item.featureKey)}
+          className="flex h-[44px] w-full items-center gap-2.5 rounded-xl px-3 text-[16px] font-medium text-teal-100/75 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
+          title="Available on the Pro plan. Click to view details."
         >
           <Icon className="h-5 w-5 shrink-0 text-teal-200/75" aria-hidden />
           <span className="flex-1 text-left truncate">{item.title}</span>
@@ -809,6 +898,71 @@ const SidebarContent = ({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
       </div>
 
       <TrialExpiredGateModal open={trialExpiredOpen} onOpenChange={setTrialExpiredOpen} />
+
+      <Dialog open={proModalFeature.open} onOpenChange={(open) => setProModalFeature((prev) => ({ ...prev, open }))}>
+        <DialogContent className="max-w-md p-6 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl">
+          <DialogHeader className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-xs font-black text-amber-700 dark:text-amber-300">
+                <Crown className="h-3.5 w-3.5 text-amber-600" /> Pro Feature
+              </span>
+            </div>
+            <DialogTitle className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+              {proModalFeature.title}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              {proModalFeature.description}
+            </DialogDescription>
+          </DialogHeader>
+
+          {proModalFeature.highlights && proModalFeature.highlights.length > 0 ? (
+            <div className="mt-3 rounded-2xl bg-teal-50/70 dark:bg-teal-950/40 border border-teal-100 dark:border-teal-900/60 p-3.5 space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-teal-800 dark:text-teal-300">Included in PG Ease Pro</p>
+              <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
+                {proModalFeature.highlights.map((h, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
+                    <span>{h}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          <div className="mt-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 p-3 flex items-center justify-between text-xs">
+            <div>
+              <p className="font-bold text-slate-900 dark:text-white">PG Ease Pro</p>
+              <p className="text-[11px] text-slate-500">₹49 / bed / month + 18% GST</p>
+            </div>
+            <span className="text-[10.5px] font-semibold text-teal-700 dark:text-teal-300 bg-white dark:bg-slate-800 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700">
+              Lite is ₹29/bed
+            </span>
+          </div>
+
+          <div className="mt-5 flex items-center justify-end gap-2.5">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setProModalFeature((prev) => ({ ...prev, open: false }))}
+              className="text-xs rounded-xl"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                setProModalFeature((prev) => ({ ...prev, open: false }));
+                navigate("/plans");
+                if (mobileOpen) onMobileClose?.();
+              }}
+              className="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl px-4 gap-1.5 shadow-sm"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Upgrade to Pro (₹49/bed)
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

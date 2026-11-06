@@ -55,12 +55,31 @@ function combineWhen(day: string, time: string): Date | null {
 }
 
 function asList(value: unknown): any[] {
-  if (Array.isArray(value)) return value;
-  const record = value as { data?: unknown; requests?: unknown; tenants?: unknown } | null;
-  if (Array.isArray(record?.data)) return record.data;
-  if (Array.isArray(record?.requests)) return record.requests;
-  if (Array.isArray(record?.tenants)) return record.tenants;
-  return [];
+  let list: any[] = [];
+  if (Array.isArray(value)) {
+    list = value;
+  } else {
+    const record = value as { data?: unknown; requests?: unknown; tenants?: unknown } | null;
+    if (Array.isArray(record?.data)) list = record.data;
+    else if (Array.isArray(record?.requests)) list = record.requests;
+    else if (Array.isArray(record?.tenants)) list = record.tenants;
+  }
+  return list.map((item) => {
+    if (item && item.request && typeof item.request === "object") {
+      return {
+        ...item.request,
+        id: item.request.id || item.id,
+        tenant: item.tenant || item.request.tenant,
+        room: item.room || item.request.room,
+        tenantName: item.tenant?.name || item.request.tenantName || item.request.tenant?.name,
+        tenantPhone: item.tenant?.phone || item.request.tenantPhone || item.request.tenant?.phone,
+        roomNumber: item.room?.roomNumber || item.request.roomNumber || item.request.room?.roomNumber,
+        floorName: item.floorName || item.request.floorName,
+        blockName: item.blockName || item.request.blockName,
+      };
+    }
+    return item;
+  });
 }
 
 function getMovementState(req: any): "away" | "upcoming" | "returned" {

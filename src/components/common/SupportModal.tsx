@@ -64,7 +64,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({ open, onOpenChange }
           </a>
 
           <a
-            href="mailto:support@pgease.in?subject=PG%20Ease%20Owner%20Support%20Request"
+            href="mailto:support@pgease.com?subject=PG%20Ease%20Owner%20Support%20Request"
             className="flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] transition-all group cursor-pointer"
           >
             <div className="flex items-center gap-3">
@@ -73,7 +73,7 @@ export const SupportModal: React.FC<SupportModalProps> = ({ open, onOpenChange }
               </div>
               <div>
                 <p className="text-xs font-bold text-white group-hover:text-indigo-300 transition-colors">Email Desk</p>
-                <p className="text-[11px] text-slate-400">support@pgease.in</p>
+                <p className="text-[11px] text-slate-400">support@pgease.com</p>
               </div>
             </div>
             <span className="text-xs font-bold text-indigo-400">Email &rarr;</span>

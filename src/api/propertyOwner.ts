@@ -912,6 +912,8 @@ export function normalizeSingleTenant(raw: any): PropertyTenant {
       noticeStartedAt: noticeGivenAt,
       vacateOn: expectedMoveOutDate,
       daysUntilVacate: expectedMoveOutDate ? Math.ceil((new Date(expectedMoveOutDate).getTime() - Date.now()) / (24 * 60 * 60 * 1000)) : null,
+      reason: stay.notice?.reason ?? t.notice?.reason ?? stay.reason ?? t.reason ?? (stay as any).vacateReason ?? (t as any).vacateReason ?? "",
+      remarks: stay.notice?.remarks ?? t.notice?.remarks ?? stay.remarks ?? t.remarks ?? (stay as any).vacateRemarks ?? (t as any).vacateRemarks ?? "",
     },
     roomNo,
     roomNumber,

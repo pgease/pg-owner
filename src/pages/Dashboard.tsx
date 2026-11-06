@@ -52,13 +52,25 @@ const Dashboard = () => {
     }
   }, [location.state]);
 
-  // Show the expired-plan prompt once per session.
+  // Show the expired-plan prompt once per session if not previously dismissed.
   useEffect(() => {
-    if (!subAccess.isLoading && subAccess.isExpired && !sessionStorage.getItem("trial_expired_gate_prompted")) {
+    if (
+      !subAccess.isLoading &&
+      subAccess.isExpired &&
+      !sessionStorage.getItem("trial_expired_gate_dismissed") &&
+      !localStorage.getItem("trial_expired_gate_dismissed")
+    ) {
       setGateModalOpen(true);
-      sessionStorage.setItem("trial_expired_gate_prompted", "true");
     }
   }, [subAccess.isExpired, subAccess.isLoading]);
+
+  const handleGateModalClose = (open: boolean) => {
+    setGateModalOpen(open);
+    if (!open) {
+      sessionStorage.setItem("trial_expired_gate_dismissed", "true");
+      localStorage.setItem("trial_expired_gate_dismissed", "true");
+    }
+  };
 
   const data = useDashboardData(selectedPgId);
 
@@ -86,7 +98,7 @@ const Dashboard = () => {
           </div>
         </div>
         <CelebrationDialog open={celebrationOpen} onClose={() => setCelebrationOpen(false)} pgName={celebrationPgName} />
-        <TrialExpiredGateModal open={gateModalOpen} onOpenChange={setGateModalOpen} featureName="Add New Property" />
+        <TrialExpiredGateModal open={gateModalOpen} onOpenChange={handleGateModalClose} featureName="Add New Property" />
       </CanAccessPage>
     );
   }
@@ -207,7 +219,7 @@ const Dashboard = () => {
         )}
       </div>
       <CelebrationDialog open={celebrationOpen} onClose={() => setCelebrationOpen(false)} pgName={celebrationPgName} />
-      <TrialExpiredGateModal open={gateModalOpen} onOpenChange={setGateModalOpen} featureName="PG Management" />
+      <TrialExpiredGateModal open={gateModalOpen} onOpenChange={handleGateModalClose} featureName="PG Management" />
     </CanAccessPage>
   );
 };

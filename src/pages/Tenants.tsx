@@ -533,14 +533,14 @@ const Tenants = () => {
         </div>
 
         {/* Search, FilterBar Chips, Density Toggle, Export */}
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5">
-          <div className="flex flex-wrap items-center gap-2 flex-1">
+        <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
             <SearchInput
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               aria-label="Search tenants by name, phone, or room"
               placeholder="Search name, phone, room…"
-              className="w-full sm:w-64"
+              className="w-full sm:w-60"
             />
 
             {/* Block Filter */}
@@ -552,7 +552,7 @@ const Tenants = () => {
                 setSelectedRoomId("");
               }}
             >
-              <SelectTrigger className="w-[130px] h-9 text-xs" aria-label="Filter by block">
+              <SelectTrigger className="w-[125px] h-9 text-xs shrink-0" aria-label="Filter by block">
                 <SelectValue placeholder="All Blocks" />
               </SelectTrigger>
               <SelectContent>
@@ -573,7 +573,7 @@ const Tenants = () => {
                 setSelectedRoomId("");
               }}
             >
-              <SelectTrigger className="w-[125px] h-9 text-xs" aria-label="Filter by floor">
+              <SelectTrigger className="w-[120px] h-9 text-xs shrink-0" aria-label="Filter by floor">
                 <SelectValue placeholder="All Floors" />
               </SelectTrigger>
               <SelectContent>
@@ -593,7 +593,7 @@ const Tenants = () => {
               value={selectedRoomId || "all"}
               onValueChange={(v) => setSelectedRoomId(v === "all" ? "" : v)}
             >
-              <SelectTrigger className="w-[125px] h-9 text-xs" aria-label="Filter by room">
+              <SelectTrigger className="w-[120px] h-9 text-xs shrink-0" aria-label="Filter by room">
                 <SelectValue placeholder="All Rooms" />
               </SelectTrigger>
               <SelectContent>
@@ -610,7 +610,7 @@ const Tenants = () => {
 
             {/* KYC Status Filter */}
             <Select value={kycFilter} onValueChange={(v) => setKycFilter(v as typeof kycFilter)}>
-              <SelectTrigger className="w-[120px] h-9 text-xs" aria-label="Filter by KYC status">
+              <SelectTrigger className="w-[115px] h-9 text-xs shrink-0" aria-label="Filter by KYC status">
                 <SelectValue placeholder="KYC status" />
               </SelectTrigger>
               <SelectContent>
@@ -621,14 +621,14 @@ const Tenants = () => {
             </Select>
           </div>
 
-          <div className="flex items-center gap-2 self-end md:self-auto">
+          <div className="flex items-center gap-2 self-start xl:self-auto shrink-0">
             {/* Density Toggle */}
-            <div className="flex rounded-md border border-[var(--gray-300)] p-0.5 bg-white">
+            <div className="flex rounded-md border border-[var(--gray-300)] p-0.5 bg-white shrink-0">
               <button
                 type="button"
                 onClick={() => setDensity("default")}
                 className={cn(
-                  "px-2 py-1 text-xs rounded-sm transition-colors",
+                  "px-2 py-1 text-xs rounded-sm transition-colors cursor-pointer",
                   density === "default"
                     ? "bg-[var(--gray-100)] text-[var(--gray-900)] font-medium"
                     : "text-[var(--gray-500)] hover:text-[var(--gray-900)]",
@@ -641,7 +641,7 @@ const Tenants = () => {
                 type="button"
                 onClick={() => setDensity("compact")}
                 className={cn(
-                  "px-2 py-1 text-xs rounded-sm transition-colors",
+                  "px-2 py-1 text-xs rounded-sm transition-colors cursor-pointer",
                   density === "compact"
                     ? "bg-[var(--gray-100)] text-[var(--gray-900)] font-medium"
                     : "text-[var(--gray-500)] hover:text-[var(--gray-900)]",
@@ -656,16 +656,18 @@ const Tenants = () => {
               variant="secondary"
               size="sm"
               onClick={handleExportCSV}
-              className="gap-1.5 h-9 text-xs"
+              className="gap-1.5 h-9 text-xs shrink-0 whitespace-nowrap cursor-pointer"
               disabled={filteredTenants.length === 0}
             >
-              <Download className="h-3.5 w-3.5" /> Export
+              <Download className="h-3.5 w-3.5 shrink-0" /> <span>Export</span>
             </Button>
           </div>
         </div>
 
-        {/* Standardized DataTable */}
+        {/* Standardized DataTable with responsive horizontal scroll container */}
+        <div className="w-full overflow-x-auto rounded-[6px]">
         <DataTable
+          className="min-w-[820px]"
           columns={[
             {
               id: "tenant",
@@ -891,6 +893,7 @@ const Tenants = () => {
             />
           }
         />
+        </div>
 
         {/* Tenant Detail Drawer (Opened on row click) */}
         <TenantDetailDrawer

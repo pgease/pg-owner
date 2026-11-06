@@ -371,34 +371,34 @@ export default function Structure() {
         />
 
         {/* Property & View Switcher Bar */}
-        <div className="register-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+        <div className="register-card p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="h-10 w-10 rounded-md bg-[var(--brand-50)] border border-[var(--brand-100)] text-[var(--brand-700)] flex items-center justify-center shrink-0">
               <Building2 className="h-5 w-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-md font-semibold text-[var(--gray-900)]">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-md font-semibold text-[var(--gray-900)] truncate">
                   {activeProperty?.name || "Select Property"}
                 </h2>
-                <span className="text-[11px] font-medium text-[var(--gray-500)] bg-[var(--gray-100)] px-2 py-0.5 rounded-sm">
+                <span className="text-[11px] font-medium text-[var(--gray-500)] bg-[var(--gray-100)] px-2 py-0.5 rounded-sm shrink-0">
                   {allRooms.length} rooms
                 </span>
               </div>
-              <p className="text-xs text-[var(--gray-500)] mt-0.5">
+              <p className="text-xs text-[var(--gray-500)] mt-0.5 truncate">
                 {activeProperty?.address || "Configure room blocks and bed capacity"}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0">
             {/* View Mode Toggle: Bed Grid vs Table */}
-            <div className="hidden md:flex rounded-md border border-[var(--gray-300)] p-0.5 bg-white">
+            <div className="hidden sm:flex rounded-md border border-[var(--gray-300)] p-0.5 bg-white shrink-0">
               <button
                 type="button"
                 onClick={() => setViewMode("grid")}
                 className={cn(
-                  "flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-sm transition-colors",
+                  "flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-sm transition-colors cursor-pointer",
                   viewMode === "grid"
                     ? "bg-[var(--gray-100)] text-[var(--gray-900)] font-semibold"
                     : "text-[var(--gray-600)] hover:text-[var(--gray-900)]"
@@ -410,7 +410,7 @@ export default function Structure() {
                 type="button"
                 onClick={() => setViewMode("table")}
                 className={cn(
-                  "flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-sm transition-colors",
+                  "flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-sm transition-colors cursor-pointer",
                   viewMode === "table"
                     ? "bg-[var(--gray-100)] text-[var(--gray-900)] font-semibold"
                     : "text-[var(--gray-600)] hover:text-[var(--gray-900)]"
@@ -421,7 +421,7 @@ export default function Structure() {
             </div>
 
             <Select value={currentPropertyId || ""} onValueChange={(val) => setCurrentPropertyId(val)}>
-              <SelectTrigger className="w-[180px] h-9 text-xs">
+              <SelectTrigger className="w-[180px] sm:w-[220px] max-w-full h-9 text-xs shrink-0">
                 <SelectValue placeholder="Switch PG" />
               </SelectTrigger>
               <SelectContent>
@@ -612,8 +612,8 @@ export default function Structure() {
               />
             </div>
           ) : viewMode === "grid" ? (
-            /* Bed Grid View */
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            /* Bed Grid View - Responsive 2 columns on tablet so headers and bed tiles never truncate */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
               {rooms.map((r: any) => {
                 const bedCount = Number(r.capacity || r.numberOfBeds || r.beds?.length || 1);
 
@@ -634,9 +634,9 @@ export default function Structure() {
                     key={r.id}
                     className="register-card p-3.5 flex flex-col justify-between space-y-3"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm text-[var(--gray-900)]">
+                    <div className="flex items-center justify-between gap-1 min-w-0">
+                      <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                        <span className="font-semibold text-sm text-[var(--gray-900)] whitespace-nowrap">
                           Room {r.roomNumber}
                         </span>
                         <StatusBadge
@@ -645,8 +645,8 @@ export default function Structure() {
                           size="sm"
                         />
                       </div>
-                      <span className="text-xs text-[var(--gray-500)]">
-                        {bedCount} Bed
+                      <span className="text-xs text-[var(--gray-500)] shrink-0 whitespace-nowrap">
+                        {bedCount} {bedCount === 1 ? "Bed" : "Beds"}
                       </span>
                     </div>
 
@@ -678,23 +678,23 @@ export default function Structure() {
                               }
                             }}
                             className={cn(
-                              "rounded-sm p-2 text-left text-xs border transition-colors flex flex-col justify-between h-14",
+                              "rounded-sm p-2 text-left text-xs border transition-colors flex flex-col justify-between h-14 min-w-0 cursor-pointer",
                               isOccupied
                                 ? isOnNotice
-                                  ? "bg-amber-50 border-amber-200 text-amber-900"
-                                  : "bg-emerald-50 border-emerald-200 text-emerald-900"
+                                    ? "bg-amber-50 border-amber-200 text-amber-900"
+                                    : "bg-emerald-50 border-emerald-200 text-emerald-900"
                                 : "bg-white border-dashed border-[var(--gray-300)] text-[var(--gray-500)] hover:border-[var(--brand-600)] hover:text-[var(--brand-600)]"
                             )}
                             aria-label={isOccupied ? `Bed ${idx + 1}, occupied by ${assignedTenant.name}` : `Bed ${idx + 1} is vacant. Add a tenant.`}
                             title={isOccupied ? `Occupied by ${assignedTenant.name}` : `Bed ${idx + 1} is vacant. Click to add tenant.`}
                           >
-                            <div className="flex items-center justify-between font-medium">
-                              <span className="flex items-center gap-1 text-[11px]">
-                                <BedDouble className="h-3 w-3" /> Bed {idx + 1}
+                            <div className="flex items-center justify-between font-medium w-full">
+                              <span className="flex items-center gap-1 text-[11px] whitespace-nowrap">
+                                <BedDouble className="h-3 w-3 shrink-0" /> Bed {idx + 1}
                               </span>
                               <span
                                 className={cn(
-                                  "h-2 w-2 rounded-full",
+                                  "h-2 w-2 rounded-full shrink-0",
                                   isOccupied
                                     ? isOnNotice
                                       ? "bg-amber-500"
@@ -703,7 +703,7 @@ export default function Structure() {
                                 )}
                               />
                             </div>
-                            <span className="truncate text-[11px] font-semibold">
+                            <span className="truncate text-[11px] font-semibold w-full block">
                               {isOccupied ? assignedTenant.name || "Tenant" : "+ Allocate"}
                             </span>
                           </button>

@@ -16,14 +16,16 @@ const MENU_LINKS = [
   { to: "/settings", label: "Profile" },
   { to: "/group-chat", label: "Group Chat (Soon)" },
   { to: "/complaints", label: "Complaints" },
-  { to: "/tenants/kyc", label: "KYC" },
-  { to: "/food", label: "Food" },
-  { to: "/team", label: "Staff" },
+  { to: "/tenants/guests", label: "Guest Requests & Check-in" },
+  { to: "/nightout", label: "Night Out Logs" },
+  { to: "/tenants/kyc", label: "KYC & Agreements" },
+  { to: "/food", label: "Food & Meals" },
+  { to: "/team", label: "Staff & Permissions" },
   { to: "/reports", label: "Reports" },
   { to: "/expenses", label: "Expenses" },
-  { to: "/plans", label: "Plans" },
-  { to: "/settings", label: "Settings" },
-  { to: "/support", label: "Support" },
+  { to: "/plans", label: "Plans & Billing" },
+  { to: "https://help.pgease.com", label: "Help & Guides (help.pgease.com)", isExternal: true },
+  { to: "/support", label: "Contact Support" },
 ];
 
 export function MobileBottomNav() {
@@ -58,17 +60,31 @@ export function MobileBottomNav() {
           </div>
           <nav className="flex-1 overflow-y-auto px-3 py-2">
             {MENU_LINKS.map((link) => (
-              <button
-                key={link.to}
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false);
-                  navigate(link.to);
-                }}
-                className="flex w-full items-center min-h-11 px-3 py-3 text-left text-[16px] text-[#101010] rounded-[16px] hover:bg-[#F5F5F5]"
-              >
-                {link.label}
-              </button>
+              link.isExternal ? (
+                <a
+                  key={link.to}
+                  href={link.to}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex w-full items-center justify-between min-h-11 px-3 py-3 text-left text-[16px] text-[#101010] rounded-[16px] hover:bg-[#F5F5F5]"
+                >
+                  <span>{link.label}</span>
+                  <span className="text-xs text-[#008080] font-bold">↗</span>
+                </a>
+              ) : (
+                <button
+                  key={link.to}
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    navigate(link.to);
+                  }}
+                  className="flex w-full items-center min-h-11 px-3 py-3 text-left text-[16px] text-[#101010] rounded-[16px] hover:bg-[#F5F5F5]"
+                >
+                  {link.label}
+                </button>
+              )
             ))}
             <button
               type="button"

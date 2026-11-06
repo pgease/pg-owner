@@ -43,8 +43,8 @@ const KNOWLEDGE_RESPONSES: Record<string, { answer: string; link?: { label: stri
   },
   website: {
     answer:
-      "PG Ease Pro includes your PG website (for example `madhavpg.pgease.com`). You can show rooms, amenities, and food, and take tenant enquiries without a broker.",
-    link: { label: "Upgrade to Pro", url: "/plans" },
+      "PG Ease includes your dedicated PG website (for example `madhavpg.pgease.com`). You can show rooms, amenities, and food, and take tenant enquiries directly without broker commissions.",
+    link: { label: "View Public Listing", url: "/post-pg" },
   },
   account_manager: {
     answer:
@@ -121,7 +121,7 @@ export const EaseBuddyAI: React.FC<{
         botResponse = KNOWLEDGE_RESPONSES.plans;
       } else if (q.includes("upi") || q.includes("verify") || q.includes("approve") || q.includes("payment") || q.includes("rent")) {
         botResponse = KNOWLEDGE_RESPONSES.upi;
-      } else if (q.includes("website") || q.includes("subdomain") || q.includes("pgease.in") || q.includes("domain")) {
+      } else if (q.includes("website") || q.includes("subdomain") || q.includes("pgease.com") || q.includes("pgease.in") || q.includes("domain")) {
         botResponse = KNOWLEDGE_RESPONSES.website;
       } else if (q.includes("manager") || q.includes("rahul") || q.includes("support") || q.includes("contact")) {
         botResponse = KNOWLEDGE_RESPONSES.account_manager;
@@ -143,13 +143,13 @@ export const EaseBuddyAI: React.FC<{
 
   return (
     <>
-      {/* Floating Action Button - Positioned at bottom: 24px, right: 24px */}
+      {/* Floating Action Button - Positioned safely above bottom nav & clear of table actions */}
       {!isOpen && (
-        <div className="fixed bottom-24 right-5 z-30 hidden md:block">
+        <div className="fixed bottom-[calc(76px+var(--safe-bottom))] md:bottom-8 right-4 sm:right-6 z-30">
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="group relative flex h-12 w-12 items-center justify-center rounded-full bg-[var(--brand-600)] text-white shadow-pop hover:scale-105 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-600)] focus-visible:ring-offset-2 border-2 border-white overflow-hidden p-0.5"
+            className="group relative flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-[var(--brand-600)] text-white shadow-xl hover:scale-105 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-600)] focus-visible:ring-offset-2 border-2 border-white overflow-hidden p-0.5"
             title="Ease Buddy AI Assistant"
             aria-label="Open Ease Buddy AI"
           >
@@ -165,7 +165,7 @@ export const EaseBuddyAI: React.FC<{
 
       {/* Ease Buddy Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-24 right-5 z-50 w-[92vw] sm:w-[380px] h-[520px] max-h-[70vh] rounded-md border border-[var(--gray-200)] bg-white shadow-overlay flex flex-col overflow-hidden text-[var(--gray-900)]">
+        <div className="fixed bottom-[calc(76px+var(--safe-bottom))] md:bottom-8 right-4 sm:right-6 z-50 w-[92vw] sm:w-[380px] h-[520px] max-h-[70vh] rounded-2xl border border-[var(--gray-200)] bg-white shadow-2xl flex flex-col overflow-hidden text-[var(--gray-900)]">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-[var(--gray-50)] border-b border-[var(--gray-200)] shrink-0">
             <div className="flex items-center gap-2.5">

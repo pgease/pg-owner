@@ -81,8 +81,9 @@ export const MetricDisplay: React.FC<MetricDisplayProps> = ({
           <div className="h-8 w-20 animate-pulse rounded-[4px] bg-[#EEF1F3]" />
         ) : (
           <span
+            title={typeof value === "string" ? value : undefined}
             className={cn(
-              "text-[24px] leading-[32px] font-semibold tabular-nums tracking-[-0.01em]",
+              "text-[18px] sm:text-[20px] lg:text-[24px] leading-tight font-semibold tabular-nums tracking-[-0.01em] truncate block max-w-full",
               TONE_VALUE_CLASSES[tone] || TONE_VALUE_CLASSES.default,
             )}
           >

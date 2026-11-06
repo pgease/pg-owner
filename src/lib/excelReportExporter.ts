@@ -146,7 +146,7 @@ export function build95Headers(monthName = getMonthName()): string[] {
     "Bond Link",
     "Booked By",
     "Rental Agreement",
-    "Police Verification",
+    "KYC Verification Status",
     "Aadhar Front",
     "Aadhar Back",
     "Bank Account Number",
@@ -279,7 +279,7 @@ export function mapTenantTo95Columns(
   const bookedBy = t.bookedBy || "Owner";
 
   const rentalAgreement = t.agreementUrl ? "Available" : "Not Created";
-  const policeVerif = kyc.policeVerificationStatus || (isKyc ? "Completed" : "Pending");
+  const kycVerifStatus = kyc.status || (isKyc ? "Completed" : "Pending");
   const aadharFront = kyc.aadhaarFrontUrl ? "Uploaded" : "-";
   const aadharBack = kyc.aadhaarBackUrl ? "Uploaded" : "-";
 
@@ -377,7 +377,7 @@ export function mapTenantTo95Columns(
     bondLink,
     bookedBy,
     rentalAgreement,
-    policeVerif,
+    kycVerifStatus,
     aadharFront,
     aadharBack,
     bankAcc,

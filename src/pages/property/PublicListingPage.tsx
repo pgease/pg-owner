@@ -133,7 +133,7 @@ export const CATALOG_RULES_BY_CATEGORY = [
       { name: "No Loud Music / Noise After 10:00 PM", icon: Volume2 },
       { name: "Heavy Electrical Appliances (Heaters/Induction) Not Allowed", icon: AlertTriangle },
       { name: "Mandatory 30-Day Move-out Notice Period", icon: Clock },
-      { name: "Police Verification / Aadhaar KYC Mandatory Before Check-in", icon: ShieldCheck },
+      { name: "Verified Aadhaar KYC Mandatory Before Check-in", icon: ShieldCheck },
     ],
   },
 ];

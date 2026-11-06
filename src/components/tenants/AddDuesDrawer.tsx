@@ -29,7 +29,7 @@ interface DueTypeItem {
 const DUE_TYPES: DueTypeItem[] = [
   { id: "rent", name: "Rent" },
   { id: "security_deposit", name: "Security Deposit" },
-  { id: "police_verification", name: "Police Verification" },
+  { id: "kyc_verification", name: "KYC Verification Charge" },
   { id: "mess", name: "Mess" },
   { id: "electricity_bill", name: "Electricity Bill" },
   { id: "manual_late_fine", name: "Manual Late Fine" },

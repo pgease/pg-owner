@@ -263,10 +263,12 @@ export const OwnerSupportCommunityCards: React.FC = () => {
         </a>
 
         {/* Card 4: Help and Support */}
-        <div
-          onClick={() => setSupportModalOpen(true)}
+        <a
+          href="https://help.pgease.com"
+          target="_blank"
+          rel="noopener noreferrer"
           className="group relative flex flex-col justify-between rounded-2xl sm:rounded-3xl bg-[#FFF9EC] border border-[#FDE8BF] p-4 sm:p-5 h-[200px] sm:h-[220px] transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-amber-900/5 cursor-pointer overflow-hidden"
-          title="24/7 PG Ease Help and Support Desk"
+          title="Open PG Ease Help Center & Support (help.pgease.com)"
         >
           <div>
             <h4 className="text-[16px] sm:text-[18px] font-bold text-slate-900 leading-tight">
@@ -275,8 +277,8 @@ export const OwnerSupportCommunityCards: React.FC = () => {
               Support
             </h4>
             <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-amber-600/10 px-2 py-0.5 text-[10px] sm:text-[11px] font-semibold text-amber-800">
-              <Clock className="h-3 w-3" />
-              24/7 Support
+              <ExternalLink className="h-3 w-3" />
+              help.pgease.com
             </span>
           </div>
 
@@ -320,7 +322,7 @@ export const OwnerSupportCommunityCards: React.FC = () => {
               </g>
             </svg>
           </div>
-        </div>
+        </a>
       </div>
 
       {/* Account Manager Modal */}

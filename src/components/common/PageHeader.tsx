@@ -77,10 +77,10 @@ export function PageHeader({
           ) : null}
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-page-title truncate">{title}</h1>
+              <h1 className="text-page-title break-words leading-tight">{title}</h1>
               {titleAddon}
             </div>
-            {description ? <p className="mt-1 text-[13.5px] text-muted-foreground">{description}</p> : null}
+            {description ? <p className="mt-1 text-[13.5px] text-muted-foreground break-words">{description}</p> : null}
           </div>
         </div>
         {headerActions ? <div className="flex flex-wrap items-center gap-2 sm:shrink-0">{headerActions}</div> : null}

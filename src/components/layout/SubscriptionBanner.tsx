@@ -39,14 +39,16 @@ export const SubscriptionBanner: React.FC = () => {
   if (isExpired) {
     return (
       <Strip tone="danger" role="alert">
-        <Lock className="h-4 w-4 shrink-0" aria-hidden />
-        <p className="min-w-0 flex-1 text-sm">
-          <span className="font-medium">Your plan has expired.</span>{" "}
-          <span className="text-muted-foreground">Your data is safe and you can still view everything. Choose a plan to continue adding tenants and recording payments.</span>
-        </p>
-        <Button size="sm" className="h-8 shrink-0 gap-1.5" onClick={() => navigate("/plans")}>
-          Choose a plan <ArrowRight className="h-3.5 w-3.5" />
-        </Button>
+        <Lock className="h-4 w-4 shrink-0 text-rose-600" aria-hidden />
+        <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
+          <p className="min-w-0 truncate text-xs sm:text-sm">
+            <span className="font-semibold text-rose-700 dark:text-rose-400">Plan expired</span>
+            <span className="hidden sm:inline text-muted-foreground"> — Your data is safe. Renew to add tenants & record payments.</span>
+          </p>
+          <Button size="sm" className="h-7 sm:h-8 px-2.5 sm:px-3 text-xs shrink-0 gap-1 bg-rose-600 hover:bg-rose-700 text-white font-semibold" onClick={() => navigate("/plans")}>
+            <span>Renew</span> <ArrowRight className="h-3 w-3" />
+          </Button>
+        </div>
       </Strip>
     );
   }
@@ -54,27 +56,31 @@ export const SubscriptionBanner: React.FC = () => {
   if (isTrial && !dismissedTrial && daysRemaining <= 10) {
     return (
       <Strip tone="warning">
-        <Clock className="h-4 w-4 shrink-0" aria-hidden />
-        <p className="min-w-0 flex-1 text-sm">
-          <span className="font-medium">
-            {daysRemaining <= 0 ? "Your trial ends today." : `Your trial ends in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}.`}
-          </span>{" "}
-          <span className="text-muted-foreground">Pick a plan to keep everything running without interruption.</span>
-        </p>
-        <Button size="sm" variant="outline" className="h-8 shrink-0 gap-1.5" onClick={() => navigate("/plans")}>
-          View plans <ArrowRight className="h-3.5 w-3.5" />
-        </Button>
-        <button
-          type="button"
-          onClick={() => {
-            setDismissedTrial(true);
-            writeDismissed(TRIAL_DISMISS_KEY);
-          }}
-          className="rounded p-1 text-muted-foreground hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10"
-          aria-label="Dismiss"
-        >
-          <X className="h-4 w-4" />
-        </button>
+        <Clock className="h-4 w-4 shrink-0 text-amber-600" aria-hidden />
+        <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
+          <p className="min-w-0 truncate text-xs sm:text-sm">
+            <span className="font-semibold text-amber-800 dark:text-amber-300">
+              {daysRemaining <= 0 ? "Trial ends today" : `Trial: ${daysRemaining}d left`}
+            </span>
+            <span className="hidden sm:inline text-muted-foreground"> — Pick a plan to keep operations uninterrupted.</span>
+          </p>
+          <div className="flex items-center gap-1 shrink-0">
+            <Button size="sm" variant="outline" className="h-7 sm:h-8 px-2.5 text-xs gap-1 border-amber-300 hover:bg-amber-100" onClick={() => navigate("/plans")}>
+              <span>Plans</span> <ArrowRight className="h-3 w-3" />
+            </Button>
+            <button
+              type="button"
+              onClick={() => {
+                setDismissedTrial(true);
+                writeDismissed(TRIAL_DISMISS_KEY);
+              }}
+              className="rounded p-1 text-muted-foreground hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10"
+              aria-label="Dismiss"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
       </Strip>
     );
   }

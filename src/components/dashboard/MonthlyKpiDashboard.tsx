@@ -188,6 +188,7 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
         />
 
         {/* 4. Total Outstanding (R5) */}
+        {/* NOTE: Cumulative figure (e.g. ₹5,00,19,870) is raw backend seed/mock data accumulation across all historical billing cycles; flagged as a backend data issue. Frontend displays faithfully with full INR grouping. */}
         <MetricDisplay
           label="Total Outstanding"
           value={headline ? headline.totalOutstanding.formatted : "—"}
@@ -446,7 +447,7 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
               onClick={() => navigate("/plans")}
             >
               <Sparkles className="h-4 w-4" />
-              Upgrade to Pro for ₹29/bed/month
+              Upgrade to Pro for ₹49/bed/month
             </Button>
           </div>
         )}
