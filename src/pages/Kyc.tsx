@@ -79,10 +79,12 @@ import { useEntitlements } from "@/hooks/useEntitlements";
 import { FeatureGuard } from "@/components/common/FeatureGuard";
 import { TrialExpiredGateModal } from "@/components/common/TrialExpiredGateModal";
 import { formatINR, formatDate } from "@/lib/formatters";
+import { launchEasebuzzCheckout } from "@/lib/easebuzzCheckout";
 
 declare global {
   interface Window {
     Razorpay?: any;
+    EasebuzzCheckout?: any;
   }
 }
 
@@ -169,6 +171,7 @@ export default function Kyc() {
   const verifyPaymentMut = useVerifyCreditPaymentMutation();
   const [topupOpen, setTopupOpen] = useState(false);
   const [selectedPackId, setSelectedPackId] = useState<string>("");
+  const [selectedGateway, setSelectedGateway] = useState<"easebuzz" | "razorpay">("easebuzz");
 
   // Request KYC Modal
   const [requestKycOpen, setRequestKycOpen] = useState(false);
@@ -311,10 +314,68 @@ export default function Kyc() {
     });
   };
 
-  // Top-up Razorpay Checkout
+  // Top-up Checkout (Easebuzz / Razorpay)
   const handleTopupCheckout = async (packId: string) => {
     try {
-      const order = await topupOrderMut.mutateAsync(packId);
+      const order = await topupOrderMut.mutateAsync({ creditPackId: packId, gateway: selectedGateway });
+
+      // ─── Easebuzz Flow ────────────────────────────────────────────────────────
+      if (selectedGateway === "easebuzz") {
+        if (!window.EasebuzzCheckout) {
+          const script = document.createElement("script");
+          script.src = "https://ebz-static.s3.ap-south-1.amazonaws.com/easecheckout/v2.0.0/easebuzz-checkout-v2.min.js";
+          document.body.appendChild(script);
+          await new Promise((resolve) => (script.onload = resolve));
+        }
+
+        launchEasebuzzCheckout(
+          {
+            key: order.key || order.keyId,
+            access_key: order.access_key!,
+            env: order.env || "test",
+            txnid: order.txnid || order.orderId,
+            amount: order.amount,
+            is_sandbox: (order as any).is_sandbox,
+          },
+          {
+            onSuccess: async (response_data: any) => {
+              try {
+                await verifyPaymentMut.mutateAsync({
+                  packId,
+                  creditPackId: packId,
+                  gateway: "easebuzz",
+                  txnid: response_data.txnid || order.orderId,
+                  easebuzz_id: response_data.easebuzz_id,
+                  hash: response_data.hash,
+                  status: response_data.status,
+                  easebuzz_response: response_data,
+                });
+                toast({
+                  title: "Credits Recharged! ⚡",
+                  description: "Your verification credits have been updated.",
+                });
+                setTopupOpen(false);
+              } catch (err: any) {
+                toast({
+                  title: "Payment Verification Failed",
+                  description: err?.message || "Please contact support if amount was deducted.",
+                  variant: "destructive",
+                });
+              }
+            },
+            onFailure: (response_data: any) => {
+              toast({
+                title: "Payment Not Completed",
+                description: response_data.error_Message || response_data.status || "Cancelled by user.",
+                variant: "destructive",
+              });
+            },
+          }
+        );
+        return;
+      }
+
+      // ─── Razorpay Flow ────────────────────────────────────────────────────────
       if (!window.Razorpay) {
         const script = document.createElement("script");
         script.src = "https://checkout.razorpay.com/v1/checkout.js";
@@ -334,6 +395,7 @@ export default function Kyc() {
             await verifyPaymentMut.mutateAsync({
               packId,
               creditPackId: packId,
+              gateway: "razorpay",
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
@@ -1085,6 +1147,43 @@ export default function Kyc() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Gateway Selector */}
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <p className="text-xs font-semibold text-slate-800 mb-2">Select Payment Gateway:</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedGateway("easebuzz")}
+                  className={`p-2 rounded-lg border text-left flex items-center justify-between text-xs font-semibold transition cursor-pointer ${
+                    selectedGateway === "easebuzz"
+                      ? "border-[#008080] bg-teal-50/60 text-[#008080] ring-1 ring-[#008080]"
+                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#008080]"></span>
+                    <span>Easebuzz</span>
+                  </div>
+                  <span className="text-[10px] text-slate-500 font-normal">Fast UPI / Card</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedGateway("razorpay")}
+                  className={`p-2 rounded-lg border text-left flex items-center justify-between text-xs font-semibold transition cursor-pointer ${
+                    selectedGateway === "razorpay"
+                      ? "border-blue-600 bg-blue-50 text-blue-800 ring-1 ring-blue-600"
+                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                    <span>Razorpay</span>
+                  </div>
+                  <span className="text-[10px] text-slate-500 font-normal">All Options</span>
+                </button>
+              </div>
             </div>
 
             {otherCreditPacks.length > 0 && (

@@ -952,7 +952,12 @@ export function useCreditPacks() {
 
 export function useCreateCreditTopupOrderMutation() {
   return useMutation({
-    mutationFn: (creditPackId: string) => createCreditTopupOrder(creditPackId),
+    mutationFn: (param: string | { creditPackId: string; gateway?: 'razorpay' | 'easebuzz' }) => {
+      if (typeof param === 'string') {
+        return createCreditTopupOrder(param);
+      }
+      return createCreditTopupOrder(param.creditPackId, param.gateway);
+    },
   });
 }
 
@@ -1005,13 +1010,15 @@ export function useCreatePlanCheckoutOrderMutation() {
       numberOfBeds,
       durationMonths,
       billingCycle,
+      gateway,
     }: {
       planId: string;
       numberOfBeds?: number;
       durationMonths?: number;
       billingCycle?: 'monthly' | 'annual';
+      gateway?: 'razorpay' | 'easebuzz';
     }) =>
-      createPlanCheckoutOrder(planId, { numberOfBeds, durationMonths, billingCycle }),
+      createPlanCheckoutOrder(planId, { numberOfBeds, durationMonths, billingCycle, gateway }),
   });
 }
 

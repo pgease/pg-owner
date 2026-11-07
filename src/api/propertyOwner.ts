@@ -2156,7 +2156,14 @@ export interface RazorpayOrderResponse {
   currency: string;
   keyId: string;
   notes?: Record<string, any>;
+  gateway?: 'razorpay' | 'easebuzz';
+  access_key?: string;
+  txnid?: string;
+  key?: string;
+  env?: 'test' | 'prod';
 }
+
+export type PaymentOrderResponse = RazorpayOrderResponse;
 
 export async function getCreditBalance() {
   const data = await httpRequest<CreditBalanceResponse>(`${PROPERTY_OWNER_BASE}/credits/balance`, {
@@ -2187,28 +2194,41 @@ export async function getCreditPacks() {
   });
 }
 
-export async function createCreditTopupOrder(creditPackId: string) {
+export async function createCreditTopupOrder(creditPackId: string, gateway?: 'razorpay' | 'easebuzz') {
   return httpRequest<RazorpayOrderResponse>(`${PROPERTY_OWNER_BASE}/credits/${creditPackId}/checkout-order`, {
     method: 'POST',
+    body: gateway ? { gateway } : undefined,
     auth: true,
   });
 }
 
 export async function verifyCreditPayment(body: {
+  gateway?: 'razorpay' | 'easebuzz';
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   razorpaySignature?: string;
   razorpay_order_id?: string;
   razorpay_payment_id?: string;
   razorpay_signature?: string;
+  txnid?: string;
+  easebuzz_id?: string;
+  hash?: string;
+  status?: string;
+  easebuzz_response?: Record<string, any>;
   creditPackId?: string;
   packId?: string;
 }) {
   const payload = {
     packId: body.packId || body.creditPackId,
+    gateway: body.gateway,
     razorpay_order_id: body.razorpay_order_id || body.razorpayOrderId,
     razorpay_payment_id: body.razorpay_payment_id || body.razorpayPaymentId,
     razorpay_signature: body.razorpay_signature || body.razorpaySignature,
+    txnid: body.txnid,
+    easebuzz_id: body.easebuzz_id,
+    hash: body.hash,
+    status: body.status,
+    easebuzz_response: body.easebuzz_response,
   };
 
   return httpRequest<{ success: boolean; message: string; newBalance: number }>(`${PROPERTY_OWNER_BASE}/credits/verify-payment`, {
@@ -2351,7 +2371,7 @@ export async function getCurrentPlan() {
 
 export async function createPlanCheckoutOrder(
   planId: string,
-  payload?: { numberOfBeds?: number; durationMonths?: number; billingCycle?: 'monthly' | 'annual' } | 'monthly' | 'annual'
+  payload?: { numberOfBeds?: number; durationMonths?: number; billingCycle?: 'monthly' | 'annual'; gateway?: 'razorpay' | 'easebuzz' } | 'monthly' | 'annual'
 ) {
   const body = typeof payload === 'object' ? payload : { billingCycle: payload || 'monthly' };
   return httpRequest<RazorpayOrderResponse>(`${PROPERTY_OWNER_BASE}/plans/${planId}/checkout-order`, {
@@ -2362,12 +2382,18 @@ export async function createPlanCheckoutOrder(
 }
 
 export async function verifyPlanPayment(body: {
+  gateway?: 'razorpay' | 'easebuzz';
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   razorpaySignature?: string;
   razorpay_order_id?: string;
   razorpay_payment_id?: string;
   razorpay_signature?: string;
+  txnid?: string;
+  easebuzz_id?: string;
+  hash?: string;
+  status?: string;
+  easebuzz_response?: Record<string, any>;
   planId: string;
   numberOfBeds?: number;
   durationMonths?: number;

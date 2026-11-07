@@ -25,16 +25,19 @@ import { formatINR } from "@/lib/formatters";
 import { getPaymentSettings, updatePaymentSettings } from "@/api/propertyOwner";
 import { SUPPORT_PHONE_TEL, supportWhatsAppUrl } from "@/config/links";
 import { cn } from "@/lib/utils";
+import { launchEasebuzzCheckout } from "@/lib/easebuzzCheckout";
 
 declare global {
   interface Window {
     Razorpay?: any;
+    EasebuzzCheckout?: any;
   }
 }
 
 export default function Plans() {
   const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
+  const [selectedGateway, setSelectedGateway] = useState<"easebuzz" | "razorpay">("easebuzz");
   const [payMode, setPayMode] = useState<"MANUAL" | "GATEWAY">("MANUAL");
   const [upiId, setUpiId] = useState("");
   const [kycStatus, setKycStatus] = useState("not_submitted");
@@ -242,8 +245,67 @@ export default function Plans() {
         planId,
         billingCycle,
         numberOfBeds: selectedBeds,
+        gateway: selectedGateway,
       });
 
+      // ─── Easebuzz Flow ────────────────────────────────────────────────────────
+      if (selectedGateway === "easebuzz") {
+        if (!window.EasebuzzCheckout) {
+          const script = document.createElement("script");
+          script.src = "https://ebz-static.s3.ap-south-1.amazonaws.com/easecheckout/v2.0.0/easebuzz-checkout-v2.min.js";
+          document.body.appendChild(script);
+          await new Promise((resolve) => (script.onload = resolve));
+        }
+
+        launchEasebuzzCheckout(
+          {
+            key: order.key || order.keyId,
+            access_key: order.access_key!,
+            env: order.env || "test",
+            txnid: order.txnid || order.orderId,
+            amount: order.amount,
+            is_sandbox: (order as any).is_sandbox,
+          },
+          {
+            onSuccess: async (response_data: any) => {
+              try {
+                await verifyPaymentMut.mutateAsync({
+                  gateway: "easebuzz",
+                  txnid: response_data.txnid || order.orderId,
+                  easebuzz_id: response_data.easebuzz_id,
+                  hash: response_data.hash,
+                  status: response_data.status,
+                  easebuzz_response: response_data,
+                  planId,
+                  billingCycle,
+                  numberOfBeds: selectedBeds,
+                });
+                toast({
+                  title: "Subscription Activated! 👑",
+                  description: `Your account has been upgraded to ${planKey} Plan for ${selectedBeds} beds.`,
+                });
+                refetchCurrentPlan();
+              } catch (err: any) {
+                toast({
+                  title: "Payment Verification Failed",
+                  description: err?.message || "Please contact support if amount was debited.",
+                  variant: "destructive",
+                });
+              }
+            },
+            onFailure: (response_data: any) => {
+              toast({
+                title: "Payment Not Completed",
+                description: response_data.error_Message || response_data.status || "Cancelled by user.",
+                variant: "destructive",
+              });
+            },
+          }
+        );
+        return;
+      }
+
+      // ─── Razorpay Flow ────────────────────────────────────────────────────────
       if (!window.Razorpay) {
         const script = document.createElement("script");
         script.src = "https://checkout.razorpay.com/v1/checkout.js";
@@ -270,6 +332,7 @@ export default function Plans() {
         handler: async (response: any) => {
           try {
             await verifyPaymentMut.mutateAsync({
+              gateway: "razorpay",
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
@@ -551,16 +614,55 @@ export default function Plans() {
           </p>
         </div>
 
+        {/* Gateway Selector */}
+        <div className="mt-4 p-3 bg-[#F6F7F8] rounded-lg border border-[#E2E6EA]">
+          <p className="text-xs font-bold text-[#18212B] mb-2">Select Payment Gateway:</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedGateway("easebuzz")}
+              className={`p-2.5 rounded-md border text-left flex items-center justify-between text-xs font-bold transition cursor-pointer ${
+                selectedGateway === "easebuzz"
+                  ? "border-[#008080] bg-[#E8F4F4] text-[#008080] ring-1 ring-[#008080]"
+                  : "border-[#E2E6EA] bg-white text-[#556270] hover:border-[#C8CFD6]"
+              }`}
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#008080]"></span>
+                <span>Easebuzz</span>
+              </div>
+              <span className="text-[10px] text-[#6B7785] font-normal">Fast UPI / Card</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedGateway("razorpay")}
+              className={`p-2.5 rounded-md border text-left flex items-center justify-between text-xs font-bold transition cursor-pointer ${
+                selectedGateway === "razorpay"
+                  ? "border-blue-600 bg-blue-50 text-blue-800 ring-1 ring-blue-600"
+                  : "border-[#E2E6EA] bg-white text-[#556270] hover:border-[#C8CFD6]"
+              }`}
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                <span>Razorpay</span>
+              </div>
+              <span className="text-[10px] text-[#6B7785] font-normal">All Options</span>
+            </button>
+          </div>
+        </div>
+
         <button
           type="button"
           disabled={createOrderMut.isPending || !activePlan}
           onClick={handleUpgradeCheckout}
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-[#008080] text-sm font-semibold text-white hover:bg-[#006B6B] disabled:opacity-50 cursor-pointer shadow-sm"
+          className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-[#008080] text-sm font-semibold text-white hover:bg-[#006B6B] disabled:opacity-50 cursor-pointer shadow-sm"
         >
           {createOrderMut.isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <span>Pay {formatINR(planTotal)} for {activePlan?.displayName || activePlan?.name || "PG Ease Pro"}</span>
+            <span>
+              Pay {formatINR(planTotal)} for {activePlan?.displayName || activePlan?.name || "PG Ease Pro"} via {selectedGateway === "easebuzz" ? "Easebuzz ⚡" : "Razorpay 💳"}
+            </span>
           )}
         </button>
       </section>
