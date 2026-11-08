@@ -425,6 +425,33 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
         const collectedName = firstTimeOwnerName.trim();
         const mobileFlow = !isMdUp();
 
+        // If the owner has no properties yet, route directly to /onboarding to set up their PG
+        if (!data.hasProperties) {
+          if (collectedName) {
+            try {
+              const updated = await updateMe({ name: collectedName });
+              authStorage.setPropertyOwner({
+                ...data.propertyOwner,
+                name: updated?.name || collectedName,
+              });
+            } catch {
+              authStorage.setPropertyOwner({
+                ...data.propertyOwner,
+                name: collectedName,
+              });
+            }
+          }
+          setShowSuccess(true);
+          toast({
+            title: "Authenticated Successfully",
+            description: "Welcome to PG Ease! Let's set up your first PG.",
+          });
+          setTimeout(() => {
+            navigate("/onboarding", { replace: true });
+          }, 500);
+          return;
+        }
+
         if (mobileFlow || collectedName) {
           if (collectedName) {
             try {
@@ -446,14 +473,10 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
             description: `Welcome${collectedName || currentName ? `, ${collectedName || currentName}` : ""}!`,
           });
           setTimeout(() => {
-            if (!data.hasProperties) {
-              navigate("/onboarding", { replace: true });
-            } else {
-              navigate(getPostLoginDestination("/dashboard"), { replace: true });
-            }
+            navigate(getPostLoginDestination("/dashboard"), { replace: true });
           }, 700);
         } else if (isFirstTime) {
-          // Desktop only: first-time owner still enters name after OTP
+          // Desktop only: existing owner with properties but placeholder name enters name
           setVerifiedAuthData(data);
           setStep("first_time_name");
           toast({
@@ -535,7 +558,11 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
       });
 
       setTimeout(() => {
-        navigate(getPostLoginDestination("/dashboard"), { replace: true });
+        if (!verifiedAuthData?.hasProperties) {
+          navigate("/onboarding", { replace: true });
+        } else {
+          navigate(getPostLoginDestination("/dashboard"), { replace: true });
+        }
       }, 500);
     } catch {
       if (verifiedAuthData) {
@@ -546,7 +573,11 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
       }
       setShowSuccess(true);
       setTimeout(() => {
-        navigate(getPostLoginDestination("/dashboard"), { replace: true });
+        if (!verifiedAuthData?.hasProperties) {
+          navigate("/onboarding", { replace: true });
+        } else {
+          navigate(getPostLoginDestination("/dashboard"), { replace: true });
+        }
       }, 500);
     } finally {
       setIsSavingName(false);
