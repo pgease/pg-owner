@@ -21,7 +21,20 @@ export interface EasebuzzCallbacks {
 }
 
 export function launchEasebuzzCheckout(order: EasebuzzOrderData, callbacks: EasebuzzCallbacks) {
-  const isSandbox = order.is_sandbox || order.access_key.startsWith('sandbox_ebz_') || order.access_key.startsWith('mock_ebz_');
+  if (!order || !order.access_key) {
+    callbacks.onFailure?.({
+      status: 'failure',
+      txnid: order?.txnid || '',
+      error_Message: 'Gateway access key not received from server.',
+    });
+    return;
+  }
+
+  const isSandbox = Boolean(
+    order.is_sandbox ||
+      order.access_key.startsWith('sandbox_ebz_') ||
+      order.access_key.startsWith('mock_ebz_')
+  );
 
   // If live key is active, use official Easebuzz SDK iframe
   if (!isSandbox && (window as any).EasebuzzCheckout) {
@@ -57,6 +70,9 @@ function renderSandboxModal(order: EasebuzzOrderData, callbacks: EasebuzzCallbac
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   `;
 
+  const rawAmt = Number(order.amount) || 0;
+  const displayAmt = rawAmt > 2000 ? (rawAmt / 100).toLocaleString('en-IN') : rawAmt.toLocaleString('en-IN');
+
   overlay.innerHTML = `
     <div style="background: white; border-radius: 20px; max-width: 440px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden; animation: ebzFadeIn 0.2s ease-out;">
       <!-- Header -->
@@ -72,7 +88,7 @@ function renderSandboxModal(order: EasebuzzOrderData, callbacks: EasebuzzCallbac
         </div>
         <div style="margin-top: 14px;">
           <div style="font-size: 12px; color: #94a3b8;">Amount to Pay</div>
-          <div style="font-size: 28px; font-weight: 800; color: white;">₹${Number(order.amount).toLocaleString('en-IN')}</div>
+          <div style="font-size: 28px; font-weight: 800; color: white;">₹${displayAmt}</div>
           <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Txn ID: ${order.txnid}</div>
         </div>
       </div>

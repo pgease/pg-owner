@@ -2340,6 +2340,17 @@ export async function getPlans() {
   return catalog ? { ...data, catalog } : data;
 }
 
+export interface EasebuzzSubmerchantDetails {
+  id: string;
+  submerchantId: string;
+  status: 'NOT_STARTED' | 'KYC_PENDING' | 'ACTIVE' | 'REJECTED' | 'SUSPENDED' | string;
+  kycDashboardUrl?: string;
+  bankLast4?: string;
+  bankName?: string;
+  ifsc?: string;
+  onlinePaymentsEnabled: boolean;
+}
+
 export interface PaymentSettings {
   success?: boolean;
   paymentMode: "MANUAL" | "GATEWAY";
@@ -2348,6 +2359,8 @@ export interface PaymentSettings {
   isKycActive?: boolean;
   kycStatus: string;
   canUseGateway?: boolean;
+  isProPlan?: boolean;
+  submerchant?: EasebuzzSubmerchantDetails | null;
   message?: string;
 }
 
@@ -2356,9 +2369,31 @@ export async function getPaymentSettings() {
 }
 
 export async function updatePaymentSettings(body: { paymentMode: "MANUAL" | "GATEWAY"; upiId?: string }) {
-  return httpRequest<Awaited<ReturnType<typeof getPaymentSettings>>>("/owner/payment-settings", {
+  return httpRequest<PaymentSettings>("/owner/payment-settings", {
     method: "PATCH",
     body,
+    auth: true,
+  });
+}
+
+export async function startEasebuzzKyc(): Promise<{ success: boolean; kycUrl?: string; submerchant?: EasebuzzSubmerchantDetails }> {
+  return httpRequest("/owner/easebuzz/submerchant", {
+    method: "POST",
+    auth: true,
+  });
+}
+
+export async function refreshEasebuzzKycLink(): Promise<{ success: boolean; kycUrl?: string }> {
+  return httpRequest("/owner/easebuzz/submerchant/kyc-link", {
+    method: "POST",
+    auth: true,
+  });
+}
+
+export async function toggleEasebuzzOnline(enabled: boolean): Promise<{ success: boolean; onlinePaymentsEnabled: boolean }> {
+  return httpRequest("/owner/easebuzz/toggle-online", {
+    method: "PATCH",
+    body: { enabled },
     auth: true,
   });
 }

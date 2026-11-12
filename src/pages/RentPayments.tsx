@@ -1665,10 +1665,17 @@ export const RentPayments = () => {
                   id: "paymentMethod",
                   header: "Mode",
                   render: (row: RentCollectionHistoryItem) => {
-                    const method = (row.paymentMethod || "UPI").toUpperCase();
+                    const method = String(row.paymentMethod || "UPI").toLowerCase();
+                    const isEasebuzz = method.includes("easebuzz") || method === "gateway" || method === "online";
                     return (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--gray-100)] text-[var(--gray-800)] border border-[var(--gray-200)]">
-                        {method}
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border ${
+                          isEasebuzz
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-300 font-semibold"
+                            : "bg-[var(--gray-100)] text-[var(--gray-800)] border-[var(--gray-200)]"
+                        }`}
+                      >
+                        {isEasebuzz ? "UPI · Auto-verified" : method.toUpperCase()}
                       </span>
                     );
                   },
@@ -1948,7 +1955,9 @@ export const RentPayments = () => {
                           <div className="flex items-center gap-1.5">
                             <span className="font-semibold text-emerald-800">Payment Credited</span>
                             <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 uppercase font-mono font-medium">
-                              {tx.paymentMethod || "UPI"}
+                              {String(tx.paymentMethod || "").toLowerCase().includes("easebuzz") || tx.paymentMethod === "gateway" || tx.paymentMethod === "online"
+                                ? "UPI · Auto-verified"
+                                : tx.paymentMethod || "UPI"}
                             </span>
                           </div>
                           <p className="text-[11px] text-[var(--gray-500)] mt-0.5">

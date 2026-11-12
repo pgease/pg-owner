@@ -260,21 +260,44 @@ export function useEntitlements(): EntitlementsInfo {
       rawStatus = "EXPIRED";
     }
 
-    // 3. Apply demo overrides if active
-    if (demoState === "expired") {
-      rawStatus = "EXPIRED";
-      daysRemaining = 0;
-    } else if (demoState === "trial") {
-      rawStatus = "TRIAL";
-      daysRemaining = 24;
-      trialExpiresAtDate = new Date(Date.now() + 24 * 24 * 60 * 60 * 1000);
-      trialEndsAt = trialExpiresAtDate.toISOString();
-    } else if (demoState === "pro") {
-      rawStatus = "PRO";
-      daysRemaining = 0;
-    } else if (demoState === "lite") {
-      rawStatus = "LITE";
-      daysRemaining = 0;
+    // If user has an active paid subscription from the API, clear any stale demo override in localStorage
+    const hasActivePaidServerPlan = Boolean(
+      (apiSub?.status === "PRO" || apiSub?.status === "LITE") && !apiSub?.trial?.isActive
+    );
+    if (hasActivePaidServerPlan && typeof window !== "undefined") {
+      try {
+        if (localStorage.getItem("pgease_demo_plan")) {
+          localStorage.removeItem("pgease_demo_plan");
+        }
+      } catch {}
+    }
+
+    // 3. Apply demo overrides only if explicitly present in URL query param, or if no active paid plan exists on server
+    const hasUrlQueryOverride = (() => {
+      try {
+        const sp = new URLSearchParams(window.location.search);
+        return sp.has("trial") || sp.has("expired") || sp.has("pro") || sp.has("lite");
+      } catch {
+        return false;
+      }
+    })();
+
+    if (demoState && (hasUrlQueryOverride || !hasActivePaidServerPlan)) {
+      if (demoState === "expired") {
+        rawStatus = "EXPIRED";
+        daysRemaining = 0;
+      } else if (demoState === "trial") {
+        rawStatus = "TRIAL";
+        daysRemaining = 24;
+        trialExpiresAtDate = new Date(Date.now() + 24 * 24 * 60 * 60 * 1000);
+        trialEndsAt = trialExpiresAtDate.toISOString();
+      } else if (demoState === "pro") {
+        rawStatus = "PRO";
+        daysRemaining = 0;
+      } else if (demoState === "lite") {
+        rawStatus = "LITE";
+        daysRemaining = 0;
+      }
     }
 
     const isTrial = rawStatus === "TRIAL";

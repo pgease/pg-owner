@@ -26,6 +26,7 @@ import { getPaymentSettings, updatePaymentSettings } from "@/api/propertyOwner";
 import { SUPPORT_PHONE_TEL, supportWhatsAppUrl } from "@/config/links";
 import { cn } from "@/lib/utils";
 import { launchEasebuzzCheckout } from "@/lib/easebuzzCheckout";
+import { EasebuzzGatewayCard } from "@/components/property/EasebuzzGatewayCard";
 
 declare global {
   interface Window {
@@ -282,7 +283,7 @@ export default function Plans() {
                 });
                 toast({
                   title: "Subscription Activated! 👑",
-                  description: `Your account has been upgraded to ${planKey} Plan for ${selectedBeds} beds.`,
+                  description: `Your account has been upgraded to ${activePlan?.displayName || activePlan?.name || "Pro"} for ${selectedBeds} beds.`,
                 });
                 refetchCurrentPlan();
               } catch (err: any) {
@@ -668,62 +669,14 @@ export default function Plans() {
       </section>
 
       {/* Step 2: Tenant Collection Method */}
-      <section className="rounded-xl border border-[#E2E6EA] bg-white p-5 shadow-sm">
-        <p className="text-xs font-bold uppercase tracking-wide text-[#008080]">Step 2</p>
-        <h2 className="mt-1 text-lg font-bold text-[#18212B]">How should tenants pay rent?</h2>
-        <p className="mt-1 text-sm text-[#556270]">Choose how you prefer to collect rent. You can change this setting at any time.</p>
-
-        <div className="mt-4 grid gap-2">
-          <button
-            type="button"
-            disabled={savingPay}
-            onClick={() => savePaymentMode("MANUAL")}
-            className={`rounded-lg border p-4 text-left cursor-pointer transition-colors ${payMode === "MANUAL" ? "border-[#008080] bg-[#E8F4F4]" : "border-[#E2E6EA] bg-white hover:border-slate-300"}`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-bold text-[#18212B]">They pay my UPI (Lite & Pro)</div>
-              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">0% Gateway Fee</span>
-            </div>
-            <div className="mt-1 text-xs text-[#556270]">
-              The tenant scans your personal or business UPI QR code. You verify the UTR and mark it paid.
-            </div>
-          </button>
-          <button
-            type="button"
-            disabled={savingPay}
-            onClick={() => savePaymentMode("GATEWAY")}
-            className={`rounded-lg border p-4 text-left cursor-pointer transition-colors ${payMode === "GATEWAY" ? "border-[#008080] bg-[#E8F4F4]" : "border-[#E2E6EA] bg-white hover:border-slate-300"}`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-bold text-[#18212B]">Collect automatically via Gateway (Pro)</div>
-              <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">Auto-Reconciled</span>
-            </div>
-            <div className="mt-1 text-xs text-[#556270]">
-              The tenant pays inside the app via UPI, Cards, or NetBanking. Rent is auto-settled to your bank account. Requires KYC.
-            </div>
-          </button>
+      <section className="space-y-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide text-[#008080]">Step 2</p>
+          <h2 className="mt-1 text-lg font-bold text-[#18212B]">How should tenants pay rent?</h2>
+          <p className="mt-1 text-sm text-[#556270]">Automated online UPI gateway with Easebuzz direct bank settlement or direct manual UPI collection.</p>
         </div>
 
-        {payMessage && <p className="mt-3 text-sm text-[#18212B]">{payMessage}</p>}
-
-        <label className="mt-4 block text-sm font-semibold text-[#18212B]">
-          Your UPI ID
-          <input
-            value={upiId}
-            onChange={(e) => setUpiId(e.target.value)}
-            placeholder="name@upi"
-            className="mt-1 h-10 w-full rounded-md border border-[#C8CFD6] px-3 text-sm font-normal text-[#18212B] outline-none focus:border-[#008080]"
-          />
-        </label>
-        <button
-          type="button"
-          disabled={savingUpi}
-          onClick={saveUpi}
-          className="mt-2 h-9 rounded-md border border-[#C8CFD6] px-3 text-sm font-semibold text-[#18212B] hover:bg-[#F6F7F8] disabled:opacity-50 cursor-pointer"
-        >
-          {savingUpi ? "Saving…" : "Save UPI ID"}
-        </button>
-        <p className="mt-3 text-sm text-[#556270]">{kycText}</p>
+        <EasebuzzGatewayCard />
       </section>
 
       <button
