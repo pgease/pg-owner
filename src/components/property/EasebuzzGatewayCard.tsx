@@ -272,7 +272,15 @@ export const EasebuzzGatewayCard = () => {
             ) : (
               <div className="flex items-center justify-between bg-white p-2.5 rounded-lg border border-border/60">
                 <span className="text-muted-foreground">Settlement A/C</span>
-                <span className="text-muted-foreground italic">Link verified bank account below</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate("/my-pgs/bank")}
+                  className="h-7 text-xs text-primary border-primary/40 hover:bg-primary/5 font-semibold"
+                >
+                  <Building className="h-3 w-3 mr-1" />
+                  Link Bank Account
+                </Button>
               </div>
             )}
           </div>
