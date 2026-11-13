@@ -147,7 +147,11 @@ function setLocal(key: string, data: any) {
 // 1. Catalog APIs
 export async function getInventoryCatalog(pgId: string): Promise<CatalogItem[]> {
   try {
-    return await httpRequest<CatalogItem[]>(`/pg/${pgId}/inventory/catalog`, { auth: true });
+    return await httpRequest<CatalogItem[]>(`/pg/${pgId}/inventory/catalog`, {
+      auth: true,
+      skipForceLogout: true,
+      signal: AbortSignal.timeout(1200),
+    });
   } catch {
     const local = getLocal<CatalogItem[]>(`catalog_${pgId}`, []);
     if (!local.length) {
@@ -214,7 +218,11 @@ export async function updateCatalogItem(
 // 2. Template APIs
 export async function getInventoryTemplates(pgId: string): Promise<InventoryTemplate[]> {
   try {
-    return await httpRequest<InventoryTemplate[]>(`/pg/${pgId}/inventory/templates`, { auth: true });
+    return await httpRequest<InventoryTemplate[]>(`/pg/${pgId}/inventory/templates`, {
+      auth: true,
+      skipForceLogout: true,
+      signal: AbortSignal.timeout(1200),
+    });
   } catch {
     return getLocal<InventoryTemplate[]>(`templates_${pgId}`, [
       {
@@ -325,7 +333,11 @@ export async function bulkAssignInventoryTemplate(
 // 4. Room Inventory & Overrides
 export async function getRoomInventory(pgId: string, roomId: string): Promise<RoomInventoryResponse> {
   try {
-    return await httpRequest<RoomInventoryResponse>(`/pg/${pgId}/rooms/${roomId}/inventory`, { auth: true });
+    return await httpRequest<RoomInventoryResponse>(`/pg/${pgId}/rooms/${roomId}/inventory`, {
+      auth: true,
+      skipForceLogout: true,
+      signal: AbortSignal.timeout(1200),
+    });
   } catch {
     const roomMap = getLocal<Record<string, string>>(`room_tpl_map_${pgId}`, {});
     const templateId = roomMap[roomId] || 'tpl_std_double_ac';
@@ -432,7 +444,10 @@ export async function getCheckoutInventoryCheck(
   roomId?: string
 ): Promise<CheckoutInventoryCheckData> {
   try {
-    return await httpRequest<CheckoutInventoryCheckData>(`/pg/${pgId}/checkouts/${checkoutId}/inventory-check`, { auth: true });
+    return await httpRequest<CheckoutInventoryCheckData>(
+      `/pg/${pgId}/checkouts/${checkoutId}/inventory-check`,
+      { auth: true, skipForceLogout: true, signal: AbortSignal.timeout(1200) }
+    );
   } catch {
     const roomInv = await getRoomInventory(pgId, roomId || 'default');
     const lines: CheckoutInventoryLine[] = roomInv.allResolved.map((item) => ({

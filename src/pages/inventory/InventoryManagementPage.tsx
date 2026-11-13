@@ -28,7 +28,8 @@ import { toast } from '@/components/ui/use-toast';
 
 export const InventoryManagementPage = () => {
   const navigate = useNavigate();
-  const { currentPropertyId, currentProperty } = useApp();
+  const { selectedPgId, properties } = useApp();
+  const currentPropertyId = selectedPgId || properties?.[0]?.id || 'default_pg';
 
   const [activeTab, setActiveTab] = useState<'templates' | 'catalog'>('templates');
   const [loading, setLoading] = useState(true);
@@ -40,15 +41,14 @@ export const InventoryManagementPage = () => {
   const [selectedTemplateForAssign, setSelectedTemplateForAssign] = useState<InventoryTemplate | null>(null);
 
   const loadData = async () => {
-    if (!currentPropertyId) return;
     setLoading(true);
     try {
       const [catData, tplData] = await Promise.all([
         getInventoryCatalog(currentPropertyId),
         getInventoryTemplates(currentPropertyId),
       ]);
-      setCatalog(catData);
-      setTemplates(tplData);
+      setCatalog(catData || []);
+      setTemplates(tplData || []);
     } catch (err: any) {
       toast({
         title: 'Error loading inventory',
