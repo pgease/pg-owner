@@ -6,17 +6,65 @@ export function tenantDisplayName(t?: PropertyTenant | null): string {
   return n != null && String(n).trim() !== "" ? String(n).trim() : "—";
 }
 
-export function tenantPhotoUrl(t?: PropertyTenant | null): string {
+export function tenantPhotoUrl(t?: any): string {
   if (!t) return "";
-  const record = t as PropertyTenant & {
-    photoUrl?: string;
-    imageUrl?: string;
-    profilePhotoUrl?: string;
-    profileImage?: string;
-    avatarUrl?: string;
-  };
-  const raw = record.photoUrl || record.imageUrl || record.profilePhotoUrl || record.profileImage || record.avatarUrl;
-  return typeof raw === "string" && raw.trim() ? raw.trim() : "";
+
+  const candidates: unknown[] = [
+    t.photoUrl,
+    t.profilePhotoUrl,
+    t.imageUrl,
+    t.selfieUrl,
+    t.profileImage,
+    t.avatarUrl,
+    t.avatar,
+    t.photo,
+    t.tenant?.photoUrl,
+    t.tenant?.profilePhotoUrl,
+    t.tenant?.imageUrl,
+    t.tenant?.selfieUrl,
+    t.roomTenant?.photoUrl,
+    t.roomTenant?.profilePhotoUrl,
+    t.roomTenant?.tenant?.photoUrl,
+    t.roomTenant?.tenant?.profilePhotoUrl,
+    t.roomTenant?.tenant?.selfieUrl,
+    t.currentStay?.photoUrl,
+    t.currentStay?.profilePhotoUrl,
+    t.kycInfo?.selfieUrl,
+    t.kycInfo?.photoUrl,
+    t.kycInfo?.verifiedDetails?.photo,
+    t.kyc?.selfieUrl,
+    t.kyc?.photoUrl,
+    t.personalDetails?.photoUrl,
+    t.personalDetails?.profilePhotoUrl,
+    t.personalDetails?.selfieUrl,
+  ];
+
+  let raw = "";
+  for (const c of candidates) {
+    if (typeof c === "string" && c.trim() && c.trim() !== "null" && c.trim() !== "undefined") {
+      raw = c.trim();
+      break;
+    }
+  }
+
+  if (!raw) return "";
+
+  // Convert insecure http:// to https:// to prevent mobile WebView mixed content block
+  if (raw.startsWith("http://")) {
+    raw = "https://" + raw.slice(7);
+  }
+
+  // Handle S3 key fallback if raw is a relative key
+  if (
+    !raw.startsWith("http") &&
+    !raw.startsWith("data:") &&
+    !raw.startsWith("blob:") &&
+    !raw.startsWith("/")
+  ) {
+    return `https://pg-ease-qa.s3.ap-south-1.amazonaws.com/${raw}`;
+  }
+
+  return raw;
 }
 
 export function tenantInitials(t?: PropertyTenant | null): string {

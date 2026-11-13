@@ -30,6 +30,7 @@ import {
   UserMinus,
   Link2,
   Share2,
+  Camera,
 } from "lucide-react";
 import { TenantActivityLogsDrawer } from "@/components/tenants/TenantActivityLogsDrawer";
 import { SharePaymentLinkDialog } from "@/components/tenants/SharePaymentLinkDialog";
@@ -86,11 +87,13 @@ import {
   tenantStatusDisplay,
   tenantCode,
   tenantMoveOutDate,
+  tenantPhotoUrl,
 } from "@/lib/tenantDisplay";
 import { useApp } from "@/context/AppContext";
 import {
   queryKeys,
   usePropertyTenantDetail,
+  usePropertyTenants,
   useRequestTenantKycMutation,
   usePostManualRentMutation,
   usePropertyAgreements,
@@ -110,6 +113,8 @@ import {
 } from "@/hooks/usePropertyOwnerQueries";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { TrialExpiredGateModal } from "@/components/common/TrialExpiredGateModal";
+import { CheckoutInventoryCheckModal } from "@/components/inventory/CheckoutInventoryCheckModal";
+import { getRoomInventory, type RoomInventoryResponse } from "@/api/inventoryApi";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
@@ -295,6 +300,7 @@ export default function TenantDetailPage() {
   const subAccess = useSubscriptionAccess();
 
   const { data: tenant, isLoading } = usePropertyTenantDetail(currentPropertyId, tenantId);
+  const { data: allPropertyTenants } = usePropertyTenants(currentPropertyId);
 
   const roomTenantId = tenant?.roomTenant?.id ?? (tenant as any)?.roomTenantId ?? tenant?.id ?? "";
 
@@ -350,24 +356,38 @@ export default function TenantDetailPage() {
     setMoveOutModalOpen(true);
   };
 
-  const handleConfirmMoveOut = async () => {
+  const handleConfirmMoveOut = async (settlementData?: {
+    moveOutDate: string;
+    reason: string;
+    remarks?: string;
+    inventoryDeduction: number;
+    netSettlementAmount: number;
+    isBalanceDue: boolean;
+  }) => {
     const effectiveRtId = roomTenantId || (tenant as any)?.roomTenant?.id || tenant?.id;
     if (!currentPropertyId || !effectiveRtId) {
       toast({ title: "Stay assignment not found", variant: "destructive" });
       return;
     }
+    const finalDate = settlementData?.moveOutDate || moveOutDate || new Date().toISOString().split("T")[0];
+    const finalReason = settlementData?.reason || moveOutReason.trim() || "Tenancy completed smoothly";
+    const settlementNote = settlementData
+      ? ` | Inventory deduction: ₹${settlementData.inventoryDeduction}, Settlement: ₹${settlementData.netSettlementAmount} ${settlementData.isBalanceDue ? "(Balance due from tenant)" : "(Refund to tenant)"}`
+      : "";
+    const finalRemarks = `${settlementData?.remarks || moveOutRemarks.trim() || ""}${settlementNote}`.trim() || undefined;
+
     try {
       await moveOutMut.mutateAsync({
         roomTenantId: effectiveRtId,
         body: {
-          moveOutDate: moveOutDate || new Date().toISOString().split("T")[0],
-          reason: moveOutReason.trim() || "Tenancy completed smoothly",
-          remarks: moveOutRemarks.trim() || undefined,
+          moveOutDate: finalDate,
+          reason: finalReason,
+          remarks: finalRemarks,
         },
       });
       toast({
         title: "Tenant Move-Out Completed 🚪",
-        description: `${tenantDisplayName(tenant)} has moved out. The bed is now freed and recurring rent invoicing is halted.`,
+        description: `${tenantDisplayName(tenant)} has moved out. Inventory check saved and bed is now freed.`,
       });
       setMoveOutModalOpen(false);
       queryClient.invalidateQueries({ queryKey: queryKeys.tenantDetail(currentPropertyId, tenantId) });
@@ -473,6 +493,22 @@ export default function TenantDetailPage() {
   });
 
   const [agreementOpen, setAgreementOpen] = useState(false);
+  const [agreementInventory, setAgreementInventory] = useState<RoomInventoryResponse | null>(null);
+  const [loadingAgreementInv, setLoadingAgreementInv] = useState(false);
+
+  useEffect(() => {
+    if (agreementOpen && currentPropertyId) {
+      const targetRoom = tenant?.roomId || String(tenant ? tenantRoomNo(tenant) : "");
+      if (targetRoom) {
+        setLoadingAgreementInv(true);
+        getRoomInventory(currentPropertyId, targetRoom)
+          .then((inv) => setAgreementInventory(inv))
+          .catch(() => {})
+          .finally(() => setLoadingAgreementInv(false));
+      }
+    }
+  }, [agreementOpen, currentPropertyId, tenant]);
+
   const [agreementForm, setAgreementForm] = useState({
     monthlyRent: 12000,
     securityDeposit: 15000,
@@ -665,6 +701,25 @@ export default function TenantDetailPage() {
     upiId: "",
   });
 
+  const duplicateEditPhoneTenant = useMemo(() => {
+    if (!form.mobileNumber) return null;
+    const digits = form.mobileNumber.replace(/\D/g, "");
+    const ten = digits.length >= 10 ? digits.slice(-10) : "";
+    if (ten.length !== 10 || !Array.isArray(allPropertyTenants)) return null;
+    return (
+      allPropertyTenants.find((t: any) => {
+        if (t.id === tenantId || (t as any).roomTenantId === roomTenantId || (t as any).roomTenant?.id === roomTenantId) {
+          return false;
+        }
+        if (tenantStayStatus(t) === "MOVED_OUT") return false;
+        const otherPhone = String(t.phone || t.mobileNumber || t.contactNumber || "");
+        const otherDigits = otherPhone.replace(/\D/g, "");
+        const otherTen = otherDigits.length >= 10 ? otherDigits.slice(-10) : "";
+        return otherTen === ten;
+      }) || null
+    );
+  }, [form.mobileNumber, allPropertyTenants, tenantId, roomTenantId]);
+
   useEffect(() => {
     if (tenant) {
       const rt = (tenant as any).roomTenant || (tenant as any).currentStay || {};
@@ -827,7 +882,45 @@ export default function TenantDetailPage() {
     (tenant as any)?.currentStay?.propertyName ||
     propertyList.find((p) => p.id === currentPropertyId)?.name ||
     "—";
-  const photo = (tenant as any)?.photoUrl || (tenant as any)?.imageUrl || (tenant as any)?.profilePhotoUrl;
+  const photo = tenantPhotoUrl(tenant);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    setPhotoError(false);
+  }, [tenant]);
+
+  const handleOwnerPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentPropertyId || !tenantId) return;
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Please select an image file (JPG, PNG, WebP)", variant: "destructive" });
+      return;
+    }
+    setIsUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append("photo", file);
+      const res = await fetch(`/api/property-owners/properties/${currentPropertyId}/tenants/${tenantId}/photo`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authStorage.getAccessToken()}`,
+        },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to upload photo");
+      setPhotoError(false);
+      tenantQuery.refetch();
+      toast({ title: "Tenant photo updated successfully! 📸" });
+    } catch (err: any) {
+      toast({ title: "Photo upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setIsUploadingPhoto(false);
+      if (e.target) e.target.value = "";
+    }
+  };
   const statusInfo = tenantStatusDisplay(tenant);
   const rawRoomNo = tenantRoomNo(tenant);
   const rawBedNo = tenantBedNo(tenant);
@@ -1234,6 +1327,19 @@ export default function TenantDetailPage() {
       toast({
         title: "Room information missing",
         description: "Could not identify tenant's assigned room. Please verify room allocation.",
+        variant: "destructive",
+      });
+      setIsSaving(false);
+      return;
+    }
+
+    if (duplicateEditPhoneTenant) {
+      const rNum = duplicateEditPhoneTenant.roomNumber || duplicateEditPhoneTenant.room?.roomNumber || "assigned room";
+      const bNum = duplicateEditPhoneTenant.bedNumber || duplicateEditPhoneTenant.bed?.bedNumber || duplicateEditPhoneTenant.roomTenant?.bedNumberOnAssignment;
+      const bLabel = bNum ? ` (Bed ${bNum})` : "";
+      toast({
+        title: "Duplicate Contact Number",
+        description: `Contact number ${form.mobileNumber} is already assigned to active tenant "${duplicateEditPhoneTenant.name || "Tenant"}" in Room ${rNum}${bLabel}. Same contact number cannot be assigned to two active tenants in the same PG.`,
         variant: "destructive",
       });
       setIsSaving(false);
@@ -1692,12 +1798,39 @@ export default function TenantDetailPage() {
 
         <section className="md:hidden rounded-[16px] bg-white p-4 space-y-3">
           <div className="flex items-center gap-3">
-            <Avatar className="h-16 w-16 rounded-full">
-              {photo ? <AvatarImage src={photo} alt="" className="object-cover" /> : null}
-              <AvatarFallback className="rounded-full bg-[#E8FFFF] text-base font-semibold text-[#008080]">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative group shrink-0">
+              <input
+                type="file"
+                ref={photoInputRef}
+                accept="image/*"
+                className="hidden"
+                onChange={handleOwnerPhotoUpload}
+              />
+              <div className="h-16 w-16 rounded-full overflow-hidden bg-[#E8FFFF] border-2 border-teal-200/60 flex items-center justify-center font-bold text-base text-[#008080] shadow-sm">
+                {isUploadingPhoto ? (
+                  <Loader2 className="h-6 w-6 animate-spin text-[#008080]" />
+                ) : photo && !photoError ? (
+                  <img
+                    src={photo}
+                    alt={name}
+                    className="h-full w-full object-cover"
+                    crossOrigin="anonymous"
+                    onError={() => setPhotoError(true)}
+                  />
+                ) : (
+                  initials
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                disabled={isUploadingPhoto}
+                className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-[#008080] text-white flex items-center justify-center shadow-md hover:bg-[#006666] transition-all active:scale-95 border-2 border-white tap-target"
+                title="Upload tenant photo"
+              >
+                <Camera className="h-3 w-3" />
+              </button>
+            </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-[18px] font-semibold text-[#101010] truncate">{name}</h1>
@@ -1767,12 +1900,32 @@ export default function TenantDetailPage() {
 
         <section className="hidden md:block rounded-md border border-[var(--gray-200)] bg-white p-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <Avatar className="h-14 w-14 rounded-md">
-              {photo ? <AvatarImage src={photo} alt="" className="object-cover" /> : null}
-              <AvatarFallback className="rounded-md bg-[var(--brand-50)] text-base font-semibold text-[var(--brand-700)]">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative group shrink-0">
+              <div className="h-14 w-14 rounded-md overflow-hidden bg-[var(--brand-50)] border border-[var(--brand-100)] flex items-center justify-center font-bold text-base text-[var(--brand-700)] shadow-sm">
+                {isUploadingPhoto ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-[#008080]" />
+                ) : photo && !photoError ? (
+                  <img
+                    src={photo}
+                    alt={name}
+                    className="h-full w-full object-cover"
+                    crossOrigin="anonymous"
+                    onError={() => setPhotoError(true)}
+                  />
+                ) : (
+                  initials
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                disabled={isUploadingPhoto}
+                className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-[#008080] text-white flex items-center justify-center shadow-md hover:bg-[#006666] transition-all active:scale-95 border border-white"
+                title="Upload tenant photo"
+              >
+                <Camera className="h-2.5 w-2.5" />
+              </button>
+            </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-lg font-semibold text-[var(--gray-900)]">{name}</h1>
@@ -2585,9 +2738,14 @@ export default function TenantDetailPage() {
                         <Input
                           value={form.mobileNumber}
                           onChange={(e) => setForm({ ...form, mobileNumber: e.target.value })}
-                          className="h-9 text-xs"
+                          className={`h-9 text-xs ${duplicateEditPhoneTenant ? "border-destructive text-destructive font-medium focus-visible:ring-destructive" : ""}`}
                           placeholder="10-digit mobile"
                         />
+                        {duplicateEditPhoneTenant && (
+                          <p className="text-[11px] text-destructive mt-1 font-medium leading-tight">
+                            Duplicate number: Already assigned to {duplicateEditPhoneTenant.name || "another tenant"} in Room {duplicateEditPhoneTenant.roomNumber || duplicateEditPhoneTenant.room?.roomNumber || "assigned"}{duplicateEditPhoneTenant.bedNumber || duplicateEditPhoneTenant.bed?.bedNumber || duplicateEditPhoneTenant.roomTenant?.bedNumberOnAssignment ? ` (Bed ${duplicateEditPhoneTenant.bedNumber || duplicateEditPhoneTenant.bed?.bedNumber || duplicateEditPhoneTenant.roomTenant?.bedNumberOnAssignment})` : ""}.
+                          </p>
+                        )}
                       </EditField>
                     ) : (
                       <DetailRow label="Contact Number" value={phone} />
@@ -4019,6 +4177,57 @@ export default function TenantDetailPage() {
                   onChange={(e) => setAgreementForm({ ...agreementForm, houseRules: e.target.value })}
                 />
               </div>
+
+              {/* ANNEXURE A: MOVE-IN INVENTORY HANDOVER PREVIEW */}
+              <div className="space-y-2 pt-2 border-t border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Package className="h-4 w-4 text-teal-600" />
+                    <Label className="text-xs font-bold text-gray-900">
+                      Annexure A: Move-In Inventory Handover
+                    </Label>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] text-teal-700 bg-teal-50 border-teal-200">
+                    Snapshotted in Digio eSign PDF
+                  </Badge>
+                </div>
+
+                {loadingAgreementInv ? (
+                  <div className="p-3 text-center text-xs text-gray-400">
+                    <Loader2 className="h-4 w-4 animate-spin mx-auto mb-1 text-teal-600" />
+                    Loading room inventory snapshot...
+                  </div>
+                ) : !agreementInventory || agreementInventory.allResolved.length === 0 ? (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                    <span>
+                      Room inventory template is not yet configured for Room {name ? tenantRoomNo(tenant) : ""}. Default inventory items will be attached. You can configure room templates under Settings &rarr; Room & Bed Inventory.
+                    </span>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-gray-200 bg-gray-50/60 p-2.5 space-y-1.5 max-h-40 overflow-y-auto">
+                    <div className="text-[11px] font-semibold text-gray-700">
+                      Template: {agreementInventory.templateName || "Standard Double AC"}
+                    </div>
+                    <div className="divide-y divide-gray-100 text-[11px]">
+                      {agreementInventory.allResolved.map((item, idx) => (
+                        <div key={idx} className="py-1 flex items-center justify-between text-gray-600">
+                          <span className="font-medium text-gray-900">
+                            {item.name} ({item.qty}x)
+                          </span>
+                          <span className="text-gray-400">
+                            {item.shared ? "Shared Room Item" : "Bed Personal Item"} • {item.condition}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="p-2.5 bg-gray-50 rounded-xl border border-gray-200 text-[10px] text-gray-500 leading-relaxed italic">
+                  "The Licensee acknowledges receipt of the items listed in Annexure A in the stated condition and shall return them in the same condition at the time of vacating, subject to normal wear and tear. The cost of repair or replacement for damage or loss beyond normal wear and tear may be deducted from the security deposit."
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setAgreementOpen(false)}>
@@ -4286,74 +4495,23 @@ export default function TenantDetailPage() {
           </DialogContent>
         </Dialog>
 
-        {/* MODAL: VACATE / MOVE-OUT */}
-        <Dialog open={moveOutModalOpen} onOpenChange={setMoveOutModalOpen}>
-          <DialogContent className="max-w-md rounded-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-base flex items-center gap-2 text-rose-600">
-                <UserMinus className="h-5 w-5" /> Complete Move-Out & Free Bed
-              </DialogTitle>
-              <DialogDescription className="text-xs">
-                Check out <strong className="text-foreground">{name}</strong> and release bed allocation. Recurring rent invoices will be halted.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4 py-2 text-xs">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Move-Out / Vacate Date *</Label>
-                <Input
-                  type="date"
-                  value={moveOutDate}
-                  onChange={(e) => setMoveOutDate(e.target.value)}
-                  className="h-10 text-xs rounded-xl"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Exit Reason / Notes (Optional)</Label>
-                <Textarea
-                  value={moveOutReason}
-                  onChange={(e) => setMoveOutReason(e.target.value)}
-                  placeholder="e.g. Job change, tenancy completed, personal reasons"
-                  rows={2}
-                  className="text-xs rounded-xl"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Remarks (Optional)</Label>
-                <Input
-                  value={moveOutRemarks}
-                  onChange={(e) => setMoveOutRemarks(e.target.value)}
-                  placeholder="e.g. Deposit refunded, keys handed over"
-                  className="h-9 text-xs rounded-xl"
-                />
-              </div>
-
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200/80 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
-                <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                <span>
-                  Completing move-out immediately transitions this tenant stay to MOVED_OUT, frees the bed for new allocations, and halts recurring rent invoicing. Historical payment records remain intact.
-                </span>
-              </div>
-            </div>
-
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button variant="outline" size="sm" onClick={() => setMoveOutModalOpen(false)} className="rounded-xl text-xs">
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                className="rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white gap-1.5 shadow-xs"
-                onClick={handleConfirmMoveOut}
-                disabled={moveOutMut.isPending}
-              >
-                {moveOutMut.isPending ? "Processing..." : "Confirm Move-Out & Free Bed"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {/* MODAL: VACATE / MOVE-OUT WITH INVENTORY INSPECTION & SETTLEMENT */}
+        <CheckoutInventoryCheckModal
+          open={moveOutModalOpen}
+          onOpenChange={setMoveOutModalOpen}
+          pgId={currentPropertyId || ""}
+          tenant={tenant ? {
+            id: tenant.id,
+            name: tenantDisplayName(tenant),
+            roomNumber: tenantRoomNo(tenant) || "",
+            bedNumber: tenantBedNo(tenant) || "",
+            securityDeposit: Number(tenant.securityDeposit || 10000),
+            pendingRentDues: Number((tenant as any).pendingDues || (tenant as any).pendingRent || 0),
+            roomId: tenant.roomId,
+          } : null}
+          onConfirmCheckout={handleConfirmMoveOut}
+          isSubmitting={moveOutMut.isPending}
+        />
 
         <TrialExpiredGateModal
           open={gateModalOpen}

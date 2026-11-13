@@ -4,6 +4,18 @@ function hasWindow(): boolean {
   return typeof window !== "undefined" && typeof document !== "undefined";
 }
 
+function isCapacitorNative(): boolean {
+  if (!hasWindow()) return false;
+  const w = window as any;
+  if (w.Capacitor?.isNativePlatform && typeof w.Capacitor.isNativePlatform === "function") {
+    return w.Capacitor.isNativePlatform();
+  }
+  if (w.Capacitor?.getPlatform && typeof w.Capacitor.getPlatform === "function") {
+    return w.Capacitor.getPlatform() !== "web";
+  }
+  return false;
+}
+
 function readQueryFlag(): boolean | null {
   if (!hasWindow()) return null;
   const value = new URLSearchParams(window.location.search).get("app");
@@ -27,6 +39,7 @@ export function initAppShell(): boolean {
 
   const query = readQueryFlag();
   const fromUa = readUserAgentFlag();
+  const fromNative = isCapacitorNative();
 
   if (query === false) {
     try {
@@ -46,9 +59,9 @@ export function initAppShell(): boolean {
     stored = false;
   }
 
-  const enabled = query === true || fromUa || stored;
+  const enabled = query === true || fromUa || fromNative || stored;
 
-  if (query === true || fromUa) {
+  if (query === true || fromUa || fromNative) {
     try {
       window.localStorage.setItem(STORAGE_KEY, "1");
     } catch {
@@ -66,3 +79,4 @@ export function initAppShell(): boolean {
 
   return enabled;
 }
+

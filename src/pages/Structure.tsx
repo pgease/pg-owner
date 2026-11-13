@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   AlertCircle,
   ExternalLink,
+  Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +58,7 @@ import { createProperty } from "@/api/propertyOwner";
 import { CanAccessPage } from "@/components/PermissionGuard";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { TrialExpiredGateModal } from "@/components/common/TrialExpiredGateModal";
+import { RoomInventoryDrawer } from "@/components/inventory/RoomInventoryDrawer";
 import { cn } from "@/lib/utils";
 
 function floorSortKey(name: string): number {
@@ -75,6 +77,22 @@ export default function Structure() {
 
   const [locating, setLocating] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [inventoryRoom, setInventoryRoom] = useState<any>(null);
+  const [invRefreshTick, setInvRefreshTick] = useState(0);
+
+  const roomTplMap = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem(`pgease_inv_room_tpl_map_${currentPropertyId}`) || '{}');
+    } catch {
+      return {};
+    }
+  }, [currentPropertyId, invRefreshTick]);
+
+  const getRoomTplName = (roomId: string) => {
+    const tplId = roomTplMap[roomId];
+    if (!tplId) return null;
+    return tplId.replace('tpl_', '').replace(/_/g, ' ');
+  };
 
   const entitlements = useEntitlements();
   const [trialExpiredOpen, setTrialExpiredOpen] = useState(false);
@@ -644,6 +662,32 @@ export default function Structure() {
                           label={isFull ? "Full" : `${Math.max(0, bedCount - occupiedCount)} vacant`}
                           size="sm"
                         />
+                        {(() => {
+                          const tpl = getRoomTplName(r.id);
+                          return (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setInventoryRoom(r);
+                              }}
+                              title="Click to view & edit room inventory"
+                              className="inline-flex items-center"
+                            >
+                              {tpl ? (
+                                <Badge variant="outline" className="text-[10px] font-medium bg-teal-50 text-teal-800 border-teal-200 hover:bg-teal-100 cursor-pointer">
+                                  <Package className="h-2.5 w-2.5 text-teal-600 mr-0.5" />
+                                  <span className="capitalize truncate max-w-[80px]">{tpl}</span>
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-[10px] font-medium bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100 cursor-pointer">
+                                  <Package className="h-2.5 w-2.5 text-amber-600 mr-0.5" />
+                                  Not set
+                                </Badge>
+                              )}
+                            </button>
+                          );
+                        })()}
                       </div>
                       <span className="text-xs text-[var(--gray-500)] shrink-0 whitespace-nowrap">
                         {bedCount} {bedCount === 1 ? "Bed" : "Beds"}
@@ -779,6 +823,33 @@ export default function Structure() {
                   },
                 },
                 {
+                  id: "inventory",
+                  header: "Inventory",
+                  render: (r: any) => {
+                    const tpl = getRoomTplName(r.id);
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => setInventoryRoom(r)}
+                        className="flex items-center gap-1.5 text-xs text-left group"
+                        title="Click to view & edit room inventory"
+                      >
+                        {tpl ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-teal-50 text-teal-800 border border-teal-200 group-hover:bg-teal-100">
+                            <Package className="h-3 w-3 text-teal-600" />
+                            <span className="capitalize">{tpl}</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200 group-hover:bg-amber-100">
+                            <Package className="h-3 w-3 text-amber-600" />
+                            Not set
+                          </span>
+                        )}
+                      </button>
+                    );
+                  },
+                },
+                {
                   id: "status",
                   header: "Status",
                   render: (r: any) => {
@@ -801,18 +872,30 @@ export default function Structure() {
                   header: "",
                   align: "right",
                   render: (r: any) => (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="h-7 text-xs"
-                      onClick={() =>
-                        navigate("/tenants/add", {
-                          state: { prefillRoomId: r.id, prefillRoomNumber: r.roomNumber },
-                        })
-                      }
-                    >
-                      + Allocate
-                    </Button>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs border-teal-200 text-teal-700 hover:bg-teal-50 gap-1 px-2"
+                        onClick={() => setInventoryRoom(r)}
+                        title="Room Inventory"
+                      >
+                        <Package className="h-3 w-3" />
+                        <span className="hidden sm:inline">Inventory</span>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="h-7 text-xs"
+                        onClick={() =>
+                          navigate("/tenants/add", {
+                            state: { prefillRoomId: r.id, prefillRoomNumber: r.roomNumber },
+                          })
+                        }
+                      >
+                        + Allocate
+                      </Button>
+                    </div>
                   ),
                 },
               ]}
@@ -1035,6 +1118,16 @@ export default function Structure() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {inventoryRoom && (
+          <RoomInventoryDrawer
+            open={Boolean(inventoryRoom)}
+            onOpenChange={(open) => !open && setInventoryRoom(null)}
+            pgId={currentPropertyId || ""}
+            room={inventoryRoom}
+            onUpdated={() => setInvRefreshTick((t) => t + 1)}
+          />
+        )}
 
         <TrialExpiredGateModal
           open={trialExpiredOpen}

@@ -31,8 +31,9 @@ import {
 } from "@/api/propertyOwner";
 import { toast } from "@/components/ui/use-toast";
 import { useBlocks, useFloors, useRoomsList, usePropertyTenants, queryKeys } from "@/hooks/usePropertyOwnerQueries";
-import { Check, Search, ChevronRight, ChevronLeft, Plus, Minus, DoorOpen, Bed as BedIcon, Lock, Layers, Building, Phone } from "lucide-react";
+import { Check, Search, ChevronRight, ChevronLeft, Plus, Minus, DoorOpen, Bed as BedIcon, Lock, Layers, Building, Phone, AlertCircle } from "lucide-react";
 import { cleanPhoneInput } from "@/lib/utils";
+import { tenantStayStatus } from "@/lib/tenantDisplay";
 
 function idStr(id: unknown): string {
   if (id === undefined || id === null) return "";
@@ -355,6 +356,23 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
     return list;
   }, [selectedRoomObj, currentRoomTenants]);
 
+  // Check if any active tenant in the current PG already uses this phone number
+  const duplicatePhoneTenant = useMemo(() => {
+    const digits = phone.replace(/\D/g, "");
+    const tenDigits = digits.length >= 10 ? digits.slice(-10) : "";
+    if (tenDigits.length !== 10) return null;
+    const list = Array.isArray(tenantsQuery.data) ? (tenantsQuery.data as any[]) : [];
+    return (
+      list.find((t: any) => {
+        if (tenantStayStatus(t) === "MOVED_OUT") return false;
+        const rawTPhone = String(t.phone || t.mobileNumber || t.contactNumber || "");
+        const tDigits = rawTPhone.replace(/\D/g, "");
+        const tTen = tDigits.length >= 10 ? tDigits.slice(-10) : "";
+        return tTen === tenDigits;
+      }) || null
+    );
+  }, [phone, tenantsQuery.data]);
+
   // Reset bed selection when room changes (no auto-selection)
   useEffect(() => {
     setBedNumber("");
@@ -554,6 +572,12 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
     if (!name.trim()) return "Enter tenant full name.";
     const digits = phone.replace(/\D/g, "");
     if (digits.length !== 10) return "Enter a valid 10-digit contact number.";
+    if (duplicatePhoneTenant) {
+      const roomLabel = duplicatePhoneTenant.roomNumber || duplicatePhoneTenant.room?.roomNumber || "assigned room";
+      const bedNum = duplicatePhoneTenant.bedNumber || duplicatePhoneTenant.bed?.bedNumber || duplicatePhoneTenant.roomTenant?.bedNumberOnAssignment;
+      const bedLabel = bedNum ? ` (Bed ${bedNum})` : "";
+      return `Contact number ${phone} is already registered to active tenant "${duplicatePhoneTenant.name || "Tenant"}" in Room ${roomLabel}${bedLabel}. Two active tenants cannot share the same contact number in the same PG.`;
+    }
     if (!hasSelectValue(effectiveRoomId)) return "Select a room for allocation.";
     if (!bedNumber) return "Select an available bed for allocation.";
     return null;
@@ -843,21 +867,24 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
       queryClient.invalidateQueries({ queryKey: ["property", propertyId, "tenants"] });
       onSuccess?.();
     } catch (e: unknown) {
-      const err = e as { status?: number; message?: string };
+      const err = e as { status?: number; message?: string; response?: { data?: { message?: string } } };
+      const rawMsg = String(err?.response?.data?.message || err?.message || (e instanceof Error ? e.message : "")).toLowerCase();
       const isDuplicatePhone =
-        (err?.status === 400 || (e instanceof Error && e.message.toLowerCase().includes("mobile number already exists"))) &&
-        (err?.message?.toLowerCase().includes("active tenant") || err?.message?.toLowerCase().includes("mobile number already exists"));
+        rawMsg.includes("already actively assigned") ||
+        rawMsg.includes("duplicate active tenants") ||
+        rawMsg.includes("already residing") ||
+        rawMsg.includes("mobile number already exists");
 
       if (isDuplicatePhone) {
         toast({
-          title: "Duplicate Mobile Number",
-          description: "Tenant with this phone number is already actively residing in this PG.",
+          title: "Duplicate Contact Number",
+          description: err?.response?.data?.message || (e instanceof Error ? e.message : "A tenant with this phone number is already actively residing in this PG."),
           variant: "destructive",
         });
       } else {
         toast({
           title: "Could not add tenant",
-          description: e instanceof Error ? e.message : "Something went wrong",
+          description: err?.response?.data?.message || (e instanceof Error ? e.message : "Something went wrong"),
           variant: "destructive",
         });
       }
@@ -955,8 +982,20 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                     placeholder="10-digit contact number"
                     value={phone}
                     onChange={(e) => setPhone(cleanPhoneInput(e.target.value))}
+                    className={duplicatePhoneTenant ? "border-destructive focus-visible:ring-destructive text-destructive font-medium" : ""}
                   />
                 </div>
+                {duplicatePhoneTenant && (
+                  <div className="flex items-start gap-2 p-2.5 mt-1 rounded-md bg-destructive/10 border border-destructive/30 text-destructive text-xs animate-in fade-in duration-200">
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-destructive">Duplicate contact number in this PG</p>
+                      <p className="text-destructive/90 mt-0.5">
+                        <strong>{duplicatePhoneTenant.name || "Another tenant"}</strong> is already actively assigned in Room {duplicatePhoneTenant.roomNumber || duplicatePhoneTenant.room?.roomNumber || "assigned"}{duplicatePhoneTenant.bedNumber || duplicatePhoneTenant.bed?.bedNumber || duplicatePhoneTenant.roomTenant?.bedNumberOnAssignment ? ` (Bed ${duplicatePhoneTenant.bedNumber || duplicatePhoneTenant.bed?.bedNumber || duplicatePhoneTenant.roomTenant?.bedNumberOnAssignment})` : ""} with contact number <strong>{phone}</strong>. Same contact number cannot be assigned to two active tenants in the same PG.
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 pt-1">
                   <input
                     type="checkbox"

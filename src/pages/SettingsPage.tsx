@@ -692,6 +692,26 @@ export default function SettingsPage() {
             </div>
             <ChevronRight className="h-4 w-4 text-[var(--gray-400)] shrink-0 ml-3" />
           </div>
+
+          <div
+            onClick={() => navigate("/settings/inventory")}
+            className="bg-white rounded-[16px] md:rounded-md border border-teal-200 hover:border-teal-300 hover:bg-teal-50/20 p-4 flex items-center justify-between cursor-pointer transition-colors"
+          >
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-semibold text-teal-900">
+                  Room & Bed Inventory
+                </h4>
+                <span className="rounded-full bg-teal-100 px-2 py-0.5 text-[10px] font-bold text-teal-800">
+                  Templates & Annexure A
+                </span>
+              </div>
+              <p className="text-xs text-[var(--gray-500)]">
+                Configure furniture & appliance templates, bulk-assign to rooms, and manage move-in checklists
+              </p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-teal-600 shrink-0 ml-3" />
+          </div>
         </div>
       </div>
 

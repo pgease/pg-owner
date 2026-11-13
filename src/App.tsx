@@ -17,6 +17,7 @@ import Staff from "./pages/Staff";
 import Reports from "./pages/Reports";
 import Plans from "./pages/Plans";
 import SettingsPage from "./pages/SettingsPage";
+import { InventoryManagementPage } from "./pages/inventory/InventoryManagementPage";
 import Expenses from "./pages/Expenses";
 import Support from "./pages/Support";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
@@ -166,6 +167,8 @@ const App = () => (
                         <Route path="/audit-logs" element={<ActivityLogsPage />} />
                         <Route path="/settings/activity-logs" element={<ActivityLogsPage />} />
                         <Route path="/settings" element={<SettingsPage />} />
+                        <Route path="/settings/inventory" element={<InventoryManagementPage />} />
+                        <Route path="/inventory" element={<InventoryManagementPage />} />
                         <Route path="/notifications" element={<NotificationsPage />} />
                         <Route path="/settings/notifications" element={<SettingsPage />} />
                         <Route path="/support" element={<Support />} />
