@@ -75,10 +75,10 @@ export const CheckoutInventoryCheckModal = ({
   const [moveOutDate, setMoveOutDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
-  const [reason, setReason] = useState<string>('Tenancy completed smoothly');
+  const [reason, setReason] = useState<string>('');
   const [remarks, setRemarks] = useState<string>('');
 
-  const securityDeposit = Number(tenant?.securityDeposit || 10000);
+  const securityDeposit = Number(tenant?.securityDeposit || 0);
   const pendingRentDues = Number(tenant?.pendingRentDues || 0);
 
   useEffect(() => {
@@ -114,9 +114,9 @@ export const CheckoutInventoryCheckModal = ({
       if (newStatus === 'ok' || newStatus === 'not_applicable') {
         item.deductionInr = 0;
       } else if (newStatus === 'missing') {
-        item.deductionInr = item.defaultValueInr || 1000;
+        item.deductionInr = item.defaultValueInr || 0;
       } else if (newStatus === 'damaged' && item.deductionInr === 0) {
-        item.deductionInr = Math.round((item.defaultValueInr || 1000) * 0.5);
+        item.deductionInr = Math.round((item.defaultValueInr || 0) * 0.5);
       }
 
       updated[index] = item;

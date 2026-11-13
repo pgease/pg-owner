@@ -182,9 +182,16 @@ export const InventoryCatalogTable = ({ pgId, catalog, onRefresh }: InventoryCat
               ) : (
                 filteredItems.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="py-3 px-4 font-semibold text-foreground flex items-center gap-2">
-                      <Tag className="h-3.5 w-3.5 text-primary/70 shrink-0" />
-                      <span>{item.name}</span>
+                    <td className="py-3 px-4 font-semibold text-foreground">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Tag className="h-3.5 w-3.5 text-primary/70 shrink-0" />
+                        <span>{item.name}</span>
+                        {item.isMaster && (
+                          <Badge variant="outline" className="text-[9px] bg-blue-50 text-blue-700 border-blue-200 px-1.5 py-0 font-medium">
+                            Admin Master
+                          </Badge>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3 px-4">
                       <Badge variant="outline" className="text-[10px] uppercase font-semibold">

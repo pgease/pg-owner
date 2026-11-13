@@ -20,6 +20,7 @@ import {
   type InventoryTemplate,
   getInventoryCatalog,
   getInventoryTemplates,
+  syncMasterInventory,
 } from '@/api/inventoryApi';
 import { InventoryCatalogTable } from '@/components/inventory/InventoryCatalogTable';
 import { InventoryTemplatesManager } from '@/components/inventory/InventoryTemplatesManager';
@@ -29,18 +30,48 @@ import { toast } from '@/components/ui/use-toast';
 export const InventoryManagementPage = () => {
   const navigate = useNavigate();
   const { selectedPgId, properties } = useApp();
-  const currentPropertyId = selectedPgId || properties?.[0]?.id || 'default_pg';
+  const currentPropertyId = selectedPgId || properties?.[0]?.id || '';
 
   const [activeTab, setActiveTab] = useState<'templates' | 'catalog'>('templates');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   const [templates, setTemplates] = useState<InventoryTemplate[]>([]);
 
   // Bulk Assign Modal state
   const [bulkAssignOpen, setBulkAssignOpen] = useState(false);
   const [selectedTemplateForAssign, setSelectedTemplateForAssign] = useState<InventoryTemplate | null>(null);
+  const [syncing, setSyncing] = useState(false);
+
+  const handleSyncMaster = async () => {
+    if (!currentPropertyId) return;
+    setSyncing(true);
+    try {
+      const res = await syncMasterInventory(currentPropertyId);
+      toast({
+        title: 'Synced from Admin Master',
+        description: res.syncedCount
+          ? `Successfully synced ${res.syncedCount} standard assets from Admin Panel.`
+          : 'Catalog synced with Admin Master library.',
+      });
+      loadData();
+    } catch (err: any) {
+      toast({
+        title: 'Sync Failed',
+        description: err.message || 'Could not sync master items from Admin Panel.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const loadData = async () => {
+    if (!currentPropertyId) {
+      setCatalog([]);
+      setTemplates([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const [catData, tplData] = await Promise.all([
@@ -50,6 +81,8 @@ export const InventoryManagementPage = () => {
       setCatalog(catData || []);
       setTemplates(tplData || []);
     } catch (err: any) {
+      setCatalog([]);
+      setTemplates([]);
       toast({
         title: 'Error loading inventory',
         description: err.message || 'Could not load templates or catalog.',
@@ -96,6 +129,21 @@ export const InventoryManagementPage = () => {
           <Button
             variant="outline"
             size="sm"
+            onClick={handleSyncMaster}
+            disabled={syncing || loading || !currentPropertyId}
+            className="h-8 text-xs border-teal-300 text-teal-800 bg-teal-50/60 hover:bg-teal-100 gap-1.5 font-semibold"
+          >
+            {syncing ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="h-3.5 w-3.5 text-teal-600" />
+            )}
+            Sync from Admin Master
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
             onClick={loadData}
             disabled={loading}
             className="h-8 text-xs border-gray-300 gap-1.5"
@@ -119,7 +167,15 @@ export const InventoryManagementPage = () => {
         </div>
       </div>
 
-      {loading ? (
+      {!currentPropertyId ? (
+        <div className="py-20 text-center border-2 border-dashed border-gray-200 rounded-3xl bg-gray-50/50 p-8 max-w-md mx-auto">
+          <Package className="h-10 w-10 text-gray-400 mx-auto mb-3" />
+          <h3 className="text-base font-bold text-gray-800">No PG Property Selected</h3>
+          <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
+            Please select a property from the top header PG selector to view and manage its room & bed inventory.
+          </p>
+        </div>
+      ) : loading ? (
         <div className="py-24 text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-teal-600" />
           <p className="text-xs text-gray-400 mt-2">Loading inventory catalog and templates...</p>
