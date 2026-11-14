@@ -30,7 +30,6 @@ import { EasebuzzGatewayCard } from "@/components/property/EasebuzzGatewayCard";
 
 declare global {
   interface Window {
-    Razorpay?: any;
     EasebuzzCheckout?: any;
   }
 }
@@ -38,7 +37,6 @@ declare global {
 export default function Plans() {
   const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
-  const [selectedGateway, setSelectedGateway] = useState<"easebuzz" | "razorpay">("easebuzz");
   const [payMode, setPayMode] = useState<"MANUAL" | "GATEWAY">("MANUAL");
   const [upiId, setUpiId] = useState("");
   const [kycStatus, setKycStatus] = useState("not_submitted");
@@ -246,119 +244,62 @@ export default function Plans() {
         planId,
         billingCycle,
         numberOfBeds: selectedBeds,
-        gateway: selectedGateway,
+        gateway: "easebuzz",
       });
 
       // ─── Easebuzz Flow ────────────────────────────────────────────────────────
-      if (selectedGateway === "easebuzz") {
-        if (!window.EasebuzzCheckout) {
-          const script = document.createElement("script");
-          script.src = "https://ebz-static.s3.ap-south-1.amazonaws.com/easecheckout/v2.0.0/easebuzz-checkout-v2.min.js";
-          document.body.appendChild(script);
-          await new Promise((resolve) => (script.onload = resolve));
-        }
-
-        launchEasebuzzCheckout(
-          {
-            key: order.key || order.keyId,
-            access_key: order.access_key!,
-            env: order.env || "test",
-            txnid: order.txnid || order.orderId,
-            amount: order.amount,
-            is_sandbox: (order as any).is_sandbox,
-          },
-          {
-            onSuccess: async (response_data: any) => {
-              try {
-                await verifyPaymentMut.mutateAsync({
-                  gateway: "easebuzz",
-                  txnid: response_data.txnid || order.orderId,
-                  easebuzz_id: response_data.easebuzz_id,
-                  hash: response_data.hash,
-                  status: response_data.status,
-                  easebuzz_response: response_data,
-                  planId,
-                  billingCycle,
-                  numberOfBeds: selectedBeds,
-                });
-                toast({
-                  title: "Subscription Activated! 👑",
-                  description: `Your account has been upgraded to ${activePlan?.displayName || activePlan?.name || "Pro"} for ${selectedBeds} beds.`,
-                });
-                refetchCurrentPlan();
-              } catch (err: any) {
-                toast({
-                  title: "Payment Verification Failed",
-                  description: err?.message || "Please contact support if amount was debited.",
-                  variant: "destructive",
-                });
-              }
-            },
-            onFailure: (response_data: any) => {
-              toast({
-                title: "Payment Not Completed",
-                description: response_data.error_Message || response_data.status || "Cancelled by user.",
-                variant: "destructive",
-              });
-            },
-          }
-        );
-        return;
-      }
-
-      // ─── Razorpay Flow ────────────────────────────────────────────────────────
-      if (!window.Razorpay) {
+      if (!window.EasebuzzCheckout) {
         const script = document.createElement("script");
-        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.src = "https://ebz-static.s3.ap-south-1.amazonaws.com/easecheckout/v2.0.0/easebuzz-checkout-v2.min.js";
         document.body.appendChild(script);
         await new Promise((resolve) => (script.onload = resolve));
       }
 
-      if (!order?.keyId) {
-        toast({
-          title: "Checkout is not ready",
-          description: "The payment gateway did not return a live key. Nothing was charged.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const options = {
-        key: order.keyId,
-        amount: order.amount,
-        currency: order.currency || "INR",
-        name: "PG Ease",
-        description: `${activePlan.displayName || activePlan.name} (${selectedBeds} beds, ${billingCycle})`,
-        order_id: order.orderId,
-        handler: async (response: any) => {
-          try {
-            await verifyPaymentMut.mutateAsync({
-              gateway: "razorpay",
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-              planId,
-              billingCycle,
-              numberOfBeds: selectedBeds,
-            });
+      launchEasebuzzCheckout(
+        {
+          key: order.key || order.keyId,
+          access_key: order.access_key!,
+          env: order.env || "test",
+          txnid: order.txnid || order.orderId,
+          amount: order.amount,
+          is_sandbox: (order as any).is_sandbox,
+        },
+        {
+          onSuccess: async (response_data: any) => {
+            try {
+              await verifyPaymentMut.mutateAsync({
+                gateway: "easebuzz",
+                txnid: response_data.txnid || order.orderId,
+                easebuzz_id: response_data.easebuzz_id,
+                hash: response_data.hash,
+                status: response_data.status,
+                easebuzz_response: response_data,
+                planId,
+                billingCycle,
+                numberOfBeds: selectedBeds,
+              });
+              toast({
+                title: "Subscription Activated! 👑",
+                description: `Your account has been upgraded to ${activePlan?.displayName || activePlan?.name || "Pro"} for ${selectedBeds} beds.`,
+              });
+              refetchCurrentPlan();
+            } catch (err: any) {
+              toast({
+                title: "Payment Verification Failed",
+                description: err?.message || "Please contact support if amount was debited.",
+                variant: "destructive",
+              });
+            }
+          },
+          onFailure: (response_data: any) => {
             toast({
-              title: "Subscription Activated! 👑",
-              description: `Your account has been upgraded to ${activePlan.displayName || activePlan.name} for ${selectedBeds} beds.`,
-            });
-            refetchCurrentPlan();
-          } catch (err: any) {
-            toast({
-              title: "Payment Verification Failed",
-              description: err?.message || "Please contact support if amount was debited.",
+              title: "Payment Not Completed",
+              description: response_data.error_Message || response_data.status || "Cancelled by user.",
               variant: "destructive",
             });
-          }
-        },
-        theme: { color: "#008080" },
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+          },
+        }
+      );
     } catch (err: any) {
       toast({
         title: "Could not initiate checkout",
@@ -616,42 +557,6 @@ export default function Plans() {
         </div>
 
         {/* Gateway Selector */}
-        <div className="mt-4 p-3 bg-[#F6F7F8] rounded-lg border border-[#E2E6EA]">
-          <p className="text-xs font-bold text-[#18212B] mb-2">Select Payment Gateway:</p>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setSelectedGateway("easebuzz")}
-              className={`p-2.5 rounded-md border text-left flex items-center justify-between text-xs font-bold transition cursor-pointer ${
-                selectedGateway === "easebuzz"
-                  ? "border-[#008080] bg-[#E8F4F4] text-[#008080] ring-1 ring-[#008080]"
-                  : "border-[#E2E6EA] bg-white text-[#556270] hover:border-[#C8CFD6]"
-              }`}
-            >
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#008080]"></span>
-                <span>Easebuzz</span>
-              </div>
-              <span className="text-[10px] text-[#6B7785] font-normal">Fast UPI / Card</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedGateway("razorpay")}
-              className={`p-2.5 rounded-md border text-left flex items-center justify-between text-xs font-bold transition cursor-pointer ${
-                selectedGateway === "razorpay"
-                  ? "border-blue-600 bg-blue-50 text-blue-800 ring-1 ring-blue-600"
-                  : "border-[#E2E6EA] bg-white text-[#556270] hover:border-[#C8CFD6]"
-              }`}
-            >
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-blue-600"></span>
-                <span>Razorpay</span>
-              </div>
-              <span className="text-[10px] text-[#6B7785] font-normal">All Options</span>
-            </button>
-          </div>
-        </div>
-
         <button
           type="button"
           disabled={createOrderMut.isPending || !activePlan}
@@ -662,7 +567,7 @@ export default function Plans() {
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <span>
-              Pay {formatINR(planTotal)} for {activePlan?.displayName || activePlan?.name || "PG Ease Pro"} via {selectedGateway === "easebuzz" ? "Easebuzz ⚡" : "Razorpay 💳"}
+              Pay {formatINR(planTotal)} for {activePlan?.displayName || activePlan?.name || "PG Ease Pro"} via Easebuzz ⚡
             </span>
           )}
         </button>

@@ -4,6 +4,7 @@ import {
   Plus,
   ArrowRightLeft,
   UserMinus,
+  Trash2,
   Clock,
   Download,
   IndianRupee,
@@ -836,8 +837,8 @@ const Tenants = () => {
                               },
                             ]),
                         {
-                          label: "Move out",
-                          icon: <UserMinus className="h-3.5 w-3.5 text-[#B42318]" />,
+                          label: "Delete / Move out",
+                          icon: <Trash2 className="h-3.5 w-3.5 text-[#B42318]" />,
                           destructive: true,
                           onClick: () => handleOpenVacateModal(t),
                         },
@@ -1054,13 +1055,13 @@ const Tenants = () => {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle className="text-base flex items-center gap-2 text-[#B42318]">
-                <UserMinus className="h-5 w-5" /> Vacate & Check Out Tenant
+                <Trash2 className="h-5 w-5" /> Delete / Move Out Tenant
               </DialogTitle>
               <p className="text-xs text-[var(--gray-600)] mt-1">
-                Release bed allocation and complete stay for{" "}
+                Direct move-out and release bed allocation for{" "}
                 <strong className="text-[var(--gray-900)]">
                   {selectedTenantForVacate ? tenantDisplayName(selectedTenantForVacate) : "tenant"}
-                </strong>. All transaction history remains preserved.
+                </strong>. Bed becomes vacant immediately.
               </p>
             </DialogHeader>
 
@@ -1076,11 +1077,11 @@ const Tenants = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium">Checkout Reason (Optional)</Label>
+                <Label className="text-xs font-medium">Reason (Optional)</Label>
                 <Textarea
                   value={vacateReason}
                   onChange={(e) => setVacateReason(e.target.value)}
-                  placeholder="e.g. Job transfer, completed college exams"
+                  placeholder="e.g. Deleted by owner, Tenancy completed"
                   rows={2}
                   className="text-xs"
                 />
@@ -1097,7 +1098,7 @@ const Tenants = () => {
                 onClick={handleConfirmVacate}
                 disabled={moveOutMutation.isPending}
               >
-                {moveOutMutation.isPending ? "Processing..." : "Confirm Move-Out & Free Bed"}
+                {moveOutMutation.isPending ? "Processing..." : "Confirm Delete & Free Bed"}
               </Button>
             </DialogFooter>
           </DialogContent>

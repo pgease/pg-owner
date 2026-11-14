@@ -349,6 +349,45 @@ export default function TenantDetailPage() {
   const [moveOutReason, setMoveOutReason] = useState<string>("Tenancy completed smoothly");
   const [moveOutRemarks, setMoveOutRemarks] = useState<string>("");
 
+  // Direct Delete / Move-Out Dialog State
+  const [deleteTenantDialogOpen, setDeleteTenantDialogOpen] = useState(false);
+  const [isDeletingTenant, setIsDeletingTenant] = useState(false);
+
+  const handleDirectDeleteTenant = async () => {
+    const effectiveRtId = roomTenantId || (tenant as any)?.roomTenant?.id || tenant?.id;
+    if (!currentPropertyId || !effectiveRtId) {
+      toast({ title: "Stay assignment not found", variant: "destructive" });
+      return;
+    }
+    const today = new Date().toISOString().split("T")[0];
+    setIsDeletingTenant(true);
+    try {
+      await moveOutMut.mutateAsync({
+        roomTenantId: effectiveRtId,
+        body: {
+          moveOutDate: today,
+          reason: "Deleted by owner (Direct move-out)",
+          remarks: `Tenant deleted / moved out on ${today}. Bed freed immediately.`,
+        },
+      });
+      toast({
+        title: "Tenant Deleted Successfully 🗑️",
+        description: `${tenantDisplayName(tenant)} has been removed. The bed is now vacant and rent billing stopped.`,
+      });
+      setDeleteTenantDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: queryKeys.tenantDetail(currentPropertyId, tenantId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tenants(currentPropertyId) });
+    } catch (e: any) {
+      toast({
+        title: "Failed to delete tenant",
+        description: e?.message || "Unable to remove tenant",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingTenant(false);
+    }
+  };
+
   const handleOpenMoveOutModal = () => {
     setMoveOutDate(new Date().toISOString().split("T")[0]);
     setMoveOutReason("Tenancy completed smoothly");
@@ -1667,6 +1706,17 @@ export default function TenantDetailPage() {
                   <Send className="h-3.5 w-3.5" /> Send reminder
                 </Button>
 
+                {stayStatus !== "MOVED_OUT" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 font-semibold border-rose-300 text-rose-600 hover:bg-rose-50 hover:border-rose-400 dark:hover:bg-rose-950/30"
+                    onClick={() => setDeleteTenantDialogOpen(true)}
+                  >
+                    <Trash2 className="h-4 w-4 text-rose-600" /> Delete Tenant
+                  </Button>
+                )}
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="secondary" size="sm" className="h-9 w-9 p-0" aria-label="More actions">
@@ -1711,6 +1761,14 @@ export default function TenantDetailPage() {
                     >
                       <Clock className="h-4 w-4 text-amber-600" /> Give notice
                     </DropdownMenuItem>
+                    {stayStatus !== "MOVED_OUT" && (
+                      <DropdownMenuItem
+                        onClick={() => setDeleteTenantDialogOpen(true)}
+                        className="cursor-pointer gap-2 font-semibold text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/40"
+                      >
+                        <Trash2 className="h-4 w-4 text-rose-600" /> Delete Tenant (Move Out)
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem
                       onClick={() => setActivityDrawerOpen(true)}
                       className="cursor-pointer gap-2"
@@ -4512,6 +4570,76 @@ export default function TenantDetailPage() {
           onConfirmCheckout={handleConfirmMoveOut}
           isSubmitting={moveOutMut.isPending}
         />
+
+        {/* DIRECT DELETE TENANT (MOVE-OUT TODAY) DIALOG */}
+        <Dialog open={deleteTenantDialogOpen} onOpenChange={setDeleteTenantDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center text-rose-600 shrink-0">
+                  <Trash2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <DialogTitle className="text-base font-bold text-slate-900 dark:text-slate-100">
+                    Delete Tenant
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-slate-500 mt-0.5">
+                    Direct move-out effective today ({new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })})
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="py-2 space-y-3 text-sm text-slate-600 dark:text-slate-300">
+              <p>
+                Are you sure you want to delete and remove <strong className="text-slate-900 dark:text-white font-semibold">{tenantDisplayName(tenant)}</strong>?
+              </p>
+              <div className="rounded-xl border border-rose-200 bg-rose-50/70 dark:bg-rose-950/20 p-3 space-y-1.5 text-xs text-rose-900 dark:text-rose-200">
+                <div className="flex items-center gap-2 font-bold text-rose-800 dark:text-rose-300">
+                  <span>Immediate Actions Applied:</span>
+                </div>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>Tenant status is set to <strong>Moved Out</strong> as of today.</li>
+                  <li>The bed allocation (<span className="font-semibold">{tenantRoomLabel(tenant)}</span>) is <strong>freed and marked Vacant</strong> immediately.</li>
+                  <li>Monthly rent cycle stops.</li>
+                </ul>
+              </div>
+              <p className="text-xs text-slate-500">
+                Ledger and invoices remain safely archived for your tax and billing records.
+              </p>
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDeleteTenantDialogOpen(false)}
+                disabled={isDeletingTenant}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="gap-1.5 font-semibold bg-rose-600 hover:bg-rose-700 text-white"
+                onClick={handleDirectDeleteTenant}
+                disabled={isDeletingTenant}
+              >
+                {isDeletingTenant ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Deleting Tenant...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    Confirm Delete & Move Out
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <TrialExpiredGateModal
           open={gateModalOpen}
