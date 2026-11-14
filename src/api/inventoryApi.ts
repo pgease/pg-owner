@@ -107,11 +107,10 @@ export interface CheckoutInventoryCheckData {
 
 // 1. Catalog APIs
 export async function getInventoryCatalog(pgId: string): Promise<CatalogItem[]> {
-  if (!pgId) return [];
+  if (!pgId || pgId === 'undefined' || pgId === 'null') return [];
   try {
     const res = await httpRequest<CatalogItem[]>(`/pg/${pgId}/inventory/catalog`, {
       auth: true,
-      skipForceLogout: true,
     });
     return Array.isArray(res) ? res : [];
   } catch (err) {
@@ -157,11 +156,10 @@ export async function syncMasterInventory(
 
 // 2. Template APIs
 export async function getInventoryTemplates(pgId: string): Promise<InventoryTemplate[]> {
-  if (!pgId) return [];
+  if (!pgId || pgId === 'undefined' || pgId === 'null') return [];
   try {
     const res = await httpRequest<InventoryTemplate[]>(`/pg/${pgId}/inventory/templates`, {
       auth: true,
-      skipForceLogout: true,
     });
     return Array.isArray(res) ? res : [];
   } catch (err) {

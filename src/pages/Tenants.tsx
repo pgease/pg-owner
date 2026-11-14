@@ -37,6 +37,7 @@ import {
 import { useApp } from "@/context/AppContext";
 import type { PropertyTenant } from "@/api/propertyOwner";
 import { roomHasVacancyForAllocation } from "@/api/propertyOwner";
+import { CheckoutInventoryCheckModal } from "@/components/inventory/CheckoutInventoryCheckModal";
 import {
   useBlocks,
   useFloors,
@@ -217,21 +218,35 @@ const Tenants = () => {
     setVacateModalOpen(true);
   };
 
-  const handleConfirmVacate = async () => {
+  const handleConfirmVacate = async (settlementData?: {
+    moveOutDate: string;
+    reason: string;
+    remarks?: string;
+    inventoryDeduction: number;
+    netSettlementAmount: number;
+    isBalanceDue: boolean;
+  }) => {
     if (!selectedTenantForVacate) return;
     const roomTenantId = selectedTenantForVacate.roomTenant?.id || selectedTenantForVacate.id;
+    const finalDate = settlementData?.moveOutDate || vacateDate || new Date().toISOString().split("T")[0];
+    const finalReason = settlementData?.reason || vacateReason.trim() || "Tenancy completed smoothly";
+    const settlementNote = settlementData
+      ? ` | Inventory deduction: ₹${settlementData.inventoryDeduction}, Net: ₹${settlementData.netSettlementAmount} ${settlementData.isBalanceDue ? "(Due from tenant)" : "(Refund to tenant)"}`
+      : "";
+    const finalRemarks = `${settlementData?.remarks || vacateRemarks.trim() || ""}${settlementNote}`.trim() || undefined;
+
     try {
       await moveOutMutation.mutateAsync({
         roomTenantId,
         body: {
-          moveOutDate: vacateDate || new Date().toISOString().split("T")[0],
-          reason: vacateReason.trim() || "Tenancy completed smoothly",
-          remarks: vacateRemarks.trim() || undefined,
+          moveOutDate: finalDate,
+          reason: finalReason,
+          remarks: finalRemarks,
         },
       });
       toast({
         title: "Tenant move-out completed",
-        description: `${tenantDisplayName(selectedTenantForVacate)} has moved out. The bed is now free.`,
+        description: `${tenantDisplayName(selectedTenantForVacate)} has moved out. Settlement recorded and the bed is now free.`,
       });
       setVacateModalOpen(false);
       setSelectedTenantForVacate(null);
@@ -1050,59 +1065,23 @@ const Tenants = () => {
           </DialogContent>
         </Dialog>
 
-        {/* MODAL 2: VACATE / MOVE-OUT TENANT MODAL */}
-        <Dialog open={vacateModalOpen} onOpenChange={setVacateModalOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-base flex items-center gap-2 text-[#B42318]">
-                <Trash2 className="h-5 w-5" /> Delete / Move Out Tenant
-              </DialogTitle>
-              <p className="text-xs text-[var(--gray-600)] mt-1">
-                Direct move-out and release bed allocation for{" "}
-                <strong className="text-[var(--gray-900)]">
-                  {selectedTenantForVacate ? tenantDisplayName(selectedTenantForVacate) : "tenant"}
-                </strong>. Bed becomes vacant immediately.
-              </p>
-            </DialogHeader>
-
-            <div className="space-y-4 py-2 text-xs">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium">Move Out Date</Label>
-                <Input
-                  type="date"
-                  value={vacateDate}
-                  onChange={(e) => setVacateDate(e.target.value)}
-                  className="h-9 text-xs"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium">Reason (Optional)</Label>
-                <Textarea
-                  value={vacateReason}
-                  onChange={(e) => setVacateReason(e.target.value)}
-                  placeholder="e.g. Deleted by owner, Tenancy completed"
-                  rows={2}
-                  className="text-xs"
-                />
-              </div>
-            </div>
-
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button variant="secondary" size="sm" onClick={() => setVacateModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={handleConfirmVacate}
-                disabled={moveOutMutation.isPending}
-              >
-                {moveOutMutation.isPending ? "Processing..." : "Confirm Delete & Free Bed"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {/* MODAL 2: VACATE / MOVE-OUT WITH INVENTORY INSPECTION & SETTLEMENT (OW-08) */}
+        <CheckoutInventoryCheckModal
+          open={vacateModalOpen}
+          onOpenChange={setVacateModalOpen}
+          pgId={selectedPgId || ""}
+          tenant={selectedTenantForVacate ? {
+            id: selectedTenantForVacate.id,
+            name: tenantDisplayName(selectedTenantForVacate),
+            roomNumber: selectedTenantForVacate.roomNumber || selectedTenantForVacate.room?.roomNumber || "",
+            bedNumber: selectedTenantForVacate.bedNo || selectedTenantForVacate.bed?.bedNumber || "",
+            securityDeposit: Number(selectedTenantForVacate.securityDeposit || 10000),
+            pendingRentDues: Number((selectedTenantForVacate as any).pendingDues || (selectedTenantForVacate as any).pendingRent || 0),
+            roomId: selectedTenantForVacate.roomId,
+          } : null}
+          onConfirmCheckout={handleConfirmVacate}
+          isSubmitting={moveOutMutation.isPending}
+        />
 
         {/* MODAL 3: INITIATE NOTICE PERIOD DIALOG */}
         <Dialog open={noticeModalOpen} onOpenChange={setNoticeModalOpen}>

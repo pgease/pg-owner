@@ -82,6 +82,61 @@ export function formatShortDate(dateInput?: string | Date | number | null): stri
   }
 }
 
+/**
+ * OW-12: Formats dates and datetimes in IST (Asia/Kolkata).
+ * If the input is a pure date string (YYYY-MM-DD), or if dateOnly is requested,
+ * or if the time is UTC midnight (which would misleadingly convert to 05:30 AM in IST),
+ * it displays only the date: e.g. "15 Nov 2026" without any 5:30 AM artifact.
+ */
+export function formatIST(
+  dateInput?: string | Date | number | null,
+  options?: { dateOnly?: boolean; timeUnknown?: boolean }
+): string {
+  if (!dateInput) return "—";
+  if (typeof dateInput === "string") {
+    const trimmed = dateInput.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed) || options?.dateOnly || options?.timeUnknown) {
+      const [y, m, d] = trimmed.split(/[-T]/).map(Number);
+      if (y && m && d) {
+        const dateObj = new Date(y, m - 1, d);
+        return dateObj.toLocaleDateString("en-IN", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        });
+      }
+    }
+  }
+
+  try {
+    const d = typeof dateInput === "object" ? dateInput : new Date(dateInput);
+    if (isNaN(d.getTime())) return "—";
+
+    // Detect UTC midnight (stored date-only values)
+    const isMidnightUTC = d.getUTCHours() === 0 && d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0;
+
+    if (options?.dateOnly || options?.timeUnknown || isMidnightUTC) {
+      return d.toLocaleDateString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+    }
+
+    return d.toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  } catch {
+    return "—";
+  }
+}
+
 /** Formats backend raw enums into human-readable labels (e.g. "long_stay" -> "Long stay") */
 export function formatHumanEnum(val?: string | null): string {
   if (!val) return "—";

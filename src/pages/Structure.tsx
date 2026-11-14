@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
   Building2,
@@ -16,6 +17,7 @@ import {
   AlertCircle,
   ExternalLink,
   Package,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,7 +56,7 @@ import {
   useDeleteFloorMutation,
   useDeleteRoomMutation,
 } from "@/hooks/usePropertyOwnerQueries";
-import { createProperty } from "@/api/propertyOwner";
+import { createProperty, updateRoom } from "@/api/propertyOwner";
 import { CanAccessPage } from "@/components/PermissionGuard";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { TrialExpiredGateModal } from "@/components/common/TrialExpiredGateModal";
@@ -163,6 +165,57 @@ export default function Structure() {
     roomNumber: "",
     numberOfBeds: 2,
   });
+
+  // OW-16: Room master editing
+  const queryClient = useQueryClient();
+  const [editingRoom, setEditingRoom] = useState<any | null>(null);
+  const [editRoomOpen, setEditRoomOpen] = useState(false);
+  const [editRoomForm, setEditRoomForm] = useState({
+    roomNumber: "",
+    floorId: "",
+    numberOfBeds: 2,
+    rentPerBed: 0,
+    acType: "NON_AC",
+    hasAttachedBathroom: false,
+    hasBalcony: false,
+    hasElectricityMeter: false,
+    meterNumber: "",
+    notes: "",
+  });
+
+  const updateRoomMut = useMutation({
+    mutationFn: ({ roomId, payload }: { roomId: string; payload: any }) => {
+      if (!currentPropertyId) throw new Error("Select a PG property");
+      return updateRoom(currentPropertyId, roomId, payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["property", currentPropertyId, "rooms-list"] });
+      queryClient.invalidateQueries({ queryKey: ["property", currentPropertyId, "all-rooms-counts"] });
+      toast({ title: "Room Updated", description: "Room master details saved successfully." });
+      setEditRoomOpen(false);
+      setEditingRoom(null);
+    },
+    onError: (err: any) => {
+      toast({ title: "Failed to update room", description: err?.message, variant: "destructive" });
+    },
+  });
+
+  const handleOpenEditRoom = (r: any) => {
+    setEditingRoom(r);
+    setEditRoomForm({
+      roomNumber: String(r.roomNumber || ""),
+      floorId: String(r.floorId || effectiveFloorId || ""),
+      numberOfBeds: Number(r.numberOfBeds || r.capacity || 2),
+      rentPerBed: Number(r.rentPerBed || r.monthlyRent || 0),
+      acType: r.acType || (r.isAc ? "AC" : "NON_AC"),
+      hasAttachedBathroom: Boolean(r.hasAttachedBathroom || r.hasAttachedBath),
+      hasBalcony: Boolean(r.hasBalcony),
+      hasElectricityMeter: Boolean(r.hasElectricityMeter),
+      meterNumber: String(r.meterNumber || ""),
+      notes: String(r.notes || ""),
+    });
+    setEditRoomOpen(true);
+  };
 
   // Queries
   const blocksQuery = useBlocks(currentPropertyId);
@@ -689,9 +742,44 @@ export default function Structure() {
                           );
                         })()}
                       </div>
-                      <span className="text-xs text-[var(--gray-500)] shrink-0 whitespace-nowrap">
-                        {bedCount} {bedCount === 1 ? "Bed" : "Beds"}
-                      </span>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 text-[var(--gray-500)] hover:text-primary cursor-pointer"
+                          onClick={() => handleOpenEditRoom(r)}
+                          title="Edit room master details"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                        <span className="text-xs text-[var(--gray-500)] whitespace-nowrap">
+                          {bedCount} {bedCount === 1 ? "Bed" : "Beds"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Room Attributes Chips (OW-16) */}
+                    <div className="flex items-center gap-1 flex-wrap pt-0.5">
+                      {(r.rentPerBed > 0 || r.monthlyRent > 0) && (
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                          ₹{r.rentPerBed || r.monthlyRent}/bed
+                        </span>
+                      )}
+                      {(r.acType === "AC" || r.isAc) && (
+                        <span className="text-[10px] font-semibold text-sky-800 bg-sky-50 px-1 rounded border border-sky-200">
+                          AC
+                        </span>
+                      )}
+                      {(r.hasAttachedBathroom || r.hasAttachedBath) && (
+                        <span className="text-[10px] text-purple-800 bg-purple-50 px-1 rounded border border-purple-200">
+                          Attached Bath
+                        </span>
+                      )}
+                      {r.hasElectricityMeter && (
+                        <span className="text-[10px] text-amber-800 bg-amber-50 px-1 rounded border border-amber-200">
+                          Meter
+                        </span>
+                      )}
                     </div>
 
                     {/* Beds Grid */}
@@ -882,6 +970,16 @@ export default function Structure() {
                       >
                         <Package className="h-3 w-3" />
                         <span className="hidden sm:inline">Inventory</span>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs gap-1 px-2 text-[var(--gray-700)] hover:text-primary"
+                        onClick={() => handleOpenEditRoom(r)}
+                        title="Edit Room"
+                      >
+                        <Pencil className="h-3 w-3" />
+                        <span className="hidden sm:inline">Edit</span>
                       </Button>
                       <Button
                         size="sm"
@@ -1134,6 +1232,185 @@ export default function Structure() {
           onOpenChange={setTrialExpiredOpen}
           featureName={trialExpiredFeature}
         />
+
+        {/* DIALOG 5: EDIT ROOM MASTER MODAL (OW-16) */}
+        <Dialog open={editRoomOpen} onOpenChange={setEditRoomOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Pencil className="h-4 w-4 text-primary" /> Edit Room Master: Room {editingRoom?.roomNumber}
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Update room configuration, bed capacity, per-bed tariff, and amenities.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3.5 py-2 text-xs max-h-[70vh] overflow-y-auto pr-1">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Room Number / Name *</Label>
+                  <Input
+                    value={editRoomForm.roomNumber}
+                    onChange={(e) => setEditRoomForm({ ...editRoomForm, roomNumber: e.target.value })}
+                    className="h-8 text-xs font-semibold"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Floor</Label>
+                  <Select
+                    value={editRoomForm.floorId}
+                    onValueChange={(val) => setEditRoomForm({ ...editRoomForm, floorId: val })}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Select Floor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {floors.map((f: any) => (
+                        <SelectItem key={f.id} value={f.id} className="text-xs">
+                          {f.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Bed Capacity</Label>
+                  <Select
+                    value={String(editRoomForm.numberOfBeds)}
+                    onValueChange={(val) => setEditRoomForm({ ...editRoomForm, numberOfBeds: parseInt(val, 10) })}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 3, 4, 5, 6].map((b) => (
+                        <SelectItem key={b} value={String(b)} className="text-xs">
+                          {b} Bed{b > 1 ? "s" : ""} ({b === 1 ? "Single" : b === 2 ? "Double" : b === 3 ? "Triple" : `${b} Sharing`})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-xs">Rent Per Bed (₹ / month)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={editRoomForm.rentPerBed}
+                    onChange={(e) => setEditRoomForm({ ...editRoomForm, rentPerBed: Number(e.target.value) })}
+                    className="h-8 text-xs font-semibold"
+                    placeholder="e.g. 7500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 p-2.5 bg-muted/30 rounded-xl border">
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-semibold text-muted-foreground">Cooling Type</Label>
+                  <Select
+                    value={editRoomForm.acType}
+                    onValueChange={(val) => setEditRoomForm({ ...editRoomForm, acType: val })}
+                  >
+                    <SelectTrigger className="h-7 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="AC" className="text-xs">AC Room</SelectItem>
+                      <SelectItem value="NON_AC" className="text-xs">Non-AC</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5 pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs">
+                    <input
+                      type="checkbox"
+                      checked={editRoomForm.hasAttachedBathroom}
+                      onChange={(e) => setEditRoomForm({ ...editRoomForm, hasAttachedBathroom: e.target.checked })}
+                      className="rounded border-slate-300 h-4 w-4 text-primary"
+                    />
+                    Attached Bathroom
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-xs">
+                    <input
+                      type="checkbox"
+                      checked={editRoomForm.hasBalcony}
+                      onChange={(e) => setEditRoomForm({ ...editRoomForm, hasBalcony: e.target.checked })}
+                      className="rounded border-slate-300 h-4 w-4 text-primary"
+                    />
+                    Private Balcony
+                  </label>
+                </div>
+              </div>
+
+              <div className="p-2.5 bg-muted/30 rounded-xl border space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold">
+                  <input
+                    type="checkbox"
+                    checked={editRoomForm.hasElectricityMeter}
+                    onChange={(e) => setEditRoomForm({ ...editRoomForm, hasElectricityMeter: e.target.checked })}
+                    className="rounded border-slate-300 h-4 w-4 text-primary"
+                  />
+                  Has Sub-Meter / Electricity Meter
+                </label>
+                {editRoomForm.hasElectricityMeter && (
+                  <div className="space-y-1 pl-6">
+                    <Label className="text-[11px] text-muted-foreground">Meter Number</Label>
+                    <Input
+                      value={editRoomForm.meterNumber}
+                      onChange={(e) => setEditRoomForm({ ...editRoomForm, meterNumber: e.target.value })}
+                      placeholder="e.g. MTR-R101-01"
+                      className="h-7 text-xs"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs">Notes / Special Instructions</Label>
+                <Input
+                  value={editRoomForm.notes}
+                  onChange={(e) => setEditRoomForm({ ...editRoomForm, notes: e.target.value })}
+                  placeholder="e.g. Window facing garden, newly painted"
+                  className="h-8 text-xs"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="secondary" size="sm" onClick={() => setEditRoomOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={() =>
+                  updateRoomMut.mutate({
+                    roomId: editingRoom.id,
+                    payload: {
+                      roomNumber: editRoomForm.roomNumber.trim(),
+                      floorId: editRoomForm.floorId || undefined,
+                      numberOfBeds: Number(editRoomForm.numberOfBeds),
+                      rentPerBed: Number(editRoomForm.rentPerBed),
+                      acType: editRoomForm.acType,
+                      hasAttachedBathroom: editRoomForm.hasAttachedBathroom,
+                      hasBalcony: editRoomForm.hasBalcony,
+                      hasElectricityMeter: editRoomForm.hasElectricityMeter,
+                      meterNumber: editRoomForm.meterNumber.trim() || undefined,
+                      notes: editRoomForm.notes.trim() || undefined,
+                    },
+                  })
+                }
+                disabled={updateRoomMut.isPending || !editRoomForm.roomNumber.trim()}
+              >
+                {updateRoomMut.isPending ? "Saving..." : "Save Room Details"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </CanAccessPage>
   );

@@ -50,9 +50,9 @@ export default function AddTenantPage() {
             <div className="h-12 w-12 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center mx-auto mb-4">
               <Lock className="h-6 w-6" />
             </div>
-            <CardTitle className="text-xl font-bold text-foreground">Trial Expired: Tenant Addition Restricted</CardTitle>
+            <CardTitle className="text-xl font-bold text-foreground">Subscription Expired: Tenant Addition Restricted</CardTitle>
             <CardDescription className="text-sm mt-2 max-w-md mx-auto">
-              Your subscription has expired. To add new tenants, manage allocations, and keep your property organized, please subscribe to Lite (₹29/bed) or Pro (₹49/bed).
+              Your subscription has expired. To add new tenants, manage allocations, and keep your property organized, please subscribe to an active plan.
             </CardDescription>
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Button onClick={() => navigate("/plans")} className="bg-brand-600 hover:bg-brand-700 text-white rounded-xl">

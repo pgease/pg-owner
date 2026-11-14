@@ -8,10 +8,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApp } from "@/context/AppContext";
-import { createNightOutRequest, getNightOutRequests } from "@/api/propertyOwner";
+import { createNightOutRequest, getNightOutRequests, updateNightOutRequestStatus, informParentNightOut } from "@/api/propertyOwner";
 import { usePropertyTenants } from "@/hooks/usePropertyOwnerQueries";
 import { CanAccessPage } from "@/components/PermissionGuard";
 import { toast } from "@/components/ui/use-toast";
+import { formatIST } from "@/lib/formatters";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorState } from "@/components/common/ErrorState";
@@ -99,10 +100,7 @@ function getMovementState(req: any): "away" | "upcoming" | "returned" {
 }
 
 function formatWhen(value?: string): string {
-  if (!value) return "—";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
+  return formatIST(value);
 }
 
 function tenantName(req: any): string {
@@ -141,6 +139,50 @@ export default function NightOutRequestsPage() {
     queryKey: ["nightOutRequests", selectedPgId],
     queryFn: () => (selectedPgId ? getNightOutRequests(selectedPgId) : null),
     enabled: Boolean(selectedPgId),
+  });
+
+  // OW-13: Approve / Reject Night-out
+  const updateNightOutStatusMut = useMutation({
+    mutationFn: ({ id, status, remarks }: { id: string; status: "approved" | "rejected"; remarks?: string }) => {
+      if (!selectedPgId) throw new Error("Select a PG property");
+      return updateNightOutRequestStatus(selectedPgId, id, { status, remarks });
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["nightOutRequests", selectedPgId] });
+      toast({
+        title: `Night-out ${variables.status === "approved" ? "Approved" : "Rejected"}`,
+        description: "Status updated and resident notified.",
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Failed to update night-out",
+        description: err?.message || "Could not update status.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // OW-13: Inform Parent / Guardian
+  const informParentMut = useMutation({
+    mutationFn: (id: string) => {
+      if (!selectedPgId) throw new Error("Select a PG property");
+      return informParentNightOut(selectedPgId, id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["nightOutRequests", selectedPgId] });
+      toast({
+        title: "Parent / Guardian Informed 📱",
+        description: "WhatsApp intimation dispatched to registered emergency contact.",
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Failed to notify guardian",
+        description: err?.message || "Could not dispatch intimation.",
+        variant: "destructive",
+      });
+    },
   });
 
   const createNightOutMutation = useMutation({
@@ -389,13 +431,26 @@ export default function NightOutRequestsPage() {
                                     <span>📞 Stay Contact:</span> <strong>{req.contactDuringStay}</strong>
                                   </span>
                                 )}
-                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold ${
-                                  req.parentConsentConfirmed
-                                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900"
-                                    : "bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
-                                }`}>
-                                  {req.parentConsentConfirmed ? "✓ Parent / Guardian Informed" : "Parent Not Informed"}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold ${
+                                    req.parentConsentConfirmed
+                                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900"
+                                      : "bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
+                                  }`}>
+                                    {req.parentConsentConfirmed ? "✓ Parent / Guardian Informed" : "Parent Not Informed"}
+                                  </span>
+                                  {!req.parentConsentConfirmed && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-6 text-[10px] px-2 text-indigo-700 border-indigo-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/40"
+                                      onClick={() => informParentMut.mutate(req.id)}
+                                      disabled={informParentMut.isPending}
+                                    >
+                                      Notify Parent
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
 
                               {/* Notes if present */}
@@ -408,26 +463,50 @@ export default function NightOutRequestsPage() {
                             </div>
                           </div>
 
-                          {/* Right side: Movement Status Badge (No manual clicking required) */}
-                          <div className="shrink-0 flex items-center md:items-start pt-1">
-                            {movementState === "away" && (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-300 shadow-2xs">
-                                <Moon className="h-3.5 w-3.5 text-amber-600" />
-                                Currently Away
-                              </span>
+                          {/* Right side: Actions & Movement Status Badge */}
+                          <div className="shrink-0 flex flex-col items-end gap-2 pt-1">
+                            {((req.status || "pending").toLowerCase() === "pending" || (req.status || "").toLowerCase() === "informed") && (
+                              <div className="flex items-center gap-1.5">
+                                <Button
+                                  size="sm"
+                                  className="h-7 text-xs px-2.5 font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                                  onClick={() => updateNightOutStatusMut.mutate({ id: req.id, status: "approved" })}
+                                  disabled={updateNightOutStatusMut.isPending}
+                                >
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 text-xs px-2 font-medium border-rose-300 text-rose-700 hover:bg-rose-50"
+                                  onClick={() => updateNightOutStatusMut.mutate({ id: req.id, status: "rejected", remarks: "Declined by warden" })}
+                                  disabled={updateNightOutStatusMut.isPending}
+                                >
+                                  Reject
+                                </Button>
+                              </div>
                             )}
-                            {movementState === "upcoming" && (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-300 shadow-2xs">
-                                <Clock className="h-3.5 w-3.5 text-blue-600" />
-                                Upcoming Departure
-                              </span>
-                            )}
-                            {movementState === "returned" && (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs">
-                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                                Returned / Completed
-                              </span>
-                            )}
+
+                            <div>
+                              {movementState === "away" && (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-300 shadow-2xs">
+                                  <Moon className="h-3.5 w-3.5 text-amber-600" />
+                                  Currently Away
+                                </span>
+                              )}
+                              {movementState === "upcoming" && (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-300 shadow-2xs">
+                                  <Clock className="h-3.5 w-3.5 text-blue-600" />
+                                  Upcoming Departure
+                                </span>
+                              )}
+                              {movementState === "returned" && (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs">
+                                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                                  Returned / Completed
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </li>

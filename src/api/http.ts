@@ -184,14 +184,32 @@ export async function httpRequest<TResponse>(path: string, options: RequestOptio
   // Do not spread `options` into fetch: it carries raw `body` and custom flags (`auth`, `_retried`).
   const { auth: _a, body: _b, _retried: _r, skipForceLogout: _s, headers: _incomingHeaders, ...rest } = options;
 
-  const response = await fetch(url, {
-    ...rest,
-    headers,
-    body: serializedBody,
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...rest,
+      headers,
+      body: serializedBody,
+    });
+  } catch (netErr: any) {
+    if (!options._retried) {
+      // Retry once after 1.5 seconds for transient network errors
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      return httpRequest<TResponse>(path, { ...options, _retried: true });
+    }
+    const error: HttpError = new Error(netErr?.message || "Network request failed");
+    error.status = 0;
+    throw error;
+  }
 
   const isJson = response.headers.get("content-type")?.includes("application/json");
   const data = isJson ? await response.json() : undefined;
+
+  if (response.status === 503 && !options._retried) {
+    // Retry 503 Service Unavailable once after 1.5s (OW-20)
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    return httpRequest<TResponse>(path, { ...options, _retried: true });
+  }
 
   if (response.status === 401 && options.auth && !options._retried) {
     if (options.skipForceLogout) {

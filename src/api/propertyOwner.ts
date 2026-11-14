@@ -382,6 +382,39 @@ export async function uploadPhoto(file: File) {
   });
 }
 
+// Presigned Upload
+export async function getPresignedUploadUrl(fileName: string, mimeType?: string, folder?: string) {
+  return httpRequest<{ uploadUrl: string; presignedUrl: string; publicUrl: string; key: string }>(
+    `${PROPERTY_OWNER_BASE}/uploads/presign`,
+    {
+      method: "POST",
+      auth: true,
+      body: JSON.stringify({ fileName, mimeType, folder }),
+    }
+  );
+}
+
+export async function uploadFilePresigned(file: File, folder = "tenant-documents"): Promise<string> {
+  try {
+    const presign = await getPresignedUploadUrl(file.name, file.type, folder);
+    const targetUrl = presign?.uploadUrl || presign?.presignedUrl;
+    if (targetUrl) {
+      const uploadRes = await fetch(targetUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type || "application/octet-stream" },
+        body: file,
+      });
+      if (uploadRes.ok) {
+        return presign.publicUrl || presign.key;
+      }
+    }
+  } catch (err) {
+    console.warn("Presigned upload failed, falling back to uploadPhoto:", err);
+  }
+  const res = await uploadPhoto(file);
+  return res.url || (res as any).photoUrl || "";
+}
+
 // Upload Owner Profile Photo
 export async function uploadOwnerProfilePhoto(file: File) {
   const formData = new FormData();
@@ -586,6 +619,22 @@ export interface AddTenantPayload {
   currCountry?: string;
   currPincode?: string;
   tenantCode?: string;
+  photoUrl?: string;
+  photo?: string;
+  occupation?: string;
+  officeOrCollegeName?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelation?: string;
+  idType?: string;
+  idNumber?: string;
+  idFrontUrl?: string;
+  idBackUrl?: string;
+  meterNumber?: string;
+  openingMeterReading?: number;
+  meterReadingDate?: string;
+  electricityRatePerUnit?: number;
+  electricityBillingMode?: string;
   paymentDetails?: {
     openingBalance?: Array<{ dueType: string; dueFor?: string; dueAmount: number; collection: number }>;
     otherDues?: Array<{ dueType: string; mode: string; amount?: number | null }>;
@@ -654,7 +703,9 @@ function serializeAddTenantBody(payload: AddTenantPayload): Record<string, unkno
     "billingStartDate", "gracePeriodDays", "rentDisabled",
     "permHouseNumber", "permStreet", "permLocality", "permCity", "permDistrict", "permState", "permCountry", "permPincode",
     "currHouseNumber", "currStreet", "currLocality", "currCity", "currDistrict", "currState", "currCountry", "currPincode",
-    "tenantCode"
+    "tenantCode", "photoUrl", "photo", "occupation", "officeOrCollegeName", "emergencyContactName",
+    "emergencyContactPhone", "emergencyContactRelation", "idType", "idNumber", "idFrontUrl", "idBackUrl",
+    "meterNumber", "openingMeterReading", "meterReadingDate", "electricityRatePerUnit", "electricityBillingMode"
   ];
 
   for (const key of optionalFields) {
@@ -1152,6 +1203,19 @@ export async function updatePropertyTenant(
 }
 
 export async function getPropertyTenantById(propertyId: string, tenantId: string) {
+  try {
+    const full = await httpRequest<unknown>(
+      `${PROPERTY_OWNER_BASE}/properties/${propertyId}/tenants/${tenantId}/full-profile`,
+      {
+        method: "GET",
+        auth: true,
+      }
+    );
+    if (full) return normalizeSingleTenant(full);
+  } catch (err) {
+    // Graceful fallback to regular tenant-detail endpoint (OW-04)
+  }
+
   const raw = await httpRequest<unknown>(
     `${PROPERTY_OWNER_BASE}/properties/${propertyId}/tenants/${tenantId}`,
     {
@@ -1160,6 +1224,28 @@ export async function getPropertyTenantById(propertyId: string, tenantId: string
     }
   );
   return normalizeSingleTenant(raw);
+}
+
+/** GET `/api/property-owners/properties/:propertyId/tenants/:tenantId/notice-history` (OW-14) */
+export async function getNoticeHistory(propertyId: string, tenantId: string) {
+  return httpRequest<{ success: boolean; data: any[] }>(
+    `${PROPERTY_OWNER_BASE}/properties/${propertyId}/tenants/${tenantId}/notice-history`,
+    {
+      method: "GET",
+      auth: true,
+    }
+  );
+}
+
+/** POST `/api/property-owners/properties/:propertyId/night-out-requests/:requestId/inform-parent` (OW-13) */
+export async function informParentNightOut(propertyId: string, requestId: string) {
+  return httpRequest<{ success: boolean; message: string }>(
+    `${PROPERTY_OWNER_BASE}/properties/${propertyId}/night-out-requests/${requestId}/inform-parent`,
+    {
+      method: "POST",
+      auth: true,
+    }
+  );
 }
 
 /** GET `/api/property-owners/properties/:propertyId/tenants` */
@@ -1485,6 +1571,21 @@ export interface CreateRoomPayload {
   roomNumber: string;
   numberOfBeds: number;
   sharingWisePricing?: SharingWisePricingItem[];
+  roomType?: string;
+  rentPerBed?: number;
+  acType?: "AC" | "NON_AC" | string;
+  hasAttachedBathroom?: boolean;
+  hasBalcony?: boolean;
+  hasElectricityMeter?: boolean;
+  meterNumber?: string;
+  amenities?: string[];
+  notes?: string;
+  beds?: Array<{
+    bedNumber: number;
+    label?: string;
+    rentOverride?: number;
+    status?: "VACANT" | "RESERVED" | "MAINTENANCE";
+  }>;
 }
 
 /** POST …/properties/{propertyId}/rooms — body includes floorId (not in URL path). */

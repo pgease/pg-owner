@@ -36,11 +36,13 @@ import { useApp } from "@/context/AppContext";
 import {
   getGuestRequests,
   createGuestRequest,
+  updateGuestRequestStatus,
   GuestDetailItem,
 } from "@/api/propertyOwner";
 import { usePropertyTenants } from "@/hooks/usePropertyOwnerQueries";
 import { CanAccessPage } from "@/components/PermissionGuard";
 import { toast } from "@/components/ui/use-toast";
+import { formatIST } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 
 interface GuestFormItem {
@@ -111,6 +113,31 @@ export default function GuestRequestsPage() {
     queryKey: ["guestRequests", selectedPgId],
     queryFn: () => (selectedPgId ? getGuestRequests(selectedPgId) : null),
     enabled: Boolean(selectedPgId),
+  });
+
+  // OW-13: Approve / Reject mutation
+  const updateStatusMut = useMutation({
+    mutationFn: ({ id, status, remarks }: { id: string; status: "approved" | "rejected"; remarks?: string }) => {
+      if (!selectedPgId) throw new Error("Select a PG property");
+      return updateGuestRequestStatus(selectedPgId, id, { status, remarks });
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["guestRequests", selectedPgId] });
+      toast({
+        title: `Guest Request ${variables.status === "approved" ? "Approved" : "Rejected"}`,
+        description: `Status updated and resident notified.`,
+      });
+      if (selectedRequest) {
+        setSelectedRequest(null);
+      }
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Failed to update request",
+        description: err?.message || "Could not save guest status.",
+        variant: "destructive",
+      });
+    },
   });
 
   const handleAddGuestItem = () => {
@@ -485,22 +512,12 @@ export default function GuestRequestsPage() {
                               <TableCell className="font-medium text-slate-900 text-xs align-top pt-3">
                                 <div>
                                   <span className="font-bold text-slate-600">Arr:</span>{" "}
-                                  {arrDateStr
-                                    ? new Date(arrDateStr).toLocaleDateString("en-IN", {
-                                        day: "2-digit",
-                                        month: "short",
-                                        year: "numeric",
-                                      })
-                                    : "N/A"}
+                                  {arrDateStr ? formatIST(arrDateStr) : "N/A"}
                                 </div>
                                 {depDateStr && (
                                   <div className="text-[11px] text-slate-500 mt-1">
                                     <span className="font-semibold text-slate-600">Dep:</span>{" "}
-                                    {new Date(depDateStr).toLocaleDateString("en-IN", {
-                                        day: "2-digit",
-                                        month: "short",
-                                        year: "numeric",
-                                      })}
+                                    {formatIST(depDateStr)}
                                   </div>
                                 )}
                               </TableCell>
@@ -581,15 +598,38 @@ export default function GuestRequestsPage() {
 
                               {/* ACTIONS */}
                               <TableCell className="text-right align-top pt-3">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7 text-[11px] px-2.5 font-semibold text-slate-700 hover:text-teal-700 hover:border-teal-300 gap-1"
-                                  onClick={() => setSelectedRequest(req)}
-                                >
-                                  <Eye className="h-3 w-3 text-slate-500" />
-                                  View Details
-                                </Button>
+                                <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                                  {isPending && (
+                                    <>
+                                      <Button
+                                        size="sm"
+                                        className="h-7 text-[11px] px-2.5 font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                                        onClick={() => updateStatusMut.mutate({ id: req.id, status: "approved" })}
+                                        disabled={updateStatusMut.isPending}
+                                      >
+                                        Approve
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-7 text-[11px] px-2 font-medium border-rose-300 text-rose-700 hover:bg-rose-50"
+                                        onClick={() => updateStatusMut.mutate({ id: req.id, status: "rejected", remarks: "Declined by property manager" })}
+                                        disabled={updateStatusMut.isPending}
+                                      >
+                                        Reject
+                                      </Button>
+                                    </>
+                                  )}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 text-[11px] px-2.5 font-semibold text-slate-700 hover:text-teal-700 hover:border-teal-300 gap-1"
+                                    onClick={() => setSelectedRequest(req)}
+                                  >
+                                    <Eye className="h-3 w-3 text-slate-500" />
+                                    View Details
+                                  </Button>
+                                </div>
                               </TableCell>
                             </TableRow>
                           );
@@ -812,13 +852,7 @@ export default function GuestRequestsPage() {
                     <span className="text-slate-600">Expected Arrival:</span>
                     <span className="font-bold text-slate-800">
                       {selectedRequest.expectedArrival || selectedRequest.arrivalDate
-                        ? new Date(selectedRequest.expectedArrival || selectedRequest.arrivalDate).toLocaleString("en-IN", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })
+                        ? formatIST(selectedRequest.expectedArrival || selectedRequest.arrivalDate)
                         : "N/A"}
                     </span>
                   </div>
@@ -826,13 +860,7 @@ export default function GuestRequestsPage() {
                     <div className="flex justify-between">
                       <span className="text-slate-600">Expected Departure:</span>
                       <span className="font-semibold text-slate-800">
-                        {new Date(selectedRequest.expectedDeparture).toLocaleString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}
+                        {formatIST(selectedRequest.expectedDeparture)}
                       </span>
                     </div>
                   )}
@@ -903,10 +931,37 @@ export default function GuestRequestsPage() {
               </div>
             )}
 
-            <DialogFooter>
-              <Button className="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold" onClick={() => setSelectedRequest(null)}>
-                Close
-              </Button>
+            <DialogFooter className="gap-2 sm:gap-0">
+              {selectedRequest && ((selectedRequest.status || "pending").toLowerCase() === "pending" || (selectedRequest.status || "").toLowerCase() === "informed") ? (
+                <div className="flex items-center justify-between w-full gap-2">
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                      onClick={() => updateStatusMut.mutate({ id: selectedRequest.id, status: "approved" })}
+                      disabled={updateStatusMut.isPending}
+                    >
+                      Approve Request
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-rose-300 text-rose-700 hover:bg-rose-50"
+                      onClick={() => updateStatusMut.mutate({ id: selectedRequest.id, status: "rejected", remarks: "Rejected by owner" })}
+                      disabled={updateStatusMut.isPending}
+                    >
+                      Reject Request
+                    </Button>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedRequest(null)}>
+                    Close
+                  </Button>
+                </div>
+              ) : (
+                <Button className="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold" onClick={() => setSelectedRequest(null)}>
+                  Close
+                </Button>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -60,13 +60,14 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import type { PropertyTenant } from "@/api/propertyOwner";
+import { getNoticeHistory } from "@/api/propertyOwner";
 import { PageHeader } from "@/components/common/PageHeader";
 import { MetricDisplay } from "@/components/common/MetricDisplay";
 import { SearchInput } from "@/components/common/SearchInput";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { EmptyState } from "@/components/common/EmptyState";
-import { formatINR, formatDate } from "@/lib/formatters";
+import { formatINR, formatDate, formatIST } from "@/lib/formatters";
 
 export default function NoticePeriodPage() {
   const navigate = useNavigate();
@@ -97,6 +98,28 @@ export default function NoticePeriodPage() {
 
   // Selected Tenant for Actions
   const [selectedTenant, setSelectedTenant] = useState<PropertyTenant | null>(null);
+
+  // OW-14: Notice History State
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyTenant, setHistoryTenant] = useState<PropertyTenant | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [noticeHistory, setNoticeHistory] = useState<any[]>([]);
+
+  const handleOpenNoticeHistory = async (tenant: PropertyTenant) => {
+    setHistoryTenant(tenant);
+    setHistoryOpen(true);
+    setHistoryLoading(true);
+    try {
+      if (currentPropertyId && tenant.id) {
+        const res = await getNoticeHistory(currentPropertyId, tenant.id);
+        setNoticeHistory(Array.isArray(res?.data) ? res.data : []);
+      }
+    } catch {
+      setNoticeHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
   // Initiate Form
   const [initiateForm, setInitiateForm] = useState({
@@ -664,6 +687,11 @@ export default function NoticePeriodPage() {
                                           onClick: () => handleOpenCancelAlert(t),
                                         },
                                         {
+                                          label: "Notice History",
+                                          icon: <Clock className="h-4 w-4" />,
+                                          onClick: () => handleOpenNoticeHistory(t),
+                                        },
+                                        {
                                           label: "View profile",
                                           icon: <ExternalLink className="h-4 w-4" />,
                                           onClick: () => navigate(`/tenants/${t.id}`),
@@ -964,6 +992,67 @@ export default function NoticePeriodPage() {
                 disabled={moveOutMut.isPending}
               >
                 {moveOutMut.isPending ? "Processing..." : "Confirm Move-Out"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* MODAL 5: NOTICE HISTORY TIMELINE (OW-14) */}
+        <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-base flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary" /> Notice History & Audit
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Chronological notice events for {historyTenant?.name || "resident"}.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="py-2 text-xs">
+              {historyLoading ? (
+                <div className="py-8 flex justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : noticeHistory.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  <p className="font-semibold text-xs">No prior notice history recorded</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {historyTenant?.noticeGivenAt
+                      ? `Notice given on ${formatIST(historyTenant.noticeGivenAt)}`
+                      : "Tenant is on regular active stay."}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-border/60">
+                  {noticeHistory.map((h: any, idx: number) => (
+                    <div key={idx} className="relative pl-7 space-y-0.5">
+                      <div className="absolute left-1.5 top-1 h-3 w-3 rounded-full bg-primary ring-4 ring-background" />
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-foreground text-xs uppercase tracking-wider">
+                          {h.action || "Notice Event"}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground font-mono">
+                          {h.timestamp ? formatIST(h.timestamp) : "—"}
+                        </span>
+                      </div>
+                      <p className="text-muted-foreground text-[11px]">
+                        Actor: <span className="font-semibold text-foreground">{h.actor || "Tenant"}</span>
+                      </p>
+                      {h.reason && (
+                        <p className="text-[11px] text-foreground bg-muted/30 p-1.5 rounded-lg border">
+                          "{h.reason}"
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button size="sm" onClick={() => setHistoryOpen(false)} className="w-full">
+                Close History
               </Button>
             </DialogFooter>
           </DialogContent>

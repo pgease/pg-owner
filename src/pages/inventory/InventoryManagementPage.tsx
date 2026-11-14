@@ -30,7 +30,13 @@ import { toast } from '@/components/ui/use-toast';
 export const InventoryManagementPage = () => {
   const navigate = useNavigate();
   const { selectedPgId, properties } = useApp();
-  const currentPropertyId = selectedPgId || properties?.[0]?.id || '';
+
+  const validPgId = (id?: string | null) =>
+    id && id !== 'undefined' && id !== 'null' && typeof id === 'string' && id.trim().length > 0
+      ? id.trim()
+      : '';
+
+  const currentPropertyId = validPgId(selectedPgId) || validPgId(properties?.[0]?.id);
 
   const [activeTab, setActiveTab] = useState<'templates' | 'catalog'>('templates');
   const [loading, setLoading] = useState(false);
@@ -81,13 +87,7 @@ export const InventoryManagementPage = () => {
       setCatalog(catData || []);
       setTemplates(tplData || []);
     } catch (err: any) {
-      setCatalog([]);
-      setTemplates([]);
-      toast({
-        title: 'Error loading inventory',
-        description: err.message || 'Could not load templates or catalog.',
-        variant: 'destructive',
-      });
+      console.warn('Inventory loading notice:', err);
     } finally {
       setLoading(false);
     }
@@ -175,48 +175,52 @@ export const InventoryManagementPage = () => {
             Please select a property from the top header PG selector to view and manage its room & bed inventory.
           </p>
         </div>
-      ) : loading ? (
-        <div className="py-24 text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-teal-600" />
-          <p className="text-xs text-gray-400 mt-2">Loading inventory catalog and templates...</p>
-        </div>
       ) : (
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-4">
-          <TabsList className="bg-gray-100 p-1 rounded-xl">
-            <TabsTrigger
-              value="templates"
-              className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-teal-700 data-[state=active]:shadow-xs rounded-lg px-4 py-2"
-            >
-              <Layers className="h-3.5 w-3.5 mr-1.5" />
-              Inventory Templates ({templates.length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="catalog"
-              className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-teal-700 data-[state=active]:shadow-xs rounded-lg px-4 py-2"
-            >
-              <TableIcon className="h-3.5 w-3.5 mr-1.5" />
-              Item Catalog & Values ({catalog.length})
-            </TabsTrigger>
-          </TabsList>
+        <div className="space-y-4">
+          {loading && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-teal-50/70 border border-teal-200/80 rounded-lg text-xs text-teal-700 animate-pulse">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-teal-600" />
+              <span>Updating inventory catalog and templates...</span>
+            </div>
+          )}
 
-          <TabsContent value="templates" className="space-y-4">
-            <InventoryTemplatesManager
-              pgId={currentPropertyId || ''}
-              catalog={catalog}
-              templates={templates}
-              onRefresh={loadData}
-              onOpenBulkAssign={handleOpenBulkAssign}
-            />
-          </TabsContent>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-4">
+            <TabsList className="bg-gray-100 p-1 rounded-xl">
+              <TabsTrigger
+                value="templates"
+                className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-teal-700 data-[state=active]:shadow-xs rounded-lg px-4 py-2"
+              >
+                <Layers className="h-3.5 w-3.5 mr-1.5" />
+                Inventory Templates ({templates.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="catalog"
+                className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-teal-700 data-[state=active]:shadow-xs rounded-lg px-4 py-2"
+              >
+                <TableIcon className="h-3.5 w-3.5 mr-1.5" />
+                Item Catalog & Values ({catalog.length})
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="catalog" className="space-y-4">
-            <InventoryCatalogTable
-              pgId={currentPropertyId || ''}
-              catalog={catalog}
-              onRefresh={loadData}
-            />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="templates" className="space-y-4">
+              <InventoryTemplatesManager
+                pgId={currentPropertyId || ''}
+                catalog={catalog}
+                templates={templates}
+                onRefresh={loadData}
+                onOpenBulkAssign={handleOpenBulkAssign}
+              />
+            </TabsContent>
+
+            <TabsContent value="catalog" className="space-y-4">
+              <InventoryCatalogTable
+                pgId={currentPropertyId || ''}
+                catalog={catalog}
+                onRefresh={loadData}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
       )}
 
       {/* Bulk Assign Modal */}

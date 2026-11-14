@@ -56,6 +56,8 @@ export const EasebuzzGatewayCard = () => {
   }, []);
 
   const handleStartKyc = async () => {
+    // Open new tab synchronously to bypass browser popup blockers (OW-15)
+    const newWindow = window.open("about:blank", "_blank", "noopener,noreferrer");
     setActionLoading(true);
     try {
       const res = await startEasebuzzKyc();
@@ -64,13 +66,24 @@ export const EasebuzzGatewayCard = () => {
         description: "Opening Easebuzz KYC dashboard in a new tab...",
       });
       if (res.kycUrl) {
-        window.open(res.kycUrl, "_blank", "noopener,noreferrer");
+        if (newWindow) newWindow.location.href = res.kycUrl;
+        else window.open(res.kycUrl, "_blank", "noopener,noreferrer");
+      } else {
+        if (newWindow) newWindow.close();
       }
       await fetchSettings();
     } catch (err: any) {
+      if (newWindow) newWindow.close();
+      const status = err?.status;
+      let desc = err?.message || "Failed to start sub-merchant onboarding.";
+      if (status === 502) {
+        desc = "Couldn't open Easebuzz KYC. Try again in a minute.";
+      } else if (status === 400) {
+        desc = err?.message || "Missing mandatory profile details. Please update your PG and banking profile.";
+      }
       toast({
         title: "Could not initiate KYC",
-        description: err?.message || "Failed to start sub-merchant onboarding.",
+        description: desc,
         variant: "destructive",
       });
     } finally {
@@ -79,6 +92,8 @@ export const EasebuzzGatewayCard = () => {
   };
 
   const handleRefreshKyc = async () => {
+    // Open new tab synchronously to bypass browser popup blockers (OW-15)
+    const newWindow = window.open("about:blank", "_blank", "noopener,noreferrer");
     setActionLoading(true);
     try {
       const res = await refreshEasebuzzKycLink();
@@ -87,13 +102,22 @@ export const EasebuzzGatewayCard = () => {
         description: "Opening Easebuzz verification link...",
       });
       if (res.kycUrl) {
-        window.open(res.kycUrl, "_blank", "noopener,noreferrer");
+        if (newWindow) newWindow.location.href = res.kycUrl;
+        else window.open(res.kycUrl, "_blank", "noopener,noreferrer");
+      } else {
+        if (newWindow) newWindow.close();
       }
       await fetchSettings();
     } catch (err: any) {
+      if (newWindow) newWindow.close();
+      const status = err?.status;
+      let desc = err?.message || "Failed to get fresh KYC link.";
+      if (status === 502) {
+        desc = "Couldn't open Easebuzz KYC. Try again in a minute.";
+      }
       toast({
         title: "Could not refresh KYC link",
-        description: err?.message || "Failed to get fresh KYC link.",
+        description: desc,
         variant: "destructive",
       });
     } finally {

@@ -25,13 +25,18 @@ import {
   createRoom,
   updateRoom,
   getSettlementBankAccounts,
+  uploadFilePresigned,
   type SettlementBankAccountItem,
   type BlockItem,
   type FloorItem,
 } from "@/api/propertyOwner";
 import { toast } from "@/components/ui/use-toast";
 import { useBlocks, useFloors, useRoomsList, usePropertyTenants, queryKeys } from "@/hooks/usePropertyOwnerQueries";
-import { Check, Search, ChevronRight, ChevronLeft, Plus, Minus, DoorOpen, Bed as BedIcon, Lock, Layers, Building, Phone, AlertCircle } from "lucide-react";
+import {
+  Check, Search, ChevronRight, ChevronLeft, Plus, Minus, DoorOpen, Bed as BedIcon,
+  Lock, Layers, Building, Phone, AlertCircle, Camera, Upload, Trash2, Zap,
+  ShieldCheck, Loader2, User, Mail
+} from "lucide-react";
 import { cleanPhoneInput } from "@/lib/utils";
 import { tenantStayStatus } from "@/lib/tenantDisplay";
 
@@ -76,6 +81,10 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [tenantType, setTenantType] = useState("Student");
+  const [occupation, setOccupation] = useState("Student");
+  const [officeOrCollegeName, setOfficeOrCollegeName] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [selectedBlockId, setSelectedBlockId] = useState<string>(() => navState?.prefillBlockId || "");
   const [selectedFloorId, setSelectedFloorId] = useState<string>(() => navState?.prefillFloorId || "");
   const [selectedRoomId, setSelectedRoomId] = useState<string>(() => navState?.prefillRoomId || "");
@@ -84,6 +93,26 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
   const [referredBy, setReferredBy] = useState("");
   const [sendWhatsappReminder, setSendWhatsappReminder] = useState(false);
   const [expandedOtherDetails, setExpandedOtherDetails] = useState<string>("none");
+
+  // Inline Validation Touched States (OW-05)
+  const [nameTouched, setNameTouched] = useState(false);
+  const [phoneTouched, setPhoneTouched] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [rentTouched, setRentTouched] = useState(false);
+  const [moveInTouched, setMoveInTouched] = useState(false);
+
+  // Emergency Contact & ID Verification States (OW-06)
+  const [emergencyContactName, setEmergencyContactName] = useState("");
+  const [emergencyContactPhone, setEmergencyContactPhone] = useState("");
+  const [emergencyContactRelation, setEmergencyContactRelation] = useState("Parent");
+  const [sameAsGuardianForEmergency, setSameAsGuardianForEmergency] = useState(false);
+  const [idType, setIdType] = useState("Aadhaar");
+  const [idNumber, setIdNumber] = useState("");
+  const [idFrontUrl, setIdFrontUrl] = useState("");
+  const [idBackUrl, setIdBackUrl] = useState("");
+  const [isUploadingIdFront, setIsUploadingIdFront] = useState(false);
+  const [isUploadingIdBack, setIsUploadingIdBack] = useState(false);
+  const [vehicleNumber, setVehicleNumber] = useState("");
 
   // Personal Details
   const [remarks, setRemarks] = useState("");
@@ -228,6 +257,11 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
   const [securityDeposit, setSecurityDeposit] = useState("");
   const [electricityBill, setElectricityBill] = useState("0");
   const [electricityMeter, setElectricityMeter] = useState(false);
+  const [meterNumber, setMeterNumber] = useState("");
+  const [openingMeterReading, setOpeningMeterReading] = useState("0");
+  const [meterReadingDate, setMeterReadingDate] = useState(new Date().toISOString().split("T")[0]);
+  const [electricityRatePerUnit, setElectricityRatePerUnit] = useState("10");
+  const [electricityBillingMode, setElectricityBillingMode] = useState<"individual" | "shared">("individual");
 
   // Rent Engine Invoicing Rules
   const [billingStartDate, setBillingStartDate] = useState(new Date().toISOString().split("T")[0]);
@@ -567,16 +601,118 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
     }
   }, [moveInDate]);
 
-  const getStepOneError = (): string | null => {
-    if (!selectedPgId) return "Select a PG property from the header.";
-    if (!name.trim()) return "Enter tenant full name.";
+  // Auto-prefill meter number from selected room if room has one (OW-07)
+  useEffect(() => {
+    if (selectedRoomObj?.meterNumber && !meterNumber) {
+      setMeterNumber(selectedRoomObj.meterNumber);
+    }
+  }, [selectedRoomObj]);
+
+  // Sync Emergency Contact when "sameAsGuardianForEmergency" is checked (OW-06)
+  useEffect(() => {
+    if (sameAsGuardianForEmergency) {
+      const gName = guardianName || fatherName;
+      const gPhone = guardianPhone || fatherPhone;
+      if (gName) setEmergencyContactName(gName);
+      if (gPhone) setEmergencyContactPhone(cleanPhoneInput(gPhone));
+      setEmergencyContactRelation("Guardian");
+    }
+  }, [sameAsGuardianForEmergency, guardianName, guardianPhone, fatherName, fatherPhone]);
+
+  // Photo and ID Upload Handlers (OW-06)
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Image size must be ≤ 5MB.", variant: "destructive" });
+      return;
+    }
+    try {
+      setIsUploadingPhoto(true);
+      const url = await uploadFilePresigned(file, "tenant-photos");
+      if (url) {
+        setPhotoUrl(url);
+        toast({ title: "Photo Uploaded", description: "Tenant photo uploaded successfully." });
+      }
+    } catch (err: any) {
+      toast({ title: "Upload Failed", description: err.message || "Failed to upload photo", variant: "destructive" });
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleIdUpload = async (file: File, side: "front" | "back") => {
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Document size must be ≤ 5MB.", variant: "destructive" });
+      return;
+    }
+    try {
+      if (side === "front") setIsUploadingIdFront(true);
+      else setIsUploadingIdBack(true);
+      const url = await uploadFilePresigned(file, "tenant-ids");
+      if (url) {
+        if (side === "front") setIdFrontUrl(url);
+        else setIdBackUrl(url);
+        toast({ title: "Document Uploaded", description: `ID ${side} copy uploaded successfully.` });
+      }
+    } catch (err: any) {
+      toast({ title: "Upload Failed", description: err.message || "Could not upload document", variant: "destructive" });
+    } finally {
+      if (side === "front") setIsUploadingIdFront(false);
+      else setIsUploadingIdBack(false);
+    }
+  };
+
+  // Profile completion score (OW-06)
+  const profileCompletion = useMemo(() => {
+    let score = 0;
+    if (name.trim()) score += 15;
     const digits = phone.replace(/\D/g, "");
-    if (digits.length !== 10) return "Enter a valid 10-digit contact number.";
+    if (digits.length === 10) score += 15;
+    if (hasSelectValue(effectiveRoomId) && bedNumber) score += 20;
+    if (parseInt(fixedRent, 10) > 0) score += 15;
+    if (photoUrl) score += 10;
+    if (email.trim()) score += 5;
+    if (guardianName.trim() || fatherName.trim() || emergencyContactName.trim()) score += 10;
+    if (idNumber.trim() || idFrontUrl) score += 10;
+    return Math.min(100, score);
+  }, [name, phone, effectiveRoomId, bedNumber, fixedRent, photoUrl, email, guardianName, fatherName, emergencyContactName, idNumber, idFrontUrl]);
+
+  // Validation rules (OW-05)
+  const phoneValidationError = useMemo(() => {
+    if (!phone) return "Contact number is required.";
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length !== 10) return "Contact number must be exactly 10 digits.";
+    if (!/^[6-9]/.test(digits)) return "Indian mobile number must start with 6, 7, 8, or 9.";
     if (duplicatePhoneTenant) {
       const roomLabel = duplicatePhoneTenant.roomNumber || duplicatePhoneTenant.room?.roomNumber || "assigned room";
       const bedNum = duplicatePhoneTenant.bedNumber || duplicatePhoneTenant.bed?.bedNumber || duplicatePhoneTenant.roomTenant?.bedNumberOnAssignment;
       const bedLabel = bedNum ? ` (Bed ${bedNum})` : "";
-      return `Contact number ${phone} is already registered to active tenant "${duplicatePhoneTenant.name || "Tenant"}" in Room ${roomLabel}${bedLabel}. Two active tenants cannot share the same contact number in the same PG.`;
+      return `Number is already registered to active tenant "${duplicatePhoneTenant.name || "Tenant"}" in Room ${roomLabel}${bedLabel}.`;
+    }
+    return null;
+  }, [phone, duplicatePhoneTenant]);
+
+  const guardianPhoneValidationError = useMemo(() => {
+    const tDigits = phone.replace(/\D/g, "").slice(-10);
+    const gDigits = guardianPhone.replace(/\D/g, "").slice(-10);
+    const fDigits = fatherPhone.replace(/\D/g, "").slice(-10);
+    if (tDigits && gDigits && tDigits === gDigits) {
+      return "Guardian contact number cannot be the tenant's own number.";
+    }
+    if (tDigits && fDigits && tDigits === fDigits) {
+      return "Father contact number cannot be the tenant's own number.";
+    }
+    return null;
+  }, [phone, guardianPhone, fatherPhone]);
+
+  const getStepOneError = (): string | null => {
+    if (!selectedPgId) return "Select a PG property from the header.";
+    if (!name.trim()) return "Enter tenant full name.";
+    if (phoneValidationError) return phoneValidationError;
+    if (guardianPhoneValidationError) return guardianPhoneValidationError;
+    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      return "Enter a valid email address.";
     }
     if (!hasSelectValue(effectiveRoomId)) return "Select a room for allocation.";
     if (!bedNumber) return "Select an available bed for allocation.";
@@ -587,6 +723,14 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
     if (!moveInDate) return "Enter move-in / joining date.";
     const rentNum = parseInt(fixedRent, 10);
     if (isNaN(rentNum) || rentNum <= 0) return "Enter monthly fixed rent amount (must be greater than 0).";
+    if (electricityMeter) {
+      if (openingMeterReading && parseFloat(openingMeterReading) < 0) {
+        return "Opening meter reading cannot be negative.";
+      }
+      if (electricityRatePerUnit && parseFloat(electricityRatePerUnit) <= 0) {
+        return "Electricity rate per unit must be greater than 0.";
+      }
+    }
     return null;
   };
 
@@ -594,15 +738,32 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
   const stepTwoError = getStepTwoError();
 
   const goNext = () => {
-    if (step === 1 && stepOneError) {
-      setShowStepErrors(true);
-      toast({ title: "Incomplete Tenant Details", description: stepOneError, variant: "destructive" });
-      return;
+    if (step === 1) {
+      setNameTouched(true);
+      setPhoneTouched(true);
+      setEmailTouched(true);
+      if (stepOneError) {
+        setShowStepErrors(true);
+        toast({ title: "Incomplete Tenant Details", description: stepOneError, variant: "destructive" });
+        if (!name.trim()) {
+          document.getElementById("tenant-name-input")?.focus();
+        } else if (phoneValidationError) {
+          document.getElementById("tenant-phone-input")?.focus();
+        }
+        return;
+      }
     }
-    if (step === 2 && stepTwoError) {
-      setShowStepErrors(true);
-      toast({ title: "Incomplete Stay Details", description: stepTwoError, variant: "destructive" });
-      return;
+    if (step === 2) {
+      setRentTouched(true);
+      setMoveInTouched(true);
+      if (stepTwoError) {
+        setShowStepErrors(true);
+        toast({ title: "Incomplete Stay Details", description: stepTwoError, variant: "destructive" });
+        if (!fixedRent || parseInt(fixedRent, 10) <= 0) {
+          document.getElementById("fixed-rent-input")?.focus();
+        }
+        return;
+      }
     }
     setShowStepErrors(false);
     setStep((s) => (Math.min(3, s + 1) as 1 | 2 | 3));
@@ -773,6 +934,23 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
         bookedBy: bookedBy.trim() || undefined,
         rentingType: rentalFrequency || "Monthly",
         collectOnlinePayments: true,
+        photoUrl: photoUrl || undefined,
+        photo: photoUrl || undefined,
+        occupation: occupation || undefined,
+        officeOrCollegeName: officeOrCollegeName.trim() || undefined,
+        emergencyContactName: emergencyContactName.trim() || undefined,
+        emergencyContactPhone: emergencyContactPhone ? `+91${emergencyContactPhone.replace(/\D/g, "")}` : undefined,
+        emergencyContactRelation: emergencyContactRelation || undefined,
+        idType: idType || undefined,
+        idNumber: idNumber.trim() || undefined,
+        idFrontUrl: idFrontUrl || undefined,
+        idBackUrl: idBackUrl || undefined,
+        vehicleNumber: vehicleNumber.trim() || undefined,
+        meterNumber: electricityMeter ? meterNumber.trim() || undefined : undefined,
+        openingMeterReading: electricityMeter && openingMeterReading ? parseFloat(openingMeterReading) : undefined,
+        meterReadingDate: electricityMeter ? meterReadingDate || undefined : undefined,
+        electricityRatePerUnit: electricityMeter && electricityRatePerUnit ? parseFloat(electricityRatePerUnit) : undefined,
+        electricityBillingMode: electricityMeter ? electricityBillingMode : undefined,
         paymentDetails: {
           openingBalance: [
             { dueType: rentDueType, dueFor: rentDueFor, dueAmount: parseInt(rentDueAmt, 10) || 0, collection: parseInt(rentCollAmt, 10) || 0 },
@@ -858,7 +1036,23 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
           bankUpiId: upiId.trim() || undefined,
           checkinTime: checkinTime || undefined,
           checkoutTime: checkoutTime || undefined,
-          officeOrCollegeName: referredBy.trim() || undefined,
+          officeOrCollegeName: officeOrCollegeName.trim() || referredBy.trim() || undefined,
+          occupation: occupation || undefined,
+          photoUrl: photoUrl || undefined,
+          photo: photoUrl || undefined,
+          emergencyContactName: emergencyContactName.trim() || undefined,
+          emergencyContactPhone: emergencyContactPhone ? `+91${emergencyContactPhone.replace(/\D/g, "")}` : undefined,
+          emergencyContactRelation: emergencyContactRelation || undefined,
+          idType: idType || undefined,
+          idNumber: idNumber.trim() || undefined,
+          idFrontUrl: idFrontUrl || undefined,
+          idBackUrl: idBackUrl || undefined,
+          vehicleNumber: vehicleNumber.trim() || undefined,
+          meterNumber: electricityMeter ? meterNumber.trim() || undefined : undefined,
+          openingMeterReading: electricityMeter && openingMeterReading ? parseFloat(openingMeterReading) : undefined,
+          meterReadingDate: electricityMeter ? meterReadingDate || undefined : undefined,
+          electricityRatePerUnit: electricityMeter && electricityRatePerUnit ? parseFloat(electricityRatePerUnit) : undefined,
+          electricityBillingMode: electricityMeter ? electricityBillingMode : undefined,
         } as any);
       }
 
@@ -959,19 +1153,83 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
             <CardTitle className="text-sm font-bold text-foreground">Tenant Details</CardTitle>
           </CardHeader>
           <CardContent className="p-0 md:p-5 space-y-5">
+            {/* Quick Photo Upload & Profile Completion (OW-06) */}
+            <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl bg-muted/30 border">
+              <div className="relative group shrink-0">
+                <div className="h-16 w-16 rounded-full border-2 border-teal-500/40 bg-muted overflow-hidden flex items-center justify-center">
+                  {photoUrl ? (
+                    <img src={photoUrl} alt="Tenant Photo" className="h-full w-full object-cover" />
+                  ) : (
+                    <User className="h-8 w-8 text-muted-foreground" />
+                  )}
+                </div>
+                {isUploadingPhoto ? (
+                  <div className="absolute inset-0 bg-background/80 rounded-full flex items-center justify-center">
+                    <Loader2 className="h-5 w-5 animate-spin text-teal-600" />
+                  </div>
+                ) : (
+                  <label
+                    htmlFor="tenant-photo-input"
+                    className="absolute bottom-0 right-0 h-6 w-6 rounded-full bg-teal-600 text-white flex items-center justify-center shadow cursor-pointer hover:bg-teal-700 transition-colors"
+                    title="Upload photo / Take picture"
+                  >
+                    <Camera className="h-3.5 w-3.5" />
+                    <input
+                      id="tenant-photo-input"
+                      type="file"
+                      accept="image/*"
+                      capture="user"
+                      className="hidden"
+                      onChange={handlePhotoUpload}
+                    />
+                  </label>
+                )}
+              </div>
+              <div className="flex-1 text-center sm:text-left space-y-1">
+                <div className="flex items-center justify-center sm:justify-start gap-2">
+                  <h4 className="text-sm font-semibold text-foreground">Tenant Photo</h4>
+                  <Badge variant="outline" className="border-teal-300 text-teal-700 bg-teal-50 text-[11px]">
+                    Profile {profileCompletion}% Complete
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Take a quick selfie or upload a photo. Optional, can also be added later in profile.
+                </p>
+                {photoUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setPhotoUrl("")}
+                    className="text-xs text-destructive hover:underline flex items-center gap-1 mx-auto sm:mx-0 mt-1"
+                  >
+                    <Trash2 className="h-3 w-3" /> Remove photo
+                  </button>
+                )}
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>
+                <Label htmlFor="tenant-name-input">
                   Tenant Full Name <span className="text-destructive font-bold">*</span>
                 </Label>
                 <Input
+                  id="tenant-name-input"
                   placeholder="Enter tenant full name"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onBlur={() => setNameTouched(true)}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    if (!nameTouched) setNameTouched(true);
+                  }}
+                  className={nameTouched && !name.trim() ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
+                {nameTouched && !name.trim() && (
+                  <p className="text-xs text-destructive font-medium mt-1">Tenant full name is required.</p>
+                )}
               </div>
+
               <div className="space-y-2">
-                <Label>
+                <Label htmlFor="tenant-phone-input">
                   Contact Number <span className="text-destructive font-bold">*</span>
                 </Label>
                 <div className="flex gap-2">
@@ -979,12 +1237,26 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                     +91
                   </span>
                   <Input
+                    id="tenant-phone-input"
+                    inputMode="numeric"
+                    maxLength={10}
                     placeholder="10-digit contact number"
                     value={phone}
-                    onChange={(e) => setPhone(cleanPhoneInput(e.target.value))}
-                    className={duplicatePhoneTenant ? "border-destructive focus-visible:ring-destructive text-destructive font-medium" : ""}
+                    onBlur={() => setPhoneTouched(true)}
+                    onChange={(e) => {
+                      setPhone(cleanPhoneInput(e.target.value));
+                      if (!phoneTouched) setPhoneTouched(true);
+                    }}
+                    className={
+                      (phoneTouched && phoneValidationError) || duplicatePhoneTenant
+                        ? "border-destructive focus-visible:ring-destructive text-destructive font-medium"
+                        : ""
+                    }
                   />
                 </div>
+                {phoneTouched && phoneValidationError && (
+                  <p className="text-xs text-destructive font-medium mt-1">{phoneValidationError}</p>
+                )}
                 {duplicatePhoneTenant && (
                   <div className="flex items-start gap-2 p-2.5 mt-1 rounded-md bg-destructive/10 border border-destructive/30 text-destructive text-xs animate-in fade-in duration-200">
                     <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
@@ -1011,19 +1283,52 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
               </div>
             </div>
 
+            {/* Occupation & College/Company Fields (OW-06) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Tenant Type</Label>
-                <Select value={tenantType} onValueChange={setTenantType}>
+                <Label>Occupation / Profile</Label>
+                <Select
+                  value={occupation}
+                  onValueChange={(v) => {
+                    setOccupation(v);
+                    setTenantType(v);
+                  }}
+                >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Tenant Type" />
+                    <SelectValue placeholder="Select Occupation" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Student">Student</SelectItem>
                     <SelectItem value="Working Professional">Working Professional</SelectItem>
+                    <SelectItem value="Self Employed">Self Employed</SelectItem>
                     <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>College / Company Name <span className="text-xs text-muted-foreground font-normal">(Optional)</span></Label>
+                <Input
+                  placeholder="e.g. Infosys, IIT, TCS, etc."
+                  value={officeOrCollegeName}
+                  onChange={(e) => setOfficeOrCollegeName(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Email Address <span className="text-xs text-muted-foreground font-normal">(Optional)</span></Label>
+                <Input
+                  type="email"
+                  placeholder="e.g. tenant@example.com"
+                  value={email}
+                  onBlur={() => setEmailTouched(true)}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                {emailTouched && email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) && (
+                  <p className="text-xs text-destructive font-medium mt-1">Please enter a valid email address.</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -1546,6 +1851,189 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                       </div>
                     </details>
 
+                    {/* (D.1) Emergency Contact Details (OW-06) */}
+                    <details className="group border rounded-lg overflow-hidden bg-card/50" open>
+                      <summary className="flex justify-between items-center p-3 font-semibold text-xs cursor-pointer bg-muted/15 select-none border-b">
+                        <span className="flex items-center gap-1.5">
+                          <Phone className="h-3.5 w-3.5 text-teal-600" /> Emergency Contact
+                        </span>
+                        <ChevronRight className="h-3 w-3 transition-transform group-open:rotate-90 text-muted-foreground" />
+                      </summary>
+                      <div className="p-3.5 space-y-3.5 bg-background text-sm">
+                        <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={sameAsGuardianForEmergency}
+                            onChange={(e) => setSameAsGuardianForEmergency(e.target.checked)}
+                            className="rounded text-teal-600 focus:ring-teal-500 h-3.5 w-3.5"
+                          />
+                          Same as parent / guardian
+                        </label>
+                        <div className="space-y-1">
+                          <Label>Emergency Contact Person Name</Label>
+                          <Input
+                            placeholder="Enter contact person name"
+                            value={emergencyContactName}
+                            onChange={(e) => setEmergencyContactName(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Relationship</Label>
+                          <Select value={emergencyContactRelation} onValueChange={setEmergencyContactRelation}>
+                            <SelectTrigger><SelectValue placeholder="Relationship" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Parent">Parent</SelectItem>
+                              <SelectItem value="Sibling">Sibling</SelectItem>
+                              <SelectItem value="Guardian">Guardian</SelectItem>
+                              <SelectItem value="Friend">Friend</SelectItem>
+                              <SelectItem value="Relative">Relative</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Emergency Contact Number</Label>
+                          <div className="flex gap-2">
+                            <span className="flex items-center rounded-md border border-input bg-muted px-2.5 text-xs text-muted-foreground">
+                              +91
+                            </span>
+                            <Input
+                              placeholder="10-digit emergency number"
+                              value={emergencyContactPhone}
+                              onChange={(e) => setEmergencyContactPhone(cleanPhoneInput(e.target.value))}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </details>
+
+                    {/* (D.2) ID Verification & Documents (OW-06) */}
+                    <details className="group border rounded-lg overflow-hidden bg-card/50" open>
+                      <summary className="flex justify-between items-center p-3 font-semibold text-xs cursor-pointer bg-muted/15 select-none border-b">
+                        <span className="flex items-center gap-1.5">
+                          <ShieldCheck className="h-3.5 w-3.5 text-teal-600" /> Identity Documents & Vehicle
+                        </span>
+                        <ChevronRight className="h-3 w-3 transition-transform group-open:rotate-90 text-muted-foreground" />
+                      </summary>
+                      <div className="p-3.5 space-y-3.5 bg-background text-sm">
+                        <div className="space-y-1">
+                          <Label>ID Document Type</Label>
+                          <Select value={idType} onValueChange={setIdType}>
+                            <SelectTrigger><SelectValue placeholder="Select ID type" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Aadhaar">Aadhaar Card</SelectItem>
+                              <SelectItem value="PAN">PAN Card</SelectItem>
+                              <SelectItem value="Passport">Passport</SelectItem>
+                              <SelectItem value="Driving Licence">Driving Licence</SelectItem>
+                              <SelectItem value="Voter ID">Voter ID</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1">
+                          <Label>{idType} Number</Label>
+                          <Input
+                            placeholder={`Enter ${idType} number`}
+                            value={idNumber}
+                            onChange={(e) => setIdNumber(e.target.value)}
+                          />
+                          {idNumber && (
+                            <p className="text-[11px] text-muted-foreground">
+                              Display Masked: {idNumber.length > 4 ? `•••• •••• ${idNumber.slice(-4)}` : idNumber}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t pt-3">
+                          <div className="space-y-1.5">
+                            <Label className="text-xs font-medium">Front Document Copy</Label>
+                            {idFrontUrl ? (
+                              <div className="relative rounded-lg border p-2 bg-muted/20 flex items-center justify-between">
+                                <span className="text-xs truncate max-w-[150px]">Front copy uploaded</span>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setIdFrontUrl("")}
+                                  className="h-6 w-6 p-0 text-destructive"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <label className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-3 cursor-pointer hover:border-teal-500 bg-muted/10 transition-colors">
+                                {isUploadingIdFront ? (
+                                  <Loader2 className="h-5 w-5 animate-spin text-teal-600" />
+                                ) : (
+                                  <>
+                                    <Upload className="h-5 w-5 text-muted-foreground mb-1" />
+                                    <span className="text-[11px] text-muted-foreground">Upload Front (≤5MB)</span>
+                                  </>
+                                )}
+                                <input
+                                  type="file"
+                                  accept="image/*,application/pdf"
+                                  className="hidden"
+                                  disabled={isUploadingIdFront}
+                                  onChange={(e) => {
+                                    const f = e.target.files?.[0];
+                                    if (f) handleIdUpload(f, "front");
+                                  }}
+                                />
+                              </label>
+                            )}
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <Label className="text-xs font-medium">Back Document Copy</Label>
+                            {idBackUrl ? (
+                              <div className="relative rounded-lg border p-2 bg-muted/20 flex items-center justify-between">
+                                <span className="text-xs truncate max-w-[150px]">Back copy uploaded</span>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setIdBackUrl("")}
+                                  className="h-6 w-6 p-0 text-destructive"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <label className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-3 cursor-pointer hover:border-teal-500 bg-muted/10 transition-colors">
+                                {isUploadingIdBack ? (
+                                  <Loader2 className="h-5 w-5 animate-spin text-teal-600" />
+                                ) : (
+                                  <>
+                                    <Upload className="h-5 w-5 text-muted-foreground mb-1" />
+                                    <span className="text-[11px] text-muted-foreground">Upload Back (≤5MB)</span>
+                                  </>
+                                )}
+                                <input
+                                  type="file"
+                                  accept="image/*,application/pdf"
+                                  className="hidden"
+                                  disabled={isUploadingIdBack}
+                                  onChange={(e) => {
+                                    const f = e.target.files?.[0];
+                                    if (f) handleIdUpload(f, "back");
+                                  }}
+                                />
+                              </label>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="space-y-1 border-t pt-3">
+                          <Label>Vehicle Number <span className="text-xs text-muted-foreground font-normal">(Optional)</span></Label>
+                          <Input
+                            placeholder="e.g. DL 01 AB 1234"
+                            value={vehicleNumber}
+                            onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
+                          />
+                        </div>
+                      </div>
+                    </details>
+
                     {/* (E) Bank Details */}
                     <details className="group border rounded-lg overflow-hidden bg-card/50">
                       <summary className="flex justify-between items-center p-3 font-semibold text-xs cursor-pointer bg-muted/15 select-none border-b">
@@ -1811,7 +2299,16 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                 </div>
                 <button
                   type="button"
-                  onClick={() => setElectricityMeter(!electricityMeter)}
+                  onClick={() => {
+                    const next = !electricityMeter;
+                    setElectricityMeter(next);
+                    if (next && selectedRoomObj?.meterNumber && !meterNumber) {
+                      setMeterNumber(selectedRoomObj.meterNumber);
+                    }
+                    if (!next) {
+                      setOpeningMeterReading("0");
+                    }
+                  }}
                   className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                     electricityMeter ? "bg-teal-600" : "bg-input"
                   }`}
@@ -1823,6 +2320,78 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                   />
                 </button>
               </div>
+
+              {/* Conditional Sub-Meter Fields (OW-07) */}
+              {electricityMeter && (
+                <div className="rounded-xl border border-teal-200 bg-teal-50/20 p-4 space-y-4 animate-in fade-in duration-200">
+                  <div className="flex items-center gap-2 text-teal-800 font-semibold text-xs uppercase tracking-wide">
+                    <Zap className="h-4 w-4 text-teal-600" />
+                    Sub-Meter & Billing Settings
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Meter Number / ID</Label>
+                      <Input
+                        placeholder="e.g. M-101"
+                        value={meterNumber}
+                        onChange={(e) => setMeterNumber(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Opening Meter Reading (Units)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        step="0.1"
+                        placeholder="0.0"
+                        value={openingMeterReading}
+                        onChange={(e) => setOpeningMeterReading(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Reading Date</Label>
+                      <Input
+                        type="date"
+                        value={meterReadingDate}
+                        onChange={(e) => setMeterReadingDate(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Rate per Unit (₹)</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        step="0.5"
+                        placeholder="10"
+                        value={electricityRatePerUnit}
+                        onChange={(e) => setElectricityRatePerUnit(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Billing Mode</Label>
+                      <Select value={electricityBillingMode} onValueChange={(v: "individual" | "shared") => setElectricityBillingMode(v)}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select Mode" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="individual">Individual Meter</SelectItem>
+                          <SelectItem value="shared">Split Room Meter Equally</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-teal-50 border border-teal-200/60 p-2.5 text-xs text-teal-900 flex items-start gap-2">
+                    <Zap className="h-4 w-4 shrink-0 text-teal-600 mt-0.5" />
+                    <div>
+                      <p className="font-semibold">Electricity Calculation Rule:</p>
+                      <p className="text-teal-800">
+                        Bill = (Current reading − Opening reading) × ₹{electricityRatePerUnit || "10"}/unit, added to monthly rent.
+                        {electricityBillingMode === "shared" && " (Total consumption will be divided equally across roommates)."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* RENT ENGINE INVOICING RULES */}
               <div className="border-t pt-4 space-y-4">

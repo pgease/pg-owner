@@ -260,12 +260,26 @@ export const SupportLearningHubModal: React.FC<SupportLearningHubModalProps> = (
                     >
                       <div className="relative aspect-video w-full overflow-hidden bg-muted">
                         {thumb ? (
-                          <img src={thumb} alt="" className="h-full w-full object-cover" loading="lazy" />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                            <Video className="h-6 w-6" />
-                          </div>
-                        )}
+                          <img
+                            src={thumb}
+                            alt=""
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                              const fallback = e.currentTarget.parentElement?.querySelector(".thumb-fallback");
+                              if (fallback) (fallback as HTMLElement).style.display = "flex";
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className={cn(
+                            "thumb-fallback h-full w-full items-center justify-center text-muted-foreground",
+                            thumb ? "hidden" : "flex"
+                          )}
+                        >
+                          <Video className="h-6 w-6" />
+                        </div>
                         <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/30">
                           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-background/95 text-primary shadow-sm">
                             <PlayCircle className="h-5 w-5" />

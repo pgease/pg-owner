@@ -174,6 +174,29 @@ export function useEntitlements(): EntitlementsInfo {
     return () => window.removeEventListener("pgease-demo-plan-change", handleDemoChange);
   }, []);
 
+  // AD-18: Refetch entitlements on window focus, every 5 min, and after 403 PLAN_FEATURE_REQUIRED
+  useEffect(() => {
+    const handleFocus = () => {
+      refetchPlan();
+      refetchFeatures();
+    };
+    const handle403 = () => {
+      refetchPlan();
+      refetchFeatures();
+    };
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("pgease-403-error", handle403);
+    const interval = setInterval(() => {
+      refetchPlan();
+      refetchFeatures();
+    }, 5 * 60 * 1000);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("pgease-403-error", handle403);
+      clearInterval(interval);
+    };
+  }, [refetchPlan, refetchFeatures]);
+
   const setDemoPlan = useCallback((mode: "trial" | "expired" | "pro" | "lite" | "reset") => {
     if (mode === "reset") {
       localStorage.removeItem("pgease_demo_plan");
@@ -305,21 +328,20 @@ export function useEntitlements(): EntitlementsInfo {
     const isPro = rawStatus === "PRO" || rawStatus === "TRIAL"; // Trial gets full Pro features
     const isLite = rawStatus === "LITE";
 
+    const serverDisplayName =
+      apiPayload?.displayName ||
+      apiPayload?.planDisplayName ||
+      currentPlanData?.currentPlan?.displayName ||
+      currentPlanData?.currentPlan?.name ||
+      apiSub?.planName;
+
     const planName = isTrial
       ? "Pro Trial"
-      : rawStatus === "PRO"
-      ? "Pro Plan"
-      : rawStatus === "LITE"
-      ? "Lite Plan"
-      : "Trial Expired";
+      : serverDisplayName || (rawStatus === "PRO" ? "Pro Plan" : "Free Plan");
 
     const planDisplayName = isTrial
       ? "Pro Trial"
-      : rawStatus === "PRO"
-      ? "Pro Plan"
-      : rawStatus === "LITE"
-      ? "Lite Plan"
-      : "Trial Expired";
+      : serverDisplayName || (rawStatus === "PRO" ? "Pro Plan" : "Free Plan");
 
     const pricePerBed = isPro ? 49 : 29;
 

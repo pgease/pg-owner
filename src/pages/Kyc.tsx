@@ -185,8 +185,8 @@ export default function Kyc() {
   const [createAgreementOpen, setCreateAgreementOpen] = useState(false);
   const [agreementForm, setAgreementForm] = useState({
     roomTenantId: "",
-    monthlyRent: 12000,
-    securityDeposit: 15000,
+    monthlyRent: 0,
+    securityDeposit: 0,
     noticePeriodDays: 30,
     lockInPeriodMonths: 3,
     agreementStartDate: new Date().toISOString().split("T")[0],
@@ -1204,7 +1204,15 @@ export default function Kyc() {
                 </Label>
                 <Select
                   value={agreementForm.roomTenantId}
-                  onValueChange={(val) => setAgreementForm({ ...agreementForm, roomTenantId: val })}
+                  onValueChange={(val) => {
+                    const selectedT = tenantsData.find((t: any) => (t.roomTenantId || t.id) === val);
+                    setAgreementForm((prev) => ({
+                      ...prev,
+                      roomTenantId: val,
+                      monthlyRent: Number(selectedT?.monthlyRent || selectedT?.rent || prev.monthlyRent || 0),
+                      securityDeposit: Number(selectedT?.securityDeposit || selectedT?.deposit || prev.securityDeposit || 0),
+                    }));
+                  }}
                 >
                   <SelectTrigger className="h-9 text-sm">
                     <SelectValue placeholder="Choose resident..." />

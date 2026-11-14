@@ -299,8 +299,16 @@ export default function TenantDetailPage() {
   const queryClient = useQueryClient();
   const subAccess = useSubscriptionAccess();
 
-  const { data: tenant, isLoading } = usePropertyTenantDetail(currentPropertyId, tenantId);
+  const { data: tenant, isLoading, isError, refetch: refetchTenant } = usePropertyTenantDetail(currentPropertyId, tenantId);
   const { data: allPropertyTenants } = usePropertyTenants(currentPropertyId);
+
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState(false);
+  const photoInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    setPhotoError(false);
+  }, [tenant]);
 
   const roomTenantId = tenant?.roomTenant?.id ?? (tenant as any)?.roomTenantId ?? tenant?.id ?? "";
 
@@ -549,13 +557,26 @@ export default function TenantDetailPage() {
   }, [agreementOpen, currentPropertyId, tenant]);
 
   const [agreementForm, setAgreementForm] = useState({
-    monthlyRent: 12000,
-    securityDeposit: 15000,
+    monthlyRent: 0,
+    securityDeposit: 0,
     noticePeriodDays: 30,
     lockInPeriodMonths: 3,
     agreementStartDate: new Date().toISOString().split("T")[0],
     houseRules: "1. No loud music after 10 PM.\n2. Guests allowed until 8 PM.\n3. Keep common areas clean.",
   });
+
+  // OW-17: Dynamically sync agreement form with real tenancy numbers
+  useEffect(() => {
+    if (tenant) {
+      setAgreementForm((prev) => ({
+        ...prev,
+        monthlyRent: Number(tenant.monthlyRent || (tenant as any).rent || 0),
+        securityDeposit: Number(tenant.securityDeposit || (tenant as any).deposit || 0),
+        noticePeriodDays: Number(tenant.noticePeriodDays || 30),
+        agreementStartDate: tenant.joiningDate ? safeDateInputString(tenant.joiningDate) : prev.agreementStartDate,
+      }));
+    }
+  }, [tenant, agreementOpen]);
 
   const [ownerSigningLoading, setOwnerSigningLoading] = useState(false);
 
@@ -893,20 +914,36 @@ export default function TenantDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+      <div className="space-y-6 pb-20 max-w-7xl mx-auto p-4 sm:p-6 animate-pulse">
+        <div className="h-8 w-40 bg-muted/70 rounded-xl" />
+        <div className="h-44 bg-muted/60 rounded-3xl" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="h-64 bg-muted/50 rounded-3xl" />
+          <div className="h-64 bg-muted/50 rounded-3xl" />
+          <div className="h-64 bg-muted/50 rounded-3xl" />
+        </div>
       </div>
     );
   }
 
-  if (!tenant) {
+  if (isError || !tenant) {
     return (
-      <div className="space-y-4 text-center py-12">
-        <h2 className="text-xl font-bold">Tenant Not Found</h2>
-        <p className="text-sm text-muted-foreground">The requested tenant could not be found in this PG.</p>
-        <Button asChild variant="outline">
-          <Link to="/tenants">Back to Tenants</Link>
-        </Button>
+      <div className="space-y-4 text-center py-20 max-w-md mx-auto p-6">
+        <div className="h-16 w-16 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+          <AlertCircle className="h-8 w-8" />
+        </div>
+        <h2 className="text-xl font-bold text-foreground">Couldn't Load This Profile</h2>
+        <p className="text-sm text-muted-foreground">
+          The requested tenant could not be retrieved. Please check your network or try again.
+        </p>
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <Button variant="outline" asChild>
+            <Link to="/tenants">Back to Tenants</Link>
+          </Button>
+          <Button onClick={() => refetchTenant()} className="bg-primary">
+            Retry Loading
+          </Button>
+        </div>
       </div>
     );
   }
@@ -922,13 +959,6 @@ export default function TenantDetailPage() {
     propertyList.find((p) => p.id === currentPropertyId)?.name ||
     "—";
   const photo = tenantPhotoUrl(tenant);
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-  const [photoError, setPhotoError] = useState(false);
-  const photoInputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    setPhotoError(false);
-  }, [tenant]);
 
   const handleOwnerPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -951,7 +981,7 @@ export default function TenantDetailPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to upload photo");
       setPhotoError(false);
-      tenantQuery.refetch();
+      refetchTenant();
       toast({ title: "Tenant photo updated successfully! 📸" });
     } catch (err: any) {
       toast({ title: "Photo upload failed", description: err.message, variant: "destructive" });
@@ -1629,7 +1659,7 @@ export default function TenantDetailPage() {
     try {
       if (type === "rent") {
         const res = await sendWhatsAppRentReminder(currentPropertyId, roomTenantId);
-        toast({ title: "WhatsApp Rent Reminder Sent 💬", description: res.message });
+        toast({ title: "WhatsApp Rent Reminder Sent 💬", description: res.message || "Reminder sent on WhatsApp" });
       } else if (type === "kyc") {
         const res = await sendWhatsAppKycReminder(currentPropertyId, roomTenantId);
         toast({ title: "WhatsApp KYC Reminder Sent 🛡️", description: res.message });
@@ -1638,11 +1668,24 @@ export default function TenantDetailPage() {
         toast({ title: "WhatsApp Agreement Link Sent 📄", description: res.message });
       }
     } catch (err: any) {
-      toast({
-        title: "Failed to send WhatsApp reminder",
-        description: err?.message || "Could not dispatch WhatsApp message.",
-        variant: "destructive",
-      });
+      const isRateLimited =
+        err?.status === 429 ||
+        err?.message?.toLowerCase().includes("rate limit") ||
+        err?.message?.toLowerCase().includes("already reminded");
+
+      if (isRateLimited) {
+        toast({
+          title: "Already Reminded",
+          description: err?.message || "Already reminded — next reminder allowed in 12 hours.",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Failed to send WhatsApp reminder",
+          description: err?.message || "Could not dispatch WhatsApp message.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
