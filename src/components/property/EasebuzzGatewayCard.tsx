@@ -20,7 +20,11 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
-import { PaymentKycModal } from "./PaymentKycModal";
+import {
+  PaymentKycModal,
+  openKycPopupPlaceholder,
+  isCapacitorApp,
+} from "./PaymentKycModal";
 import {
   getPaymentSettings,
   startEasebuzzKyc,
@@ -39,6 +43,8 @@ export const EasebuzzGatewayCard = () => {
   const [kycModalOpen, setKycModalOpen] = useState(false);
   const [kycUrl, setKycUrl] = useState<string>("");
   const [kycError, setKycError] = useState<string | null>(null);
+  const [popupBlocked, setPopupBlocked] = useState(false);
+  const [popupAlreadyOpened, setPopupAlreadyOpened] = useState(false);
 
   const fetchSettings = async () => {
     setLoading(true);
@@ -63,16 +69,39 @@ export const EasebuzzGatewayCard = () => {
   const handleStartKyc = async () => {
     setActionLoading(true);
     setKycError(null);
+
+    let popup: Window | null = null;
+    const isApp = isCapacitorApp();
+    if (!isApp) {
+      popup = openKycPopupPlaceholder("easebuzz_kyc");
+      if (!popup) {
+        setPopupBlocked(true);
+        setPopupAlreadyOpened(false);
+      } else {
+        setPopupBlocked(false);
+        setPopupAlreadyOpened(true);
+      }
+      setKycModalOpen(true);
+    }
+
     try {
       const res = await startEasebuzzKyc();
       if (res.kycUrl) {
         setKycUrl(res.kycUrl);
-        setKycModalOpen(true);
+        if (popup && !popup.closed) {
+          popup.location.href = res.kycUrl;
+        }
+        if (isApp) {
+          setKycModalOpen(true);
+        }
         toast({
           title: "KYC Portal Ready",
-          description: "Complete your verification form in the modal below.",
+          description: "Complete your verification form in the popup window.",
         });
       } else {
+        if (popup && !popup.closed) {
+          popup.close();
+        }
         const msg = "Easebuzz did not return a valid KYC URL. Please try again.";
         setKycError(msg);
         toast({
@@ -83,6 +112,9 @@ export const EasebuzzGatewayCard = () => {
       }
       await fetchSettings();
     } catch (err: any) {
+      if (popup && !popup.closed) {
+        popup.close();
+      }
       const status = err?.status;
       let desc = err?.message || "Failed to start sub-merchant onboarding.";
       if (status === 502) {
@@ -104,16 +136,39 @@ export const EasebuzzGatewayCard = () => {
   const handleRefreshKyc = async () => {
     setActionLoading(true);
     setKycError(null);
+
+    let popup: Window | null = null;
+    const isApp = isCapacitorApp();
+    if (!isApp) {
+      popup = openKycPopupPlaceholder("easebuzz_kyc");
+      if (!popup) {
+        setPopupBlocked(true);
+        setPopupAlreadyOpened(false);
+      } else {
+        setPopupBlocked(false);
+        setPopupAlreadyOpened(true);
+      }
+      setKycModalOpen(true);
+    }
+
     try {
       const res = await refreshEasebuzzKycLink();
       if (res.kycUrl) {
         setKycUrl(res.kycUrl);
-        setKycModalOpen(true);
+        if (popup && !popup.closed) {
+          popup.location.href = res.kycUrl;
+        }
+        if (isApp) {
+          setKycModalOpen(true);
+        }
         toast({
           title: "KYC Link Refreshed",
           description: "Opening Easebuzz verification form...",
         });
       } else {
+        if (popup && !popup.closed) {
+          popup.close();
+        }
         const msg = "Easebuzz did not return a valid KYC access link.";
         setKycError(msg);
         toast({
@@ -124,6 +179,9 @@ export const EasebuzzGatewayCard = () => {
       }
       await fetchSettings();
     } catch (err: any) {
+      if (popup && !popup.closed) {
+        popup.close();
+      }
       const status = err?.status;
       let desc = err?.message || "Failed to get fresh KYC link.";
       if (status === 502) {
@@ -450,6 +508,9 @@ export const EasebuzzGatewayCard = () => {
         onClose={() => setKycModalOpen(false)}
         kycUrl={kycUrl}
         onRefreshStatus={fetchSettings}
+        isPopupBlocked={popupBlocked}
+        popupAlreadyOpened={popupAlreadyOpened}
+        onClearPopupBlocked={() => setPopupBlocked(false)}
       />
     </Card>
   );

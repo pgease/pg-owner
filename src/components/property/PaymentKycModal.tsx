@@ -6,7 +6,7 @@ import { Browser } from "@capacitor/browser";
 
 /**
  * Config flag: When false, skips iframe embed, opens popup / in-app browser directly,
- * and renders a "Waiting for KYC... Refresh status" screen.
+ * and renders a "Waiting for KYC... Refresh status" screen (or "Popup blocked" screen).
  * When true, renders the iframe and displays a "Having trouble? Open in popup" banner
  * if still blank after 8s without unmounting the iframe.
  */
@@ -31,7 +31,14 @@ export function isCapacitorApp(): boolean {
   return false;
 }
 
-export function openCenteredPopup(url: string, title = "EasebuzzKYC", w = 920, h = 820) {
+/**
+ * Opens a centered popup placeholder synchronously on user click,
+ * writes a "Loading KYC..." status inside it, and returns the Window object.
+ * Returns null if blocked by browser.
+ */
+export function openKycPopupPlaceholder(target = "easebuzz_kyc", w = 920, h = 820): Window | null {
+  if (typeof window === "undefined") return null;
+
   const dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : window.screenX;
   const dualScreenTop = window.screenTop !== undefined ? window.screenTop : window.screenY;
 
@@ -41,16 +48,118 @@ export function openCenteredPopup(url: string, title = "EasebuzzKYC", w = 920, h
   const left = Math.max(0, width / 2 - w / 2 + dualScreenLeft);
   const top = Math.max(0, height / 2 - h / 2 + dualScreenTop);
 
-  const newWindow = window.open(
-    url,
-    title,
-    `scrollbars=yes,resizable=yes,width=${w},height=${h},top=${top},left=${left}`
-  );
+  try {
+    const popup = window.open(
+      "",
+      target,
+      `scrollbars=yes,resizable=yes,width=${w},height=${h},top=${top},left=${left}`
+    );
 
-  if (newWindow && window.focus) {
-    newWindow.focus();
+    if (popup) {
+      try {
+        popup.document.open();
+        popup.document.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loading KYC - PG Ease</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 1.5rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      color: #0f172a;
+    }
+    .card {
+      background: #ffffff;
+      padding: 2.5rem 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+      text-align: center;
+      max-width: 420px;
+      width: 100%;
+      border: 1px solid #e2e8f0;
+    }
+    .spinner {
+      border: 3.5px solid #e2e8f0;
+      border-top: 3.5px solid #005045;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1.25rem;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    h2 {
+      font-size: 1.25rem;
+      margin: 0 0 0.5rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    p {
+      font-size: 0.875rem;
+      color: #64748b;
+      margin: 0;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="spinner"></div>
+    <h2>Loading KYC...</h2>
+    <p>Connecting securely to Easebuzz verification portal. Please wait…</p>
+  </div>
+</body>
+</html>`);
+        popup.document.close();
+      } catch {
+        // Ignore write error if any
+      }
+      if (window.focus) popup.focus();
+    }
+    return popup;
+  } catch {
+    return null;
   }
-  return newWindow;
+}
+
+export function openCenteredPopup(url: string, title = "easebuzz_kyc", w = 920, h = 820): Window | null {
+  if (typeof window === "undefined") return null;
+
+  const dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : window.screenX;
+  const dualScreenTop = window.screenTop !== undefined ? window.screenTop : window.screenY;
+
+  const width = window.innerWidth || document.documentElement.clientWidth || screen.width;
+  const height = window.innerHeight || document.documentElement.clientHeight || screen.height;
+
+  const left = Math.max(0, width / 2 - w / 2 + dualScreenLeft);
+  const top = Math.max(0, height / 2 - h / 2 + dualScreenTop);
+
+  try {
+    const newWindow = window.open(
+      url,
+      title,
+      `scrollbars=yes,resizable=yes,width=${w},height=${h},top=${top},left=${left}`
+    );
+
+    if (newWindow && window.focus) {
+      newWindow.focus();
+    }
+    return newWindow;
+  } catch {
+    return null;
+  }
 }
 
 interface PaymentKycModalProps {
@@ -58,6 +167,9 @@ interface PaymentKycModalProps {
   onClose: () => void;
   kycUrl: string;
   onRefreshStatus?: () => Promise<void> | void;
+  isPopupBlocked?: boolean;
+  popupAlreadyOpened?: boolean;
+  onClearPopupBlocked?: () => void;
 }
 
 export const PaymentKycModal: React.FC<PaymentKycModalProps> = ({
@@ -65,15 +177,25 @@ export const PaymentKycModal: React.FC<PaymentKycModalProps> = ({
   onClose,
   kycUrl,
   onRefreshStatus,
+  isPopupBlocked = false,
+  popupAlreadyOpened = false,
+  onClearPopupBlocked,
 }) => {
   const [iframeLoading, setIframeLoading] = useState(true);
   const [showTroubleBanner, setShowTroubleBanner] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [popupBlocked, setPopupBlocked] = useState(isPopupBlocked);
 
   const loadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasConfirmedLoadRef = useRef(false);
   const browserListenerRef = useRef<PluginListenerHandle | null>(null);
   const hasAutoOpenedRef = useRef(false);
+
+  const isNative = isCapacitorApp();
+
+  useEffect(() => {
+    setPopupBlocked(isPopupBlocked);
+  }, [isPopupBlocked]);
 
   const removeBrowserListener = async () => {
     if (browserListenerRef.current) {
@@ -87,7 +209,7 @@ export const PaymentKycModal: React.FC<PaymentKycModalProps> = ({
   };
 
   const openExternalKyc = async (url: string) => {
-    if (isCapacitorApp()) {
+    if (isNative) {
       try {
         await removeBrowserListener();
         browserListenerRef.current = await Browser.addListener("browserFinished", () => {
@@ -100,13 +222,21 @@ export const PaymentKycModal: React.FC<PaymentKycModalProps> = ({
         });
         return;
       } catch (err) {
-        // If Browser plugin fails, remove listener and fall back to centered popup
         await removeBrowserListener();
-        openCenteredPopup(url);
+        const popup = openCenteredPopup(url, "easebuzz_kyc");
+        if (!popup) {
+          setPopupBlocked(true);
+        }
         return;
       }
     }
-    openCenteredPopup(url);
+    const popup = openCenteredPopup(url, "easebuzz_kyc");
+    if (!popup) {
+      setPopupBlocked(true);
+    } else {
+      setPopupBlocked(false);
+      onClearPopupBlocked?.();
+    }
   };
 
   useEffect(() => {
@@ -114,10 +244,19 @@ export const PaymentKycModal: React.FC<PaymentKycModalProps> = ({
       document.body.style.overflow = "hidden";
 
       if (!EASEBUZZ_KYC_EMBED) {
-        // When embed is false: skip iframe, open popup / app browser once
         if (!hasAutoOpenedRef.current) {
           hasAutoOpenedRef.current = true;
-          openExternalKyc(kycUrl);
+          if (isNative) {
+            openExternalKyc(kycUrl);
+          } else if (!popupAlreadyOpened && !isPopupBlocked) {
+            const popup = openCenteredPopup(kycUrl, "easebuzz_kyc");
+            if (!popup) {
+              setPopupBlocked(true);
+            } else {
+              setPopupBlocked(false);
+              onClearPopupBlocked?.();
+            }
+          }
         }
       } else {
         // When embed is true: keep iframe and watch 8s fallback
@@ -147,12 +286,27 @@ export const PaymentKycModal: React.FC<PaymentKycModalProps> = ({
       }
       removeBrowserListener();
     };
-  }, [isOpen, kycUrl]);
+  }, [isOpen, kycUrl, isNative, popupAlreadyOpened, isPopupBlocked]);
 
   if (!isOpen) return null;
 
+  const handleDirectOpenKyc = () => {
+    if (!kycUrl) return;
+    if (isNative) {
+      openExternalKyc(kycUrl);
+      setPopupBlocked(false);
+      onClearPopupBlocked?.();
+      return;
+    }
+    const popup = openCenteredPopup(kycUrl, "easebuzz_kyc");
+    if (popup) {
+      setPopupBlocked(false);
+      onClearPopupBlocked?.();
+    }
+  };
+
   const handleManualOpen = () => {
-    openExternalKyc(kycUrl);
+    handleDirectOpenKyc();
   };
 
   const handleRefresh = async () => {
@@ -184,7 +338,6 @@ export const PaymentKycModal: React.FC<PaymentKycModalProps> = ({
     }
     setIframeLoading(false);
 
-    // If accessible and blank (e.g. about:blank or empty body due to framing blocks)
     let isBlank = false;
     try {
       const iframe = e.currentTarget;
@@ -196,7 +349,6 @@ export const PaymentKycModal: React.FC<PaymentKycModalProps> = ({
         }
       }
     } catch {
-      // Cross-origin restriction is expected when external site actually loads
       isBlank = false;
     }
 
@@ -207,8 +359,6 @@ export const PaymentKycModal: React.FC<PaymentKycModalProps> = ({
       setShowTroubleBanner(false);
     }
   };
-
-  const isNative = isCapacitorApp();
 
   return (
     <div
@@ -275,41 +425,75 @@ export const PaymentKycModal: React.FC<PaymentKycModalProps> = ({
       {/* Main body */}
       <div className="relative flex-1 w-full bg-slate-100 overflow-hidden">
         {!EASEBUZZ_KYC_EMBED ? (
-          /* Waiting for KYC... Refresh status screen (when EASEBUZZ_KYC_EMBED is false) */
-          <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-white text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-50 text-teal-700 border border-teal-200 mb-4 shadow-sm">
-              <Clock className="h-8 w-8 animate-pulse text-teal-700" />
-            </div>
-            <h3 className="text-lg sm:text-xl font-bold text-foreground">
-              Waiting for KYC...
-            </h3>
-            <p className="text-xs sm:text-sm text-muted-foreground max-w-md mt-2 leading-relaxed">
-              We opened the Easebuzz verification form in a dedicated {isNative ? "app browser" : "window"}. Complete the identity and bank verification steps, then click <strong>Refresh status</strong>.
-            </p>
+          popupBlocked ? (
+            /* Popup Blocked View: Requirement 2 */
+            <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-white text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50 text-amber-700 border border-amber-200 mb-4 shadow-sm">
+                <AlertCircle className="h-8 w-8 text-amber-600" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-foreground">
+                Your browser blocked the popup
+              </h3>
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-md mt-2 leading-relaxed">
+                Your browser prevented the verification window from opening automatically. Click the button below to launch the Easebuzz KYC portal directly.
+              </p>
 
-            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-sm">
-              <Button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold text-sm h-11 px-6 gap-2 shadow-sm"
-              >
-                <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-                {refreshing ? "Checking status…" : "Refresh status"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleManualOpen}
-                className="w-full sm:w-auto h-11 text-sm px-5 gap-2"
-              >
-                <ExternalLink className="h-4 w-4" />
-                {isNative ? "Re-open verification" : "Re-open popup"}
-              </Button>
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-sm">
+                <Button
+                  onClick={handleDirectOpenKyc}
+                  disabled={!kycUrl}
+                  className="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold text-sm h-12 px-6 gap-2 shadow-sm"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Open KYC
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="w-full sm:w-auto h-12 text-sm px-5 gap-2"
+                >
+                  <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                  Refresh status
+                </Button>
+              </div>
             </div>
-          </div>
+          ) : (
+            /* Waiting for KYC... Screen (when window successfully opened) */
+            <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-white text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-50 text-teal-700 border border-teal-200 mb-4 shadow-sm">
+                <Clock className="h-8 w-8 animate-pulse text-teal-700" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-foreground">
+                Waiting for KYC...
+              </h3>
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-md mt-2 leading-relaxed">
+                We opened the Easebuzz verification form in a dedicated {isNative ? "app browser" : "window"}. Complete the identity and bank verification steps, then click <strong>Refresh status</strong>.
+              </p>
+
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-sm">
+                <Button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold text-sm h-11 px-6 gap-2 shadow-sm"
+                >
+                  <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                  {refreshing ? "Checking status…" : "Refresh status"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleManualOpen}
+                  className="w-full sm:w-auto h-11 text-sm px-5 gap-2"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  {isNative ? "Re-open verification" : "Re-open popup"}
+                </Button>
+              </div>
+            </div>
+          )
         ) : (
           /* Embedded Iframe view (when EASEBUZZ_KYC_EMBED is true) */
           <>
-            {/* Loading Spinner */}
             {iframeLoading && (
               <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/95">
                 <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
@@ -318,7 +502,6 @@ export const PaymentKycModal: React.FC<PaymentKycModalProps> = ({
               </div>
             )}
 
-            {/* Having trouble banner (shown after 8s or if blank, WITHOUT unmounting iframe) */}
             {showTroubleBanner && (
               <div className="absolute top-3 inset-x-4 z-20 rounded-xl border border-amber-300 bg-amber-50/95 p-3.5 shadow-md backdrop-blur-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-900 animate-in fade-in slide-in-from-top-2">
                 <div className="flex items-center gap-2.5">
@@ -356,7 +539,9 @@ export const PaymentKycModal: React.FC<PaymentKycModalProps> = ({
       {/* Footer bar */}
       <footer className="px-4 py-2.5 bg-white border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-muted-foreground shrink-0">
         <span>
-          Complete KYC in the {EASEBUZZ_KYC_EMBED ? "form above or popup" : "opened window"}, then click <strong>Refresh status</strong>.
+          {!EASEBUZZ_KYC_EMBED && popupBlocked
+            ? "Click 'Open KYC' to launch the verification window, then refresh status when done."
+            : `Complete KYC in the ${EASEBUZZ_KYC_EMBED ? "form above or popup" : "opened window"}, then click Refresh status.`}
         </span>
         <Button
           size="sm"

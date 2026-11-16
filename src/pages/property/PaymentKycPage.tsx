@@ -8,6 +8,7 @@ import {
   EASEBUZZ_KYC_EMBED,
   isCapacitorApp,
   openCenteredPopup,
+  openKycPopupPlaceholder,
 } from "@/components/property/PaymentKycModal";
 import { Browser } from "@capacitor/browser";
 import type { PluginListenerHandle } from "@capacitor/core";
@@ -21,6 +22,8 @@ export const PaymentKycPage: React.FC = () => {
   const [iframeLoading, setIframeLoading] = useState(true);
   const [showTroubleBanner, setShowTroubleBanner] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [popupBlocked, setPopupBlocked] = useState(false);
+  const [popupAlreadyOpened, setPopupAlreadyOpened] = useState(false);
 
   const loadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasConfirmedLoadRef = useRef(false);
@@ -55,11 +58,20 @@ export const PaymentKycPage: React.FC = () => {
         return;
       } catch (err) {
         await removeBrowserListener();
-        openCenteredPopup(url);
+        const popup = openCenteredPopup(url, "easebuzz_kyc");
+        if (!popup) {
+          setPopupBlocked(true);
+        }
         return;
       }
     }
-    openCenteredPopup(url);
+    const popup = openCenteredPopup(url, "easebuzz_kyc");
+    if (!popup) {
+      setPopupBlocked(true);
+    } else {
+      setPopupBlocked(false);
+      setPopupAlreadyOpened(true);
+    }
   };
 
   const fetchLink = async () => {
@@ -69,6 +81,10 @@ export const PaymentKycPage: React.FC = () => {
       const res = await refreshEasebuzzKycLink();
       if (res.kycUrl) {
         setKycUrl(res.kycUrl);
+        // On web without user click, browser blocks automatic popups
+        if (!isNative && !EASEBUZZ_KYC_EMBED) {
+          setPopupBlocked(true);
+        }
       } else {
         setError("Easebuzz did not return a valid KYC access link. Please verify your banking details.");
       }
@@ -84,9 +100,68 @@ export const PaymentKycPage: React.FC = () => {
     }
   };
 
+  /**
+   * Synchronously open popup placeholder in the same click as "Start/Resume KYC"
+   */
+  const handleStartOrResumeKyc = async () => {
+    if (isNative) {
+      if (kycUrl) {
+        openExternalKyc(kycUrl);
+      } else {
+        await fetchLink();
+      }
+      return;
+    }
+
+    // Web: Open placeholder popup synchronously on click!
+    setError(null);
+    const popup = openKycPopupPlaceholder("easebuzz_kyc");
+    if (!popup) {
+      setPopupBlocked(true);
+      if (!kycUrl) {
+        await fetchLink();
+      }
+      return;
+    }
+
+    setPopupBlocked(false);
+    setPopupAlreadyOpened(true);
+    setLoading(true);
+    try {
+      let url = kycUrl;
+      if (!url) {
+        const res = await refreshEasebuzzKycLink();
+        if (res.kycUrl) {
+          url = res.kycUrl;
+          setKycUrl(url);
+        } else {
+          if (popup && !popup.closed) popup.close();
+          setError("Easebuzz did not return a valid KYC access link. Please verify your banking details.");
+          return;
+        }
+      }
+      if (popup && !popup.closed) {
+        popup.location.href = url;
+      }
+    } catch (err: any) {
+      if (popup && !popup.closed) popup.close();
+      const status = err?.status;
+      let desc = err?.message || "Failed to generate KYC link.";
+      if (status === 502) {
+        desc = "Easebuzz gateway returned a temporary error (502). Please try again in a few moments.";
+      }
+      setError(desc);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!kycUrl) {
       fetchLink();
+    } else if (!isNative && !EASEBUZZ_KYC_EMBED && !popupAlreadyOpened) {
+      // URL was provided via params without user click
+      setPopupBlocked(true);
     }
   }, []);
 
@@ -95,7 +170,9 @@ export const PaymentKycPage: React.FC = () => {
       if (!EASEBUZZ_KYC_EMBED) {
         if (!hasAutoOpenedRef.current) {
           hasAutoOpenedRef.current = true;
-          openExternalKyc(kycUrl);
+          if (isNative) {
+            openExternalKyc(kycUrl);
+          }
         }
       } else {
         setIframeLoading(true);
@@ -117,7 +194,7 @@ export const PaymentKycPage: React.FC = () => {
       }
       removeBrowserListener();
     };
-  }, [kycUrl]);
+  }, [kycUrl, isNative]);
 
   const handleRefreshStatus = async () => {
     setRefreshing(true);
@@ -148,8 +225,22 @@ export const PaymentKycPage: React.FC = () => {
     navigate(-1);
   };
 
+  const handleDirectOpenKyc = () => {
+    if (!kycUrl) return;
+    if (isNative) {
+      openExternalKyc(kycUrl);
+      setPopupBlocked(false);
+      return;
+    }
+    const popup = openCenteredPopup(kycUrl, "easebuzz_kyc");
+    if (popup) {
+      setPopupBlocked(false);
+      setPopupAlreadyOpened(true);
+    }
+  };
+
   const handleManualOpen = () => {
-    openExternalKyc(kycUrl);
+    handleDirectOpenKyc();
   };
 
   const handleIframeLoad = (e: React.SyntheticEvent<HTMLIFrameElement>) => {
@@ -259,7 +350,7 @@ export const PaymentKycPage: React.FC = () => {
               {error}
             </p>
             <div className="mt-5 flex gap-2 justify-center">
-              <Button onClick={fetchLink} className="bg-primary hover:bg-primary/90 text-white text-xs h-9">
+              <Button onClick={handleStartOrResumeKyc} className="bg-primary hover:bg-primary/90 text-white text-xs h-9">
                 <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Try Again
               </Button>
               <Button variant="outline" onClick={handleDone} className="text-xs h-9">
@@ -272,37 +363,72 @@ export const PaymentKycPage: React.FC = () => {
         {!loading && !error && kycUrl && (
           <div className="w-full h-[calc(100vh-65px)] relative bg-white">
             {!EASEBUZZ_KYC_EMBED ? (
-              /* Waiting for KYC... Refresh status screen (when EASEBUZZ_KYC_EMBED is false) */
-              <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-white text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-50 text-teal-700 border border-teal-200 mb-4 shadow-sm">
-                  <Clock className="h-8 w-8 animate-pulse text-teal-700" />
-                </div>
-                <h3 className="text-lg sm:text-xl font-bold text-foreground">
-                  Waiting for KYC...
-                </h3>
-                <p className="text-xs sm:text-sm text-muted-foreground max-w-md mt-2 leading-relaxed">
-                  We opened the Easebuzz verification form in a dedicated {isNative ? "app browser" : "window"}. Complete the identity and bank verification steps, then click <strong>Refresh status</strong>.
-                </p>
+              popupBlocked ? (
+                /* Popup Blocked Screen: Requirement 2 */
+                <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-white text-center">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50 text-amber-700 border border-amber-200 mb-4 shadow-sm">
+                    <AlertCircle className="h-8 w-8 text-amber-600" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-bold text-foreground">
+                    Your browser blocked the popup
+                  </h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground max-w-md mt-2 leading-relaxed">
+                    Your browser prevented the verification window from opening automatically. Click the button below to launch the Easebuzz KYC portal directly.
+                  </p>
 
-                <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-sm">
-                  <Button
-                    onClick={handleRefreshStatus}
-                    disabled={refreshing}
-                    className="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold text-sm h-11 px-6 gap-2 shadow-sm"
-                  >
-                    <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-                    {refreshing ? "Checking status…" : "Refresh status"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleManualOpen}
-                    className="w-full sm:w-auto h-11 text-sm px-5 gap-2"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    {isNative ? "Re-open verification" : "Re-open popup"}
-                  </Button>
+                  <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-sm">
+                    <Button
+                      onClick={handleDirectOpenKyc}
+                      disabled={!kycUrl}
+                      className="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold text-sm h-12 px-6 gap-2 shadow-sm"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      Open KYC
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleRefreshStatus}
+                      disabled={refreshing}
+                      className="w-full sm:w-auto h-12 text-sm px-5 gap-2"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                      Refresh status
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                /* Waiting for KYC... Screen (when window successfully opened) */
+                <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-white text-center">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-50 text-teal-700 border border-teal-200 mb-4 shadow-sm">
+                    <Clock className="h-8 w-8 animate-pulse text-teal-700" />
+                  </div>
+                  <h3 className="text-lg sm:text-xl font-bold text-foreground">
+                    Waiting for KYC...
+                  </h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground max-w-md mt-2 leading-relaxed">
+                    We opened the Easebuzz verification form in a dedicated {isNative ? "app browser" : "window"}. Complete the identity and bank verification steps, then click <strong>Refresh status</strong>.
+                  </p>
+
+                  <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-sm">
+                    <Button
+                      onClick={handleRefreshStatus}
+                      disabled={refreshing}
+                      className="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold text-sm h-11 px-6 gap-2 shadow-sm"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                      {refreshing ? "Checking status…" : "Refresh status"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleManualOpen}
+                      className="w-full sm:w-auto h-11 text-sm px-5 gap-2"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      {isNative ? "Re-open verification" : "Re-open popup"}
+                    </Button>
+                  </div>
+                </div>
+              )
             ) : (
               /* Embedded Iframe view (when EASEBUZZ_KYC_EMBED is true) */
               <>
