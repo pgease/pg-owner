@@ -168,8 +168,8 @@ const App = () => (
                         <Route path="/audit-logs" element={<ActivityLogsPage />} />
                         <Route path="/settings/activity-logs" element={<ActivityLogsPage />} />
                         <Route path="/settings" element={<SettingsPage />} />
-                        <Route path="/settings/payment-kyc" element={<PaymentKycPage />} />
-                        <Route path="/settings/gateway-kyc" element={<PaymentKycPage />} />
+                        <Route path="/settings/payment-kyc" element={<RequireOwner><PaymentKycPage /></RequireOwner>} />
+                        <Route path="/settings/gateway-kyc" element={<RequireOwner><PaymentKycPage /></RequireOwner>} />
                         <Route path="/settings/inventory" element={<InventoryManagementPage />} />
                         <Route path="/inventory" element={<InventoryManagementPage />} />
                         <Route path="/notifications" element={<NotificationsPage />} />
