@@ -12,6 +12,7 @@ import {
   Building,
   Check,
   Copy,
+  X,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
+import { PaymentKycModal } from "./PaymentKycModal";
 import {
   getPaymentSettings,
   startEasebuzzKyc,
@@ -34,6 +36,9 @@ export const EasebuzzGatewayCard = () => {
   const [settings, setSettings] = useState<PaymentSettings | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
+  const [kycModalOpen, setKycModalOpen] = useState(false);
+  const [kycUrl, setKycUrl] = useState<string>("");
+  const [kycError, setKycError] = useState<string | null>(null);
 
   const fetchSettings = async () => {
     setLoading(true);
@@ -56,31 +61,36 @@ export const EasebuzzGatewayCard = () => {
   }, []);
 
   const handleStartKyc = async () => {
-    // Open new tab synchronously to bypass browser popup blockers (OW-15)
-    const newWindow = window.open("about:blank", "_blank", "noopener,noreferrer");
     setActionLoading(true);
+    setKycError(null);
     try {
       const res = await startEasebuzzKyc();
-      toast({
-        title: "Easebuzz Onboarding Initiated",
-        description: "Opening Easebuzz KYC dashboard in a new tab...",
-      });
       if (res.kycUrl) {
-        if (newWindow) newWindow.location.href = res.kycUrl;
-        else window.open(res.kycUrl, "_blank", "noopener,noreferrer");
+        setKycUrl(res.kycUrl);
+        setKycModalOpen(true);
+        toast({
+          title: "KYC Portal Ready",
+          description: "Complete your verification form in the modal below.",
+        });
       } else {
-        if (newWindow) newWindow.close();
+        const msg = "Easebuzz did not return a valid KYC URL. Please try again.";
+        setKycError(msg);
+        toast({
+          title: "Could not initiate KYC",
+          description: msg,
+          variant: "destructive",
+        });
       }
       await fetchSettings();
     } catch (err: any) {
-      if (newWindow) newWindow.close();
       const status = err?.status;
       let desc = err?.message || "Failed to start sub-merchant onboarding.";
       if (status === 502) {
-        desc = "Couldn't open Easebuzz KYC. Try again in a minute.";
+        desc = "Easebuzz gateway returned a temporary error (502). Please try again in a minute.";
       } else if (status === 400) {
         desc = err?.message || "Missing mandatory profile details. Please update your PG and banking profile.";
       }
+      setKycError(desc);
       toast({
         title: "Could not initiate KYC",
         description: desc,
@@ -92,29 +102,34 @@ export const EasebuzzGatewayCard = () => {
   };
 
   const handleRefreshKyc = async () => {
-    // Open new tab synchronously to bypass browser popup blockers (OW-15)
-    const newWindow = window.open("about:blank", "_blank", "noopener,noreferrer");
     setActionLoading(true);
+    setKycError(null);
     try {
       const res = await refreshEasebuzzKycLink();
-      toast({
-        title: "KYC Link Refreshed",
-        description: "Opening Easebuzz verification link...",
-      });
       if (res.kycUrl) {
-        if (newWindow) newWindow.location.href = res.kycUrl;
-        else window.open(res.kycUrl, "_blank", "noopener,noreferrer");
+        setKycUrl(res.kycUrl);
+        setKycModalOpen(true);
+        toast({
+          title: "KYC Link Refreshed",
+          description: "Opening Easebuzz verification form...",
+        });
       } else {
-        if (newWindow) newWindow.close();
+        const msg = "Easebuzz did not return a valid KYC access link.";
+        setKycError(msg);
+        toast({
+          title: "Could not refresh KYC link",
+          description: msg,
+          variant: "destructive",
+        });
       }
       await fetchSettings();
     } catch (err: any) {
-      if (newWindow) newWindow.close();
       const status = err?.status;
       let desc = err?.message || "Failed to get fresh KYC link.";
       if (status === 502) {
-        desc = "Couldn't open Easebuzz KYC. Try again in a minute.";
+        desc = "Easebuzz gateway returned a temporary error (502). Please try again in a minute.";
       }
+      setKycError(desc);
       toast({
         title: "Could not refresh KYC link",
         description: desc,
@@ -218,6 +233,26 @@ export const EasebuzzGatewayCard = () => {
       </CardHeader>
 
       <CardContent className="space-y-5 pt-4">
+        {/* Inline KYC Error Banner */}
+        {kycError && (
+          <div className="rounded-xl border border-red-200 bg-red-50/80 p-3.5 flex items-start justify-between gap-2.5 text-xs text-red-900">
+            <div className="flex items-start gap-2.5">
+              <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold block">Could Not Initiate Easebuzz KYC</span>
+                <span className="font-mono text-[11px] leading-relaxed break-words">{kycError}</span>
+              </div>
+            </div>
+            <button
+              onClick={() => setKycError(null)}
+              className="text-red-500 hover:text-red-800 p-0.5 rounded"
+              title="Dismiss error"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* Plan Gating Notice */}
         {!loading && !subAccess.isLoading && !isPro && (
           <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -408,6 +443,14 @@ export const EasebuzzGatewayCard = () => {
           </div>
         </div>
       </CardContent>
+
+      {/* In-portal Full Screen KYC Verification Modal */}
+      <PaymentKycModal
+        isOpen={kycModalOpen}
+        onClose={() => setKycModalOpen(false)}
+        kycUrl={kycUrl}
+        onRefreshStatus={fetchSettings}
+      />
     </Card>
   );
 };

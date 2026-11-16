@@ -49,6 +49,7 @@ import { EaseBuddyAI } from "./components/common/EaseBuddyAI";
 import ActivityLogsPage from "./pages/ActivityLogsPage";
 import NoticePeriodPage from "./pages/tenants/NoticePeriodPage";
 import BankAccountPage from "./pages/property/BankAccountPage";
+import { PaymentKycPage } from "./pages/property/PaymentKycPage";
 import AmenitiesPage from "./pages/property/AmenitiesPage";
 import RestrictionsPage from "./pages/property/RestrictionsPage";
 import WhatsAppRedirectPage from "./pages/WhatsAppRedirectPage";
@@ -167,6 +168,8 @@ const App = () => (
                         <Route path="/audit-logs" element={<ActivityLogsPage />} />
                         <Route path="/settings/activity-logs" element={<ActivityLogsPage />} />
                         <Route path="/settings" element={<SettingsPage />} />
+                        <Route path="/settings/payment-kyc" element={<PaymentKycPage />} />
+                        <Route path="/settings/gateway-kyc" element={<PaymentKycPage />} />
                         <Route path="/settings/inventory" element={<InventoryManagementPage />} />
                         <Route path="/inventory" element={<InventoryManagementPage />} />
                         <Route path="/notifications" element={<NotificationsPage />} />
