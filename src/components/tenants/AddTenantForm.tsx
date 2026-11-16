@@ -876,6 +876,15 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
       const formattedCompanyAddress = formatAddress6(companyAddress6);
       const formattedGuardianAddress = formatAddress6(guardianAddress6);
 
+      const toAddressObject = (addr: Address6Value) => ({
+        houseFlat: addr.houseNumber.trim() || undefined,
+        streetArea: addr.street.trim() || undefined,
+        landmark: addr.landmark?.trim() || undefined,
+        city: addr.city.trim() || undefined,
+        state: addr.state.trim() || undefined,
+        pincode: addr.pincode.trim() || undefined,
+      });
+
       const addedTenant = await addTenant(propertyId, {
         name: name.trim(),
         phone: phone.startsWith("+") ? phone : `+91${phone.replace(/\D/g, "")}`,
@@ -900,6 +909,10 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
         permanentAddress: formattedPermanentAddress || undefined,
         companyAddress: formattedCompanyAddress || undefined,
         guardianAddress: formattedGuardianAddress || undefined,
+        permAddress: toAddressObject(permAddress),
+        currAddress: toAddressObject(sameAsPermanent ? permAddress : currAddress),
+        companyAddress6: toAddressObject(companyAddress6),
+        guardianAddress6: toAddressObject(guardianAddress6),
         // Normalized 6-part address fields (Fix 4)
         permHouseNumber: permAddress.houseNumber.trim() || undefined,
         permStreet: permAddress.street.trim() || undefined,

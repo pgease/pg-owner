@@ -9,11 +9,42 @@ export function MobileTopBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { unreadCount } = useOwnerNotifications();
-  const { isPro, isLite } = useEntitlements();
+  const { isPro, isLite, isTrial, isExpired, daysRemaining, isLoading } = useEntitlements();
   const title = getMobilePageTitle(location.pathname);
   const showBack = !isMobileTabRoot(location.pathname);
 
-  const planBadge = isPro ? "Pro" : isLite ? "Lite" : "Free";
+  const planChip = (() => {
+    if (isLoading) return null;
+    if (isExpired) {
+      return {
+        label: "Expired",
+        className: "bg-rose-100 text-rose-700 border border-rose-300",
+      };
+    }
+    const days = Math.max(0, daysRemaining);
+    if (isTrial) {
+      return {
+        label: `Trial · ${days} ${days === 1 ? "day" : "days"}`,
+        className: "bg-amber-100 text-amber-800 border border-amber-300",
+      };
+    }
+    if (isPro) {
+      return {
+        label: "Pro",
+        className: "bg-amber-100 text-amber-800 border border-amber-300",
+      };
+    }
+    if (isLite) {
+      return {
+        label: "Lite",
+        className: "bg-teal-100 text-teal-800 border border-teal-300",
+      };
+    }
+    return {
+      label: "Free",
+      className: "bg-slate-100 text-slate-600 border border-slate-300",
+    };
+  })();
 
   const goBack = () => {
     const idx = typeof window !== "undefined" ? window.history.state?.idx : undefined;
@@ -44,18 +75,16 @@ export function MobileTopBar() {
         )}
         <div className="absolute inset-x-14 flex items-center justify-center gap-1.5 pointer-events-none">
           <h1 className="truncate text-[16px] font-semibold text-[#18212B]">{title}</h1>
-          <span
-            className={cn(
-              "px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0",
-              planBadge === "Pro"
-                ? "bg-amber-100 text-amber-800 border border-amber-300"
-                : planBadge === "Lite"
-                ? "bg-teal-100 text-teal-800 border border-teal-300"
-                : "bg-slate-100 text-slate-600 border border-slate-300"
-            )}
-          >
-            {planBadge}
-          </span>
+          {planChip && (
+            <span
+              className={cn(
+                "px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0",
+                planChip.className
+              )}
+            >
+              {planChip.label}
+            </span>
+          )}
         </div>
         <button
           type="button"
