@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { cleanPhoneInput } from "@/lib/utils";
 import { tenantStayStatus } from "@/lib/tenantDisplay";
+import { AddressFields6, Address6Value, formatAddress6 } from "@/components/common/AddressFields6";
 
 function idStr(id: unknown): string {
   if (id === undefined || id === null) return "";
@@ -101,17 +102,11 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
   const [rentTouched, setRentTouched] = useState(false);
   const [moveInTouched, setMoveInTouched] = useState(false);
 
-  // Emergency Contact & ID Verification States (OW-06)
+  // Emergency Contact & Vehicle States (OW-06, Fix 6, Fix 7)
   const [emergencyContactName, setEmergencyContactName] = useState("");
   const [emergencyContactPhone, setEmergencyContactPhone] = useState("");
   const [emergencyContactRelation, setEmergencyContactRelation] = useState("Parent");
   const [sameAsGuardianForEmergency, setSameAsGuardianForEmergency] = useState(false);
-  const [idType, setIdType] = useState("Aadhaar");
-  const [idNumber, setIdNumber] = useState("");
-  const [idFrontUrl, setIdFrontUrl] = useState("");
-  const [idBackUrl, setIdBackUrl] = useState("");
-  const [isUploadingIdFront, setIsUploadingIdFront] = useState(false);
-  const [isUploadingIdBack, setIsUploadingIdBack] = useState(false);
   const [vehicleNumber, setVehicleNumber] = useState("");
 
   // Personal Details
@@ -123,58 +118,46 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
   const [gender, setGender] = useState("");
   const [bloodGroup, setBloodGroup] = useState("");
   
-  // Structured Permanent Address (8 fields per spec)
-  const [permHouseNumber, setPermHouseNumber] = useState("");
-  const [permStreet, setPermStreet] = useState("");
-  const [permLocality, setPermLocality] = useState("");
-  const [permCity, setPermCity] = useState("");
-  const [permDistrict, setPermDistrict] = useState("");
-  const [permState, setPermState] = useState("");
-  const [permCountry, setPermCountry] = useState("India");
-  const [permPincode, setPermPincode] = useState("");
+  // 6-Field Normalized Addresses (Fix 4)
+  const [permAddress, setPermAddress] = useState<Address6Value>({
+    houseNumber: "",
+    street: "",
+    landmark: "",
+    city: "",
+    state: "",
+    pincode: "",
+  });
 
-  // Structured Current Address (8 fields per spec)
-  const [currHouseNumber, setCurrHouseNumber] = useState("");
-  const [currStreet, setCurrStreet] = useState("");
-  const [currLocality, setCurrLocality] = useState("");
-  const [currCity, setCurrCity] = useState("");
-  const [currDistrict, setCurrDistrict] = useState("");
-  const [currState, setCurrState] = useState("");
-  const [currCountry, setCurrCountry] = useState("India");
-  const [currPincode, setCurrPincode] = useState("");
+  const [currAddress, setCurrAddress] = useState<Address6Value>({
+    houseNumber: "",
+    street: "",
+    landmark: "",
+    city: "",
+    state: "",
+    pincode: "",
+  });
   const [sameAsPermanent, setSameAsPermanent] = useState(false);
-
-  const [nationality, setNationality] = useState("Indian");
 
   // Sync Current Address when "sameAsPermanent" is checked
   useEffect(() => {
     if (sameAsPermanent) {
-      setCurrHouseNumber(permHouseNumber);
-      setCurrStreet(permStreet);
-      setCurrLocality(permLocality);
-      setCurrCity(permCity);
-      setCurrDistrict(permDistrict);
-      setCurrState(permState);
-      setCurrCountry(permCountry);
-      setCurrPincode(permPincode);
+      setCurrAddress({ ...permAddress });
     }
-  }, [
-    sameAsPermanent,
-    permHouseNumber,
-    permStreet,
-    permLocality,
-    permCity,
-    permDistrict,
-    permState,
-    permCountry,
-    permPincode,
-  ]);
+  }, [sameAsPermanent, permAddress]);
 
-  // GST Details
+  const [nationality, setNationality] = useState("Indian");
+
+  // GST & Business Details
   const [gstNumber, setGstNumber] = useState("");
   const [panNumber, setPanNumber] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [companyAddress, setCompanyAddress] = useState("");
+  const [companyAddress6, setCompanyAddress6] = useState<Address6Value>({
+    houseNumber: "",
+    street: "",
+    landmark: "",
+    city: "",
+    state: "",
+    pincode: "",
+  });
   const [businessOwnerName, setBusinessOwnerName] = useState("");
 
   // Parent Details
@@ -188,7 +171,14 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
   // Local Guardian Details
   const [guardianName, setGuardianName] = useState("");
   const [guardianPhone, setGuardianPhone] = useState("");
-  const [guardianAddress, setGuardianAddress] = useState("");
+  const [guardianAddress6, setGuardianAddress6] = useState<Address6Value>({
+    houseNumber: "",
+    street: "",
+    landmark: "",
+    city: "",
+    state: "",
+    pincode: "",
+  });
 
   // Bank Details
   const [ownerBankAccounts, setOwnerBankAccounts] = useState<SettlementBankAccountItem[]>([]);
@@ -248,12 +238,12 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
   const [stayType, setStayType] = useState("Long Stay");
   const [moveInDate, setMoveInDate] = useState(new Date().toISOString().split("T")[0]);
   const [moveOutDate, setMoveOutDate] = useState("");
-  const [lockInPeriod, setLockInPeriod] = useState("0");
+  const [lockInPeriod, setLockInPeriod] = useState("3");
   const [noticePeriod, setNoticePeriod] = useState("30");
   const [agreementPeriod, setAgreementPeriod] = useState("11 Months");
   const [fixedRent, setFixedRent] = useState("");
   const [rentalFrequency, setRentalFrequency] = useState("Monthly");
-  const [rentDueDate, setRentDueDate] = useState("5th");
+  const [rentDueDate, setRentDueDate] = useState<number>(5);
   const [securityDeposit, setSecurityDeposit] = useState("");
   const [electricityBill, setElectricityBill] = useState("0");
   const [electricityMeter, setElectricityMeter] = useState(false);
@@ -278,26 +268,26 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
 
   const [showOtherDues, setShowOtherDues] = useState(false);
   const [duesSearch, setDuesSearch] = useState("");
-  const [otherDues, setOtherDues] = useState<Array<{ id: string; label: string; mode: "consumption" | "fixed"; amount: string }>>([
-    { id: "rent", label: "Rent", mode: "consumption", amount: "" },
-    { id: "deposit", label: "Security Deposit", mode: "consumption", amount: "" },
-    { id: "electricity_meter", label: "Electricity Meter", mode: "consumption", amount: "" },
-    { id: "kyc", label: "KYC Verification", mode: "consumption", amount: "" },
-    { id: "mess", label: "Mess", mode: "consumption", amount: "" },
-    { id: "electricity_bill", label: "Electricity Bill", mode: "consumption", amount: "" },
-    { id: "fine", label: "Manual Late Fine", mode: "consumption", amount: "" },
-    { id: "wifi", label: "Wifi", mode: "consumption", amount: "" },
-    { id: "maintenance", label: "Maintenance Bill", mode: "consumption", amount: "" },
-    { id: "laundry", label: "Laundry Bill", mode: "consumption", amount: "" },
-    { id: "agreement_charges", label: "Rental Agreement Charges", mode: "consumption", amount: "" },
-    { id: "pkg_3", label: "3 Months Rent Package", mode: "consumption", amount: "" },
-    { id: "pkg_6", label: "6 Months Rent Package", mode: "consumption", amount: "" },
-    { id: "pkg_9", label: "9 Months Rent Package", mode: "consumption", amount: "" },
-    { id: "pkg_12", label: "Yearly Rent Package", mode: "consumption", amount: "" },
-    { id: "pkg_weekly", label: "Weekly Rent Package", mode: "consumption", amount: "" },
-    { id: "pkg_daily", label: "Daily Rent Package", mode: "consumption", amount: "" },
-    { id: "joining_fee", label: "Joining Fee", mode: "consumption", amount: "" },
-    { id: "auto_joining_fee", label: "Automatic Joining Fee", mode: "consumption", amount: "" },
+  const [otherDues, setOtherDues] = useState<Array<{ id: string; label: string; mode: "consumption" | "fixed"; amount: string; collected?: string }>>([
+    { id: "rent", label: "Rent", mode: "consumption", amount: "", collected: "" },
+    { id: "deposit", label: "Security Deposit", mode: "consumption", amount: "", collected: "" },
+    { id: "electricity_meter", label: "Electricity Meter", mode: "consumption", amount: "", collected: "" },
+    { id: "kyc", label: "KYC Verification", mode: "consumption", amount: "", collected: "" },
+    { id: "mess", label: "Mess", mode: "consumption", amount: "", collected: "" },
+    { id: "electricity_bill", label: "Electricity Bill", mode: "consumption", amount: "", collected: "" },
+    { id: "fine", label: "Manual Late Fine", mode: "consumption", amount: "", collected: "" },
+    { id: "wifi", label: "Wifi", mode: "consumption", amount: "", collected: "" },
+    { id: "maintenance", label: "Maintenance Bill", mode: "consumption", amount: "", collected: "" },
+    { id: "laundry", label: "Laundry Bill", mode: "consumption", amount: "", collected: "" },
+    { id: "agreement_charges", label: "Rental Agreement Charges", mode: "consumption", amount: "", collected: "" },
+    { id: "pkg_3", label: "3 Months Rent Package", mode: "consumption", amount: "", collected: "" },
+    { id: "pkg_6", label: "6 Months Rent Package", mode: "consumption", amount: "", collected: "" },
+    { id: "pkg_9", label: "9 Months Rent Package", mode: "consumption", amount: "", collected: "" },
+    { id: "pkg_12", label: "Yearly Rent Package", mode: "consumption", amount: "", collected: "" },
+    { id: "pkg_weekly", label: "Weekly Rent Package", mode: "consumption", amount: "", collected: "" },
+    { id: "pkg_daily", label: "Daily Rent Package", mode: "consumption", amount: "", collected: "" },
+    { id: "joining_fee", label: "Joining Fee", mode: "consumption", amount: "", collected: "" },
+    { id: "auto_joining_fee", label: "Automatic Joining Fee", mode: "consumption", amount: "", collected: "" },
     { id: "auto_moveout_charges", label: "Automatic Move out Charges", mode: "consumption", amount: "" },
     { id: "others", label: "Others", mode: "consumption", amount: "" },
   ]);
@@ -641,28 +631,6 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
     }
   };
 
-  const handleIdUpload = async (file: File, side: "front" | "back") => {
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "File too large", description: "Document size must be ≤ 5MB.", variant: "destructive" });
-      return;
-    }
-    try {
-      if (side === "front") setIsUploadingIdFront(true);
-      else setIsUploadingIdBack(true);
-      const url = await uploadFilePresigned(file, "tenant-ids");
-      if (url) {
-        if (side === "front") setIdFrontUrl(url);
-        else setIdBackUrl(url);
-        toast({ title: "Document Uploaded", description: `ID ${side} copy uploaded successfully.` });
-      }
-    } catch (err: any) {
-      toast({ title: "Upload Failed", description: err.message || "Could not upload document", variant: "destructive" });
-    } finally {
-      if (side === "front") setIsUploadingIdFront(false);
-      else setIsUploadingIdBack(false);
-    }
-  };
-
   // Profile completion score (OW-06)
   const profileCompletion = useMemo(() => {
     let score = 0;
@@ -674,9 +642,9 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
     if (photoUrl) score += 10;
     if (email.trim()) score += 5;
     if (guardianName.trim() || fatherName.trim() || emergencyContactName.trim()) score += 10;
-    if (idNumber.trim() || idFrontUrl) score += 10;
+    if (vehicleNumber.trim()) score += 10;
     return Math.min(100, score);
-  }, [name, phone, effectiveRoomId, bedNumber, fixedRent, photoUrl, email, guardianName, fatherName, emergencyContactName, idNumber, idFrontUrl]);
+  }, [name, phone, effectiveRoomId, bedNumber, fixedRent, photoUrl, email, guardianName, fatherName, emergencyContactName, vehicleNumber]);
 
   // Validation rules (OW-05)
   const phoneValidationError = useMemo(() => {
@@ -692,6 +660,33 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
     }
     return null;
   }, [phone, duplicatePhoneTenant]);
+
+  const validate10DigitPhone = (num?: string): string | null => {
+    if (!num || !num.trim()) return null;
+    const clean = num.replace(/\D/g, "").slice(-10);
+    if (clean.length !== 10 || !/^[6-9]/.test(clean)) {
+      return "Enter a valid 10-digit mobile number starting with 6-9";
+    }
+    return null;
+  };
+
+  const fatherPhoneError = useMemo(() => validate10DigitPhone(fatherPhone), [fatherPhone]);
+  const motherPhoneError = useMemo(() => validate10DigitPhone(motherPhone), [motherPhone]);
+  const emergencyPhoneError = useMemo(() => validate10DigitPhone(emergencyContactPhone), [emergencyContactPhone]);
+
+  const emergencyMatchesTenant = useMemo(() => {
+    const tClean = phone.replace(/\D/g, "").slice(-10);
+    const eClean = emergencyContactPhone.replace(/\D/g, "").slice(-10);
+    return Boolean(tClean && eClean && tClean === eClean);
+  }, [phone, emergencyContactPhone]);
+
+  const panValidationError = useMemo(() => {
+    if (!panNumber || !panNumber.trim()) return null;
+    if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panNumber.trim())) {
+      return "PAN must be in valid format (e.g. ABCDE1234F).";
+    }
+    return null;
+  }, [panNumber]);
 
   const guardianPhoneValidationError = useMemo(() => {
     const tDigits = phone.replace(/\D/g, "").slice(-10);
@@ -711,6 +706,11 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
     if (!name.trim()) return "Enter tenant full name.";
     if (phoneValidationError) return phoneValidationError;
     if (guardianPhoneValidationError) return guardianPhoneValidationError;
+    if (panValidationError) return panValidationError;
+    if (fatherPhoneError) return `Father Phone: ${fatherPhoneError}`;
+    if (motherPhoneError) return `Mother Phone: ${motherPhoneError}`;
+    if (emergencyPhoneError) return `Emergency Phone: ${emergencyPhoneError}`;
+    if (emergencyMatchesTenant) return "Emergency contact number cannot equal tenant's mobile number.";
     if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       return "Enter a valid email address.";
     }
@@ -723,6 +723,9 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
     if (!moveInDate) return "Enter move-in / joining date.";
     const rentNum = parseInt(fixedRent, 10);
     if (isNaN(rentNum) || rentNum <= 0) return "Enter monthly fixed rent amount (must be greater than 0).";
+    if (!lockInPeriod || lockInPeriod.trim() === "") return "Lock-in period is required.";
+    if (!noticePeriod || noticePeriod.trim() === "") return "Notice period is required.";
+    if (!agreementPeriod || agreementPeriod.trim() === "") return "Agreement period is required.";
     if (electricityMeter) {
       if (openingMeterReading && parseFloat(openingMeterReading) < 0) {
         return "Opening meter reading cannot be negative.";
@@ -731,6 +734,32 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
         return "Electricity rate per unit must be greater than 0.";
       }
     }
+    return null;
+  };
+
+  const getStepThreeError = (): string | null => {
+    const rentDue = parseInt(rentDueAmt, 10) || 0;
+    const rentColl = parseInt(rentCollAmt, 10) || 0;
+    if (rentColl > rentDue) return "Rent collected amount cannot exceed due amount.";
+
+    const depDue = parseInt(depositDueAmt, 10) || 0;
+    const depColl = parseInt(depositCollAmt, 10) || 0;
+    if (depColl > depDue) return "Security deposit collected amount cannot exceed due amount.";
+
+    const joinDue = parseInt(joiningDueAmt, 10) || 0;
+    const joinColl = parseInt(joiningCollAmt, 10) || 0;
+    if (joinColl > joinDue) return "Joining fee collected amount cannot exceed due amount.";
+
+    for (const d of otherDues) {
+      if (d.mode === "fixed") {
+        const dDue = parseInt(d.amount, 10) || 0;
+        const dColl = parseInt(d.collected || "0", 10) || 0;
+        if (dColl > dDue) {
+          return `${d.label}: collected amount cannot exceed due amount.`;
+        }
+      }
+    }
+
     return null;
   };
 
@@ -784,6 +813,12 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
       toast({ title: "Cannot Add Tenant", description: err2, variant: "destructive" });
       return;
     }
+    const err3 = getStepThreeError();
+    if (err3) {
+      setStep(3);
+      toast({ title: "Cannot Add Tenant", description: err3, variant: "destructive" });
+      return;
+    }
 
     try {
       setSubmitting(true);
@@ -812,7 +847,7 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
           rentalTerms: {
             fixedRent: parseInt(fixedRent, 10) || 0,
             rentalFrequency,
-            addRentOn: rentDueDate,
+            addRentOn: `${rentDueDate}${rentDueDate === 1 ? "st" : rentDueDate === 2 ? "nd" : rentDueDate === 3 ? "rd" : "th"}`,
             securityDeposit: parseInt(securityDeposit, 10) || 0,
             electricityMeter,
           }
@@ -829,37 +864,17 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
               dueType: d.label,
               mode: d.mode,
               amount: d.mode === "fixed" ? parseInt(d.amount, 10) || 0 : null,
+              collection: d.mode === "fixed" ? parseInt(d.collected || "0", 10) || 0 : null,
             }))
         }
       };
 
-      const formattedPermanentAddress = [
-        permHouseNumber,
-        permStreet,
-        permLocality,
-        permCity,
-        permDistrict,
-        permState,
-        permCountry,
-        permPincode,
-      ]
-        .filter(Boolean)
-        .join(", ");
-
+      const formattedPermanentAddress = formatAddress6(permAddress);
       const formattedCurrentAddress = sameAsPermanent
         ? formattedPermanentAddress
-        : [
-            currHouseNumber,
-            currStreet,
-            currLocality,
-            currCity,
-            currDistrict,
-            currState,
-            currCountry,
-            currPincode,
-          ]
-            .filter(Boolean)
-            .join(", ");
+        : formatAddress6(currAddress);
+      const formattedCompanyAddress = formatAddress6(companyAddress6);
+      const formattedGuardianAddress = formatAddress6(guardianAddress6);
 
       const addedTenant = await addTenant(propertyId, {
         name: name.trim(),
@@ -870,7 +885,7 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
         bedNumber: parseInt(bedNumber, 10) || 1,
         monthlyRent: parseInt(fixedRent, 10) || 0,
         securityDeposit: parseInt(securityDeposit, 10) || 0,
-        rentDueDate: parseInt(rentDueDate.replace(/\D/g, "")) || 1,
+        rentDueDate: Number(rentDueDate) || 1,
         joiningDate: moveInDate,
         electricityBill: parseInt(electricityBill, 10) || 0,
         email: email.trim() || undefined,
@@ -883,23 +898,23 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
         foodPreferences: foodPreference.trim() || undefined,
         currentAddress: formattedCurrentAddress || undefined,
         permanentAddress: formattedPermanentAddress || undefined,
-        // Discrete 8-part address fields
-        permHouseNumber: permHouseNumber.trim() || undefined,
-        permStreet: permStreet.trim() || undefined,
-        permLocality: permLocality.trim() || undefined,
-        permCity: permCity.trim() || undefined,
-        permDistrict: permDistrict.trim() || undefined,
-        permState: permState.trim() || undefined,
-        permCountry: permCountry.trim() || "India",
-        permPincode: permPincode.trim() || undefined,
-        currHouseNumber: (sameAsPermanent ? permHouseNumber : currHouseNumber).trim() || undefined,
-        currStreet: (sameAsPermanent ? permStreet : currStreet).trim() || undefined,
-        currLocality: (sameAsPermanent ? permLocality : currLocality).trim() || undefined,
-        currCity: (sameAsPermanent ? permCity : currCity).trim() || undefined,
-        currDistrict: (sameAsPermanent ? permDistrict : currDistrict).trim() || undefined,
-        currState: (sameAsPermanent ? permState : currState).trim() || undefined,
-        currCountry: (sameAsPermanent ? permCountry : currCountry).trim() || "India",
-        currPincode: (sameAsPermanent ? permPincode : currPincode).trim() || undefined,
+        companyAddress: formattedCompanyAddress || undefined,
+        guardianAddress: formattedGuardianAddress || undefined,
+        // Normalized 6-part address fields (Fix 4)
+        permHouseNumber: permAddress.houseNumber.trim() || undefined,
+        permStreet: permAddress.street.trim() || undefined,
+        permLocality: permAddress.landmark?.trim() || undefined,
+        permCity: permAddress.city.trim() || undefined,
+        permState: permAddress.state.trim() || undefined,
+        permCountry: "India",
+        permPincode: permAddress.pincode.trim() || undefined,
+        currHouseNumber: (sameAsPermanent ? permAddress : currAddress).houseNumber.trim() || undefined,
+        currStreet: (sameAsPermanent ? permAddress : currAddress).street.trim() || undefined,
+        currLocality: (sameAsPermanent ? permAddress : currAddress).landmark?.trim() || undefined,
+        currCity: (sameAsPermanent ? permAddress : currAddress).city.trim() || undefined,
+        currState: (sameAsPermanent ? permAddress : currAddress).state.trim() || undefined,
+        currCountry: "India",
+        currPincode: (sameAsPermanent ? permAddress : currAddress).pincode.trim() || undefined,
         // Rent Engine Invoicing Rules
         billingStartDate: billingStartDate || moveInDate,
         gracePeriodDays: parseInt(gracePeriodDays, 10) || 0,
@@ -907,7 +922,8 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
         nationality: nationality || "India",
         remarks: remarks.trim() || undefined,
         gstin: gstNumber.trim() || undefined,
-        businessName: companyName.trim() || undefined,
+        companyName: officeOrCollegeName.trim() || undefined,
+        businessName: officeOrCollegeName.trim() || undefined,
         fatherName: fatherName.trim() || undefined,
         fatherContact: fatherPhone ? `+91${fatherPhone.replace(/\D/g, "")}` : undefined,
         fatherPhone: fatherPhone ? `+91${fatherPhone.replace(/\D/g, "")}` : undefined,
@@ -919,7 +935,6 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
         guardianName: guardianName.trim() || undefined,
         guardianContact: guardianPhone ? `+91${guardianPhone.replace(/\D/g, "")}` : undefined,
         guardianPhone: guardianPhone ? `+91${guardianPhone.replace(/\D/g, "")}` : undefined,
-        guardianAddress: guardianAddress.trim() || undefined,
         bankAccountId: selectedBankAccountId && selectedBankAccountId !== "custom" ? selectedBankAccountId : undefined,
         bankName: bankName.trim() || undefined,
         bankAccountHolderName: name.trim() || undefined,
@@ -941,10 +956,6 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
         emergencyContactName: emergencyContactName.trim() || undefined,
         emergencyContactPhone: emergencyContactPhone ? `+91${emergencyContactPhone.replace(/\D/g, "")}` : undefined,
         emergencyContactRelation: emergencyContactRelation || undefined,
-        idType: idType || undefined,
-        idNumber: idNumber.trim() || undefined,
-        idFrontUrl: idFrontUrl || undefined,
-        idBackUrl: idBackUrl || undefined,
         vehicleNumber: vehicleNumber.trim() || undefined,
         meterNumber: electricityMeter ? meterNumber.trim() || undefined : undefined,
         openingMeterReading: electricityMeter && openingMeterReading ? parseFloat(openingMeterReading) : undefined,
@@ -976,7 +987,7 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
           bedNumber: parseInt(bedNumber, 10) || 1,
           monthlyRent: parseInt(fixedRent, 10) || 0,
           securityDeposit: parseInt(securityDeposit, 10) || 0,
-          rentDueDate: parseInt(rentDueDate.replace(/\D/g, "")) || 1,
+          rentDueDate: Number(rentDueDate) || 1,
           joiningDate: moveInDate,
           electricityBill: parseInt(electricityBill, 10) || 0,
           name: name.trim(),
@@ -998,27 +1009,26 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
           bloodGroup: bloodGroup.trim() || undefined,
           currentAddress: formattedCurrentAddress || undefined,
           permanentAddress: formattedPermanentAddress || undefined,
-          permHouseNumber: permHouseNumber.trim() || undefined,
-          permStreet: permStreet.trim() || undefined,
-          permLocality: permLocality.trim() || undefined,
-          permCity: permCity.trim() || undefined,
-          permDistrict: permDistrict.trim() || undefined,
-          permState: permState.trim() || undefined,
-          permCountry: permCountry.trim() || "India",
-          permPincode: permPincode.trim() || undefined,
-          currHouseNumber: (sameAsPermanent ? permHouseNumber : currHouseNumber).trim() || undefined,
-          currStreet: (sameAsPermanent ? permStreet : currStreet).trim() || undefined,
-          currLocality: (sameAsPermanent ? permLocality : currLocality).trim() || undefined,
-          currCity: (sameAsPermanent ? permCity : currCity).trim() || undefined,
-          currDistrict: (sameAsPermanent ? permDistrict : currDistrict).trim() || undefined,
-          currState: (sameAsPermanent ? permState : currState).trim() || undefined,
-          currCountry: (sameAsPermanent ? permCountry : currCountry).trim() || "India",
-          currPincode: (sameAsPermanent ? permPincode : currPincode).trim() || undefined,
+          companyAddress: formattedCompanyAddress || undefined,
+          guardianAddress: formattedGuardianAddress || undefined,
+          permHouseNumber: permAddress.houseNumber.trim() || undefined,
+          permStreet: permAddress.street.trim() || undefined,
+          permLocality: permAddress.landmark?.trim() || undefined,
+          permCity: permAddress.city.trim() || undefined,
+          permState: permAddress.state.trim() || undefined,
+          permCountry: "India",
+          permPincode: permAddress.pincode.trim() || undefined,
+          currHouseNumber: (sameAsPermanent ? permAddress : currAddress).houseNumber.trim() || undefined,
+          currStreet: (sameAsPermanent ? permAddress : currAddress).street.trim() || undefined,
+          currLocality: (sameAsPermanent ? permAddress : currAddress).landmark?.trim() || undefined,
+          currCity: (sameAsPermanent ? permAddress : currAddress).city.trim() || undefined,
+          currState: (sameAsPermanent ? permAddress : currAddress).state.trim() || undefined,
+          currCountry: "India",
+          currPincode: (sameAsPermanent ? permAddress : currAddress).pincode.trim() || undefined,
           nationality: nationality.trim() || undefined,
           gstNumber: gstNumber.trim() || undefined,
           panNumber: panNumber.trim() || undefined,
-          companyName: companyName.trim() || undefined,
-          companyAddress: companyAddress.trim() || undefined,
+          companyName: officeOrCollegeName.trim() || undefined,
           businessOwnerName: businessOwnerName.trim() || undefined,
           fatherName: fatherName.trim() || undefined,
           fatherPhone: fatherPhone.trim() || undefined,
@@ -1028,7 +1038,6 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
           motherOccupation: motherOccupation.trim() || undefined,
           guardianName: guardianName.trim() || undefined,
           guardianPhone: guardianPhone.trim() || undefined,
-          guardianAddress: guardianAddress.trim() || undefined,
           bankAccountId: selectedBankAccountId && selectedBankAccountId !== "custom" ? selectedBankAccountId : undefined,
           bankName: bankName.trim() || undefined,
           bankAccountNumber: accountNumber.trim() || undefined,
@@ -1043,10 +1052,6 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
           emergencyContactName: emergencyContactName.trim() || undefined,
           emergencyContactPhone: emergencyContactPhone ? `+91${emergencyContactPhone.replace(/\D/g, "")}` : undefined,
           emergencyContactRelation: emergencyContactRelation || undefined,
-          idType: idType || undefined,
-          idNumber: idNumber.trim() || undefined,
-          idFrontUrl: idFrontUrl || undefined,
-          idBackUrl: idBackUrl || undefined,
           vehicleNumber: vehicleNumber.trim() || undefined,
           meterNumber: electricityMeter ? meterNumber.trim() || undefined : undefined,
           openingMeterReading: electricityMeter && openingMeterReading ? parseFloat(openingMeterReading) : undefined,
@@ -1674,27 +1679,18 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                           </Select>
                         </div>
 
-                        {/* Structured Permanent Address (8 Discrete Fields) */}
+                        {/* Structured Permanent Address (6 Fields) */}
                         <div className="space-y-2 border-t pt-3">
-                          <div className="flex items-center justify-between">
-                            <Label className="font-bold text-xs uppercase text-teal-700">Permanent Address (8 Discrete Fields)</Label>
-                            <span className="text-[10px] text-muted-foreground">Auto-normalized</span>
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <Input placeholder="House / Flat No." value={permHouseNumber} onChange={(e) => setPermHouseNumber(e.target.value)} />
-                            <Input placeholder="Street / Road" value={permStreet} onChange={(e) => setPermStreet(e.target.value)} />
-                            <Input placeholder="Locality / Area" value={permLocality} onChange={(e) => setPermLocality(e.target.value)} />
-                            <Input placeholder="City" value={permCity} onChange={(e) => setPermCity(e.target.value)} />
-                            <Input placeholder="District" value={permDistrict} onChange={(e) => setPermDistrict(e.target.value)} />
-                            <Input placeholder="State" value={permState} onChange={(e) => setPermState(e.target.value)} />
-                            <Input placeholder="Country" value={permCountry} onChange={(e) => setPermCountry(e.target.value)} />
-                            <Input placeholder="PIN Code (6 digits)" maxLength={6} value={permPincode} onChange={(e) => setPermPincode(e.target.value.replace(/\D/g, "").slice(0, 6))} />
-                          </div>
+                          <AddressFields6
+                            label="Permanent Address"
+                            value={permAddress}
+                            onChange={setPermAddress}
+                          />
                         </div>
 
-                        {/* Structured Current Address (8 Discrete Fields) */}
+                        {/* Structured Current Address (6 Fields) */}
                         <div className="space-y-2 border-t pt-3">
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between mb-1">
                             <Label className="font-bold text-xs uppercase text-teal-700">Current Address</Label>
                             <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
                               <input
@@ -1707,16 +1703,12 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                             </label>
                           </div>
                           {!sameAsPermanent ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              <Input placeholder="House / Flat No." value={currHouseNumber} onChange={(e) => setCurrHouseNumber(e.target.value)} />
-                              <Input placeholder="Street / Road" value={currStreet} onChange={(e) => setCurrStreet(e.target.value)} />
-                              <Input placeholder="Locality / Area" value={currLocality} onChange={(e) => setCurrLocality(e.target.value)} />
-                              <Input placeholder="City" value={currCity} onChange={(e) => setCurrCity(e.target.value)} />
-                              <Input placeholder="District" value={currDistrict} onChange={(e) => setCurrDistrict(e.target.value)} />
-                              <Input placeholder="State" value={currState} onChange={(e) => setCurrState(e.target.value)} />
-                              <Input placeholder="Country" value={currCountry} onChange={(e) => setCurrCountry(e.target.value)} />
-                              <Input placeholder="PIN Code (6 digits)" maxLength={6} value={currPincode} onChange={(e) => setCurrPincode(e.target.value.replace(/\D/g, "").slice(0, 6))} />
-                            </div>
+                            <AddressFields6
+                              label="Current Address"
+                              value={currAddress}
+                              onChange={setCurrAddress}
+                              disabled={sameAsPermanent}
+                            />
                           ) : (
                             <p className="text-xs text-muted-foreground bg-muted p-2 rounded">
                               Current address set same as permanent address.
@@ -1751,15 +1743,23 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                         </div>
                         <div className="space-y-1">
                           <Label>PAN Number</Label>
-                          <Input placeholder="Enter PAN number" value={panNumber} onChange={(e) => setPanNumber(e.target.value)} />
+                          <Input
+                            placeholder="e.g. ABCDE1234F"
+                            maxLength={10}
+                            value={panNumber}
+                            onChange={(e) => setPanNumber(e.target.value.toUpperCase().slice(0, 10))}
+                            className={panValidationError ? "border-destructive focus-visible:ring-destructive" : ""}
+                          />
+                          {panValidationError && (
+                            <p className="text-xs text-destructive font-medium">{panValidationError}</p>
+                          )}
                         </div>
-                        <div className="space-y-1">
-                          <Label>Company Name</Label>
-                          <Input placeholder="Enter company name" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
-                        </div>
-                        <div className="space-y-1">
-                          <Label>Company Address</Label>
-                          <Input placeholder="Enter company address" value={companyAddress} onChange={(e) => setCompanyAddress(e.target.value)} />
+                        <div className="space-y-2 border-t pt-2">
+                          <AddressFields6
+                            label="Company Address"
+                            value={companyAddress6}
+                            onChange={setCompanyAddress6}
+                          />
                         </div>
                         <div className="space-y-1">
                           <Label>Business Owner Name</Label>
@@ -1787,10 +1787,15 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                             </span>
                             <Input
                               placeholder="10-digit father contact"
+                              maxLength={10}
                               value={fatherPhone}
                               onChange={(e) => setFatherPhone(cleanPhoneInput(e.target.value))}
+                              className={fatherPhoneError ? "border-destructive focus-visible:ring-destructive" : ""}
                             />
                           </div>
+                          {fatherPhoneError && (
+                            <p className="text-xs text-destructive font-medium">{fatherPhoneError}</p>
+                          )}
                         </div>
                         <div className="space-y-1">
                           <Label>Father Occupation</Label>
@@ -1808,10 +1813,15 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                             </span>
                             <Input
                               placeholder="10-digit mother contact"
+                              maxLength={10}
                               value={motherPhone}
                               onChange={(e) => setMotherPhone(cleanPhoneInput(e.target.value))}
+                              className={motherPhoneError ? "border-destructive focus-visible:ring-destructive" : ""}
                             />
                           </div>
+                          {motherPhoneError && (
+                            <p className="text-xs text-destructive font-medium">{motherPhoneError}</p>
+                          )}
                         </div>
                         <div className="space-y-1">
                           <Label>Mother Occupation</Label>
@@ -1839,14 +1849,22 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                             </span>
                             <Input
                               placeholder="10-digit guardian contact"
+                              maxLength={10}
                               value={guardianPhone}
                               onChange={(e) => setGuardianPhone(cleanPhoneInput(e.target.value))}
+                              className={guardianPhoneValidationError ? "border-destructive focus-visible:ring-destructive" : ""}
                             />
                           </div>
+                          {guardianPhoneValidationError && (
+                            <p className="text-xs text-destructive font-medium">{guardianPhoneValidationError}</p>
+                          )}
                         </div>
-                        <div className="space-y-1">
-                          <Label>Guardian Address</Label>
-                          <Input placeholder="Enter guardian address" value={guardianAddress} onChange={(e) => setGuardianAddress(e.target.value)} />
+                        <div className="space-y-2 border-t pt-2">
+                          <AddressFields6
+                            label="Guardian Address"
+                            value={guardianAddress6}
+                            onChange={setGuardianAddress6}
+                          />
                         </div>
                       </div>
                     </details>
@@ -1899,190 +1917,38 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                             </span>
                             <Input
                               placeholder="10-digit emergency number"
+                              maxLength={10}
                               value={emergencyContactPhone}
                               onChange={(e) => setEmergencyContactPhone(cleanPhoneInput(e.target.value))}
+                              className={(emergencyPhoneError || emergencyMatchesTenant) ? "border-destructive focus-visible:ring-destructive" : ""}
                             />
                           </div>
+                          {emergencyPhoneError && (
+                            <p className="text-xs text-destructive font-medium">{emergencyPhoneError}</p>
+                          )}
+                          {emergencyMatchesTenant && (
+                            <p className="text-xs text-destructive font-medium">Emergency number can't be the tenant's number.</p>
+                          )}
                         </div>
                       </div>
                     </details>
 
-                    {/* (D.2) ID Verification & Documents (OW-06) */}
-                    <details className="group border rounded-lg overflow-hidden bg-card/50" open>
+                    {/* (D.2) Vehicle Information */}
+                    <details className="group border rounded-lg overflow-hidden bg-card/50">
                       <summary className="flex justify-between items-center p-3 font-semibold text-xs cursor-pointer bg-muted/15 select-none border-b">
                         <span className="flex items-center gap-1.5">
-                          <ShieldCheck className="h-3.5 w-3.5 text-teal-600" /> Identity Documents & Vehicle
+                          <ShieldCheck className="h-3.5 w-3.5 text-teal-600" /> Vehicle Information
                         </span>
                         <ChevronRight className="h-3 w-3 transition-transform group-open:rotate-90 text-muted-foreground" />
                       </summary>
                       <div className="p-3.5 space-y-3.5 bg-background text-sm">
                         <div className="space-y-1">
-                          <Label>ID Document Type</Label>
-                          <Select value={idType} onValueChange={setIdType}>
-                            <SelectTrigger><SelectValue placeholder="Select ID type" /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Aadhaar">Aadhaar Card</SelectItem>
-                              <SelectItem value="PAN">PAN Card</SelectItem>
-                              <SelectItem value="Passport">Passport</SelectItem>
-                              <SelectItem value="Driving Licence">Driving Licence</SelectItem>
-                              <SelectItem value="Voter ID">Voter ID</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-1">
-                          <Label>{idType} Number</Label>
-                          <Input
-                            placeholder={`Enter ${idType} number`}
-                            value={idNumber}
-                            onChange={(e) => setIdNumber(e.target.value)}
-                          />
-                          {idNumber && (
-                            <p className="text-[11px] text-muted-foreground">
-                              Display Masked: {idNumber.length > 4 ? `•••• •••• ${idNumber.slice(-4)}` : idNumber}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t pt-3">
-                          <div className="space-y-1.5">
-                            <Label className="text-xs font-medium">Front Document Copy</Label>
-                            {idFrontUrl ? (
-                              <div className="relative rounded-lg border p-2 bg-muted/20 flex items-center justify-between">
-                                <span className="text-xs truncate max-w-[150px]">Front copy uploaded</span>
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => setIdFrontUrl("")}
-                                  className="h-6 w-6 p-0 text-destructive"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
-                              </div>
-                            ) : (
-                              <label className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-3 cursor-pointer hover:border-teal-500 bg-muted/10 transition-colors">
-                                {isUploadingIdFront ? (
-                                  <Loader2 className="h-5 w-5 animate-spin text-teal-600" />
-                                ) : (
-                                  <>
-                                    <Upload className="h-5 w-5 text-muted-foreground mb-1" />
-                                    <span className="text-[11px] text-muted-foreground">Upload Front (≤5MB)</span>
-                                  </>
-                                )}
-                                <input
-                                  type="file"
-                                  accept="image/*,application/pdf"
-                                  className="hidden"
-                                  disabled={isUploadingIdFront}
-                                  onChange={(e) => {
-                                    const f = e.target.files?.[0];
-                                    if (f) handleIdUpload(f, "front");
-                                  }}
-                                />
-                              </label>
-                            )}
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <Label className="text-xs font-medium">Back Document Copy</Label>
-                            {idBackUrl ? (
-                              <div className="relative rounded-lg border p-2 bg-muted/20 flex items-center justify-between">
-                                <span className="text-xs truncate max-w-[150px]">Back copy uploaded</span>
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => setIdBackUrl("")}
-                                  className="h-6 w-6 p-0 text-destructive"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
-                              </div>
-                            ) : (
-                              <label className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-3 cursor-pointer hover:border-teal-500 bg-muted/10 transition-colors">
-                                {isUploadingIdBack ? (
-                                  <Loader2 className="h-5 w-5 animate-spin text-teal-600" />
-                                ) : (
-                                  <>
-                                    <Upload className="h-5 w-5 text-muted-foreground mb-1" />
-                                    <span className="text-[11px] text-muted-foreground">Upload Back (≤5MB)</span>
-                                  </>
-                                )}
-                                <input
-                                  type="file"
-                                  accept="image/*,application/pdf"
-                                  className="hidden"
-                                  disabled={isUploadingIdBack}
-                                  onChange={(e) => {
-                                    const f = e.target.files?.[0];
-                                    if (f) handleIdUpload(f, "back");
-                                  }}
-                                />
-                              </label>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="space-y-1 border-t pt-3">
                           <Label>Vehicle Number <span className="text-xs text-muted-foreground font-normal">(Optional)</span></Label>
                           <Input
                             placeholder="e.g. DL 01 AB 1234"
                             value={vehicleNumber}
                             onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
                           />
-                        </div>
-                      </div>
-                    </details>
-
-                    {/* (E) Bank Details */}
-                    <details className="group border rounded-lg overflow-hidden bg-card/50">
-                      <summary className="flex justify-between items-center p-3 font-semibold text-xs cursor-pointer bg-muted/15 select-none border-b">
-                        <span>Bank / UPI Settlement Details</span>
-                        <ChevronRight className="h-3 w-3 transition-transform group-open:rotate-90 text-muted-foreground" />
-                      </summary>
-                      <div className="p-3.5 space-y-3.5 bg-background text-sm">
-                        {ownerBankAccounts.length > 0 && (
-                          <div className="space-y-1">
-                            <Label className="text-xs font-semibold">Assign Settlement Account for this Tenant</Label>
-                            <Select
-                              value={selectedBankAccountId}
-                              onValueChange={handleBankSelectionChange}
-                            >
-                              <SelectTrigger className="h-9 text-xs rounded-xl">
-                                <SelectValue placeholder="Select Bank / UPI Account" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {ownerBankAccounts.map((acc) => (
-                                  <SelectItem key={acc.id} value={acc.id}>
-                                    {acc.bankName || "Bank Account"} (••••{acc.accountNumber?.slice(-4)})
-                                    {acc.isPrimary ? " [Owner Primary]" : ""}
-                                    {acc.upiId ? ` — UPI: ${acc.upiId}` : ""}
-                                  </SelectItem>
-                                ))}
-                                <SelectItem value="custom">Custom Account Details (Manual Entry)</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <p className="text-[10px] text-muted-foreground">
-                              Select which of your bank accounts this tenant will pay rent into.
-                            </p>
-                          </div>
-                        )}
-
-                        <div className="space-y-1">
-                          <Label>Bank Name</Label>
-                          <Input placeholder="e.g. HDFC Bank, SBI, ICICI" value={bankName} onChange={(e) => setBankName(e.target.value)} />
-                        </div>
-                        <div className="space-y-1">
-                          <Label>Account Number</Label>
-                          <Input placeholder="Enter account number" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} />
-                        </div>
-                        <div className="space-y-1">
-                          <Label>IFSC Code</Label>
-                          <Input placeholder="Enter IFSC code" value={ifscCode} onChange={(e) => setIfscCode(e.target.value)} />
-                        </div>
-                        <div className="space-y-1">
-                          <Label>UPI ID</Label>
-                          <Input placeholder="Enter UPI ID" value={upiId} onChange={(e) => setUpiId(e.target.value)} />
                         </div>
                       </div>
                     </details>
@@ -2155,22 +2021,27 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
               <div className="space-y-2">
-                <Label>Lock-in Period</Label>
+                <Label>
+                  Lock-in Period <span className="text-destructive font-bold">*</span>
+                </Label>
                 <Select value={lockInPeriod} onValueChange={setLockInPeriod}>
                   <SelectTrigger>
                     <SelectValue placeholder="Lock-in Period" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="0">0 months</SelectItem>
                     <SelectItem value="1">1 month</SelectItem>
                     <SelectItem value="2">2 months</SelectItem>
                     <SelectItem value="3">3 months</SelectItem>
                     <SelectItem value="6">6 months</SelectItem>
+                    <SelectItem value="11">11 months</SelectItem>
+                    <SelectItem value="12">12 months</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Notice Period</Label>
+                <Label>
+                  Notice Period <span className="text-destructive font-bold">*</span>
+                </Label>
                 <Select value={noticePeriod} onValueChange={setNoticePeriod}>
                   <SelectTrigger>
                     <SelectValue placeholder="Notice Period" />
@@ -2184,7 +2055,9 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Agreement Period</Label>
+                <Label>
+                  Agreement Period <span className="text-destructive font-bold">*</span>
+                </Label>
                 <Select value={agreementPeriod} onValueChange={setAgreementPeriod}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select Agreement Period" />
@@ -2211,6 +2084,7 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                       ₹
                     </span>
                     <Input
+                      id="fixed-rent-input"
                       type="number"
                       min={1}
                       placeholder="e.g. 8000"
@@ -2238,24 +2112,38 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>
-                    Add Rent On <span className="text-destructive font-bold">*</span>
+              {/* 1-30 Day Grid for Rent Due Date (Task A.8) */}
+              <div className="space-y-2 border-t pt-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold">
+                    Add Rent On (Due Date) <span className="text-destructive font-bold">*</span>
                   </Label>
-                  <Select value={rentDueDate} onValueChange={setRentDueDate}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Add Rent On" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 28 }, (_, index) => {
-                        const day = index + 1;
-                        const suffix = day % 10 === 1 && day !== 11 ? "st" : day % 10 === 2 && day !== 12 ? "nd" : day % 10 === 3 && day !== 13 ? "rd" : "th";
-                        return <SelectItem key={day} value={`${day}${suffix}`}>{day}{suffix} of every month</SelectItem>;
-                      })}
-                    </SelectContent>
-                  </Select>
+                  <span className="text-xs text-teal-800 font-semibold bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                    {rentDueDate ? `${rentDueDate}${rentDueDate === 1 ? 'st' : rentDueDate === 2 ? 'nd' : rentDueDate === 3 ? 'rd' : 'th'} of every month` : 'Select day'}
+                  </span>
                 </div>
+                <div className="grid grid-cols-6 gap-2 max-w-sm pt-1">
+                  {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => {
+                    const isSelected = Number(rentDueDate) === day;
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => setRentDueDate(day)}
+                        className={`h-9 rounded-lg text-xs font-semibold transition-all border ${
+                          isSelected
+                            ? "bg-[#008080] text-white border-[#008080] shadow-sm font-bold scale-[1.03]"
+                            : "bg-white hover:bg-slate-50 border-slate-200 text-slate-800"
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>
                     Regular Security Deposit <span className="text-destructive font-bold">*</span>
@@ -2438,6 +2326,59 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                   />
                 </div>
               </div>
+
+              {/* BANK & UPI SETTLEMENT DETAILS (Task A.4) */}
+              <div className="border-t pt-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-sm font-bold text-foreground">Bank / UPI Settlement Details</h4>
+                    <p className="text-xs text-muted-foreground">Select or specify where this tenant should pay rent</p>
+                  </div>
+                </div>
+
+                {ownerBankAccounts.length > 0 && (
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold">Assign Settlement Account for this Tenant</Label>
+                    <Select
+                      value={selectedBankAccountId}
+                      onValueChange={handleBankSelectionChange}
+                    >
+                      <SelectTrigger className="h-10 text-xs rounded-xl">
+                        <SelectValue placeholder="Select Bank / UPI Account" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ownerBankAccounts.map((acc) => (
+                          <SelectItem key={acc.id} value={acc.id}>
+                            {acc.bankName || "Bank Account"} (••••{acc.accountNumber?.slice(-4)})
+                            {acc.isPrimary ? " [Owner Primary]" : ""}
+                            {acc.upiId ? ` — UPI: ${acc.upiId}` : ""}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="custom">Custom Account Details (Manual Entry)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label>Bank Name</Label>
+                    <Input placeholder="e.g. HDFC Bank, SBI, ICICI" value={bankName} onChange={(e) => setBankName(e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Account Number</Label>
+                    <Input placeholder="Enter account number" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>IFSC Code</Label>
+                    <Input placeholder="Enter IFSC code" value={ifscCode} onChange={(e) => setIfscCode(e.target.value.toUpperCase())} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>UPI ID</Label>
+                    <Input placeholder="e.g. username@okhdfcbank" value={upiId} onChange={(e) => setUpiId(e.target.value)} />
+                  </div>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -2457,22 +2398,34 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                   { label: rentDueType, dueFor: rentDueFor, due: rentDueAmt, setDue: setRentDueAmt, coll: rentCollAmt, setColl: setRentCollAmt },
                   { label: "Security Deposit", dueFor: "One Time", due: depositDueAmt, setDue: setDepositDueAmt, coll: depositCollAmt, setColl: setDepositCollAmt },
                   { label: "Joining Fee", dueFor: "One Time", due: joiningDueAmt, setDue: setJoiningDueAmt, coll: joiningCollAmt, setColl: setJoiningCollAmt },
-                ].map((row) => (
-                  <div key={row.label} className="rounded-[16px] border border-[#E5E5E5] bg-white p-3.5 space-y-2">
-                    <p className="text-[15px] font-semibold text-[#101010]">{row.label}</p>
-                    <p className="text-[12px] text-[#636363]">{row.dueFor}</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-1">
-                        <Label className="text-[12px] text-[#636363]">Due (₹)</Label>
-                        <Input type="number" value={row.due} onChange={(e) => row.setDue(e.target.value)} />
+                ].map((row) => {
+                  const collExceedsDue = Number(row.coll || 0) > Number(row.due || 0);
+                  return (
+                    <div key={row.label} className="rounded-[16px] border border-[#E5E5E5] bg-white p-3.5 space-y-2">
+                      <p className="text-[15px] font-semibold text-[#101010]">{row.label}</p>
+                      <p className="text-[12px] text-[#636363]">{row.dueFor}</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-[12px] text-[#636363]">Due (₹)</Label>
+                          <Input type="number" min={0} value={row.due} onChange={(e) => row.setDue(e.target.value)} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[12px] text-[#636363]">Collected (₹)</Label>
+                          <Input
+                            type="number"
+                            min={0}
+                            value={row.coll}
+                            onChange={(e) => row.setColl(e.target.value)}
+                            className={collExceedsDue ? "border-destructive focus-visible:ring-destructive" : ""}
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <Label className="text-[12px] text-[#636363]">Collected (₹)</Label>
-                        <Input type="number" value={row.coll} onChange={(e) => row.setColl(e.target.value)} />
-                      </div>
+                      {collExceedsDue && (
+                        <p className="text-[11px] text-destructive font-medium">Collected cannot exceed due amount</p>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <div className="hidden md:block rounded-lg border overflow-hidden">
                 <table className="w-full text-sm">
@@ -2489,30 +2442,57 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                       <td className="p-3 font-medium text-foreground">{rentDueType}</td>
                       <td className="p-3 text-muted-foreground text-xs">{rentDueFor}</td>
                       <td className="p-2">
-                        <Input type="number" className="w-28 h-8 text-sm" value={rentDueAmt} onChange={(e) => setRentDueAmt(e.target.value)} />
+                        <Input type="number" min={0} className="w-28 h-8 text-sm" value={rentDueAmt} onChange={(e) => setRentDueAmt(e.target.value)} />
                       </td>
                       <td className="p-2">
-                        <Input type="number" className="w-28 h-8 text-sm" value={rentCollAmt} onChange={(e) => setRentCollAmt(e.target.value)} />
+                        <Input
+                          type="number"
+                          min={0}
+                          className={`w-28 h-8 text-sm ${Number(rentCollAmt || 0) > Number(rentDueAmt || 0) ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                          value={rentCollAmt}
+                          onChange={(e) => setRentCollAmt(e.target.value)}
+                        />
+                        {Number(rentCollAmt || 0) > Number(rentDueAmt || 0) && (
+                          <p className="text-[10px] text-destructive font-medium mt-0.5">Collected &gt; due</p>
+                        )}
                       </td>
                     </tr>
                     <tr>
                       <td className="p-3 font-medium text-foreground">Security Deposit</td>
                       <td className="p-3 text-muted-foreground text-xs">One Time</td>
                       <td className="p-2">
-                        <Input type="number" className="w-28 h-8 text-sm" value={depositDueAmt} onChange={(e) => setDepositDueAmt(e.target.value)} />
+                        <Input type="number" min={0} className="w-28 h-8 text-sm" value={depositDueAmt} onChange={(e) => setDepositDueAmt(e.target.value)} />
                       </td>
                       <td className="p-2">
-                        <Input type="number" className="w-28 h-8 text-sm" value={depositCollAmt} onChange={(e) => setDepositCollAmt(e.target.value)} />
+                        <Input
+                          type="number"
+                          min={0}
+                          className={`w-28 h-8 text-sm ${Number(depositCollAmt || 0) > Number(depositDueAmt || 0) ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                          value={depositCollAmt}
+                          onChange={(e) => setDepositCollAmt(e.target.value)}
+                        />
+                        {Number(depositCollAmt || 0) > Number(depositDueAmt || 0) && (
+                          <p className="text-[10px] text-destructive font-medium mt-0.5">Collected &gt; due</p>
+                        )}
                       </td>
                     </tr>
                     <tr>
                       <td className="p-3 font-medium text-foreground">Joining Fee</td>
                       <td className="p-3 text-muted-foreground text-xs">One Time</td>
                       <td className="p-2">
-                        <Input type="number" className="w-28 h-8 text-sm" value={joiningDueAmt} onChange={(e) => setJoiningDueAmt(e.target.value)} />
+                        <Input type="number" min={0} className="w-28 h-8 text-sm" value={joiningDueAmt} onChange={(e) => setJoiningDueAmt(e.target.value)} />
                       </td>
                       <td className="p-2">
-                        <Input type="number" className="w-28 h-8 text-sm" value={joiningCollAmt} onChange={(e) => setJoiningCollAmt(e.target.value)} />
+                        <Input
+                          type="number"
+                          min={0}
+                          className={`w-28 h-8 text-sm ${Number(joiningCollAmt || 0) > Number(joiningDueAmt || 0) ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                          value={joiningCollAmt}
+                          onChange={(e) => setJoiningCollAmt(e.target.value)}
+                        />
+                        {Number(joiningCollAmt || 0) > Number(joiningDueAmt || 0) && (
+                          <p className="text-[10px] text-destructive font-medium mt-0.5">Collected &gt; due</p>
+                        )}
                       </td>
                     </tr>
                   </tbody>
@@ -2544,54 +2524,84 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-80 overflow-y-auto pr-1">
-                    {filteredDues.map((d) => (
-                      <div
-                        key={d.id}
-                        className="flex flex-col justify-between border rounded-lg p-3.5 bg-muted/10 space-y-2.5 hover:bg-muted/20 transition-all shadow-sm"
-                      >
-                        <div className="flex flex-col gap-1.5 w-full">
-                          <span className="text-xs font-bold text-foreground leading-snug">{d.label}</span>
-                          <div className="flex gap-2 w-full">
-                            <Select
-                              value={d.mode}
-                              onValueChange={(val: "consumption" | "fixed") => {
-                                const updated = [...otherDues];
-                                const realIdx = otherDues.findIndex((x) => x.id === d.id);
-                                updated[realIdx].mode = val;
-                                updated[realIdx].amount = val === "fixed" ? "0" : "";
-                                setOtherDues(updated);
-                              }}
-                            >
-                              <SelectTrigger className="h-8 text-xs flex-1">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="consumption">As per consumption</SelectItem>
-                                <SelectItem value="fixed">Fixed Amount</SelectItem>
-                              </SelectContent>
-                            </Select>
+                    {filteredDues.map((d) => {
+                      const otherCollExceedsDue = d.mode === "fixed" && Number(d.collected || 0) > Number(d.amount || 0);
+                      return (
+                        <div
+                          key={d.id}
+                          className="flex flex-col justify-between border rounded-lg p-3.5 bg-muted/10 space-y-2.5 hover:bg-muted/20 transition-all shadow-sm"
+                        >
+                          <div className="flex flex-col gap-1.5 w-full">
+                            <span className="text-xs font-bold text-foreground leading-snug">{d.label}</span>
+                            <div className="flex flex-col gap-2 w-full">
+                              <Select
+                                value={d.mode}
+                                onValueChange={(val: "consumption" | "fixed") => {
+                                  const updated = [...otherDues];
+                                  const realIdx = otherDues.findIndex((x) => x.id === d.id);
+                                  updated[realIdx].mode = val;
+                                  updated[realIdx].amount = val === "fixed" ? "0" : "";
+                                  updated[realIdx].collected = val === "fixed" ? "0" : "";
+                                  setOtherDues(updated);
+                                }}
+                              >
+                                <SelectTrigger className="h-8 text-xs w-full">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="consumption">As per consumption</SelectItem>
+                                  <SelectItem value="fixed">Fixed Amount</SelectItem>
+                                </SelectContent>
+                              </Select>
 
-                            {d.mode === "fixed" && (
-                              <div className="relative flex-1">
-                                <span className="absolute left-2.5 top-2 text-xs text-muted-foreground">₹</span>
-                                <Input
-                                  type="number"
-                                  className="h-8 pl-6 pr-1 text-xs w-full font-bold"
-                                  placeholder="0"
-                                  value={d.amount}
-                                  onChange={(e) => {
-                                    const updated = [...otherDues];
-                                    const realIdx = otherDues.findIndex((x) => x.id === d.id);
-                                    updated[realIdx].amount = e.target.value;
-                                    setOtherDues(updated);
-                                  }}
-                                />
-                              </div>
-                            )}
+                              {d.mode === "fixed" && (
+                                <div className="space-y-1">
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div className="relative">
+                                      <span className="absolute left-2 top-2 text-[10px] text-muted-foreground">Due ₹</span>
+                                      <Input
+                                        type="number"
+                                        min={0}
+                                        className="h-8 pl-9 pr-1 text-xs w-full font-bold"
+                                        placeholder="0"
+                                        value={d.amount}
+                                        onChange={(e) => {
+                                          const updated = [...otherDues];
+                                          const realIdx = otherDues.findIndex((x) => x.id === d.id);
+                                          updated[realIdx].amount = e.target.value;
+                                          setOtherDues(updated);
+                                        }}
+                                      />
+                                    </div>
+                                    <div className="relative">
+                                      <span className="absolute left-2 top-2 text-[10px] text-muted-foreground">Coll ₹</span>
+                                      <Input
+                                        type="number"
+                                        min={0}
+                                        className={`h-8 pl-9 pr-1 text-xs w-full font-bold ${
+                                          otherCollExceedsDue ? "border-destructive focus-visible:ring-destructive" : ""
+                                        }`}
+                                        placeholder="0"
+                                        value={d.collected || ""}
+                                        onChange={(e) => {
+                                          const updated = [...otherDues];
+                                          const realIdx = otherDues.findIndex((x) => x.id === d.id);
+                                          updated[realIdx].collected = e.target.value;
+                                          setOtherDues(updated);
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                  {otherCollExceedsDue && (
+                                    <p className="text-[10px] text-destructive font-medium">Collected cannot exceed due amount</p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}

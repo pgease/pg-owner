@@ -260,7 +260,7 @@ const StaffListContent = () => {
               <SearchInput
                 placeholder="Search staff by name, email, phone..."
                 value={searchQuery}
-                onChange={setSearchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
 

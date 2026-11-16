@@ -137,7 +137,7 @@ export default function Reports() {
         roomDetails: {
           sharingCount: room?.totalBeds ?? 0,
           occupiedBeds: room?.occupiedBeds ?? 0,
-          roomType: room?.type || "",
+          roomType: (room as any)?.type || "",
         },
         financials: {
           fixedRent: rent,
@@ -445,7 +445,7 @@ export default function Reports() {
                 <SearchInput
                   placeholder="Search reports by title or field..."
                   value={searchTerm}
-                  onChange={setSearchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
 
@@ -630,7 +630,7 @@ export default function Reports() {
                 <SearchInput
                   placeholder="Filter preview rows..."
                   value={previewSearch}
-                  onChange={setPreviewSearch}
+                  onChange={(e) => setPreviewSearch(e.target.value)}
                 />
               </div>
 

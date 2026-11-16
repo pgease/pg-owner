@@ -623,6 +623,14 @@ export interface AddTenantPayload {
   photo?: string;
   occupation?: string;
   officeOrCollegeName?: string;
+  companyName?: string;
+  companyAddress?: string;
+  panNumber?: string;
+  businessOwnerName?: string;
+  permAddress?: any;
+  currAddress?: any;
+  companyAddress6?: any;
+  guardianAddress6?: any;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
   emergencyContactRelation?: string;
@@ -1471,6 +1479,7 @@ export interface RoomItem {
   createdAt?: string;
   beds?: any[];
   electricityBill?: number;
+  meterNumber?: string;
 }
 
 /** POST /properties/:id/rooms often returns `{ room, beds }` instead of a bare room. */

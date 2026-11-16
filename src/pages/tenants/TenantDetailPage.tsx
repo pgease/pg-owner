@@ -31,7 +31,9 @@ import {
   Link2,
   Share2,
   Camera,
+  Package,
 } from "lucide-react";
+import { authStorage } from "@/api/http";
 import { TenantActivityLogsDrawer } from "@/components/tenants/TenantActivityLogsDrawer";
 import { SharePaymentLinkDialog } from "@/components/tenants/SharePaymentLinkDialog";
 import { AddDuesDrawer } from "@/components/tenants/AddDuesDrawer";
@@ -293,7 +295,89 @@ function EditField({
   );
 }
 
-export default function TenantDetailPage() {
+function safeDateIso(val: unknown): string {
+  if (!val) return "";
+  try {
+    const d = new Date(val as string);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString().split("T")[0];
+  } catch {
+    return "";
+  }
+}
+
+function tenantRoomLabel(t: any): string {
+  if (!t) return "—";
+  const room = t.roomNumber || t.room?.roomNumber || t.roomInfo?.roomNumber || "—";
+  const bed = t.bedNumber || t.bed?.bedNumber || t.bedNumberOnAssignment;
+  return bed ? `Room ${room} (Bed ${bed})` : `Room ${room}`;
+}
+
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class TenantProfileErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("TenantProfile crashed:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-[50vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
+          <div className="h-12 w-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
+            <AlertCircle className="h-6 w-6" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-lg font-bold text-foreground">Couldn't load this profile</h2>
+            <p className="text-sm text-muted-foreground max-w-sm">
+              We encountered an issue displaying this tenant profile. Please try going back to the tenants list.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (window.history.length > 1) {
+                  window.history.back();
+                } else {
+                  window.location.href = "/tenants";
+                }
+              }}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" /> Back to Tenants
+            </Button>
+            <Button
+              variant="default"
+              className="bg-teal-600 hover:bg-teal-700 text-white"
+              onClick={() => this.setState({ hasError: false })}
+            >
+              Try Again
+            </Button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function TenantDetailContent() {
   const { tenantId } = useParams<{ tenantId: string }>();
   const { selectedPgId: currentPropertyId } = useApp();
   const queryClient = useQueryClient();
@@ -820,7 +904,7 @@ export default function TenantDetailPage() {
         checkinTime: rt.checkinTime ?? (tenant as any).checkinTime ?? "",
         checkoutTime: rt.checkoutTime ?? (tenant as any).checkoutTime ?? "",
         lastMeterReading: String(rt.lastMeterReading ?? (tenant as any).lastMeterReading ?? ""),
-        lastReadingDate: rt.lastReadingDate ? new Date(rt.lastReadingDate).toISOString().split("T")[0] : (tenant as any).lastReadingDate ? new Date((tenant as any).lastReadingDate).toISOString().split("T")[0] : "",
+        lastReadingDate: safeDateIso(rt.lastReadingDate) || safeDateIso((tenant as any).lastReadingDate) || "",
         rentingType: rt.rentingType ?? (tenant as any).rentingType ?? "Bed",
         collectOnlinePayments: rt.collectOnlinePayments !== undefined ? Boolean(rt.collectOnlinePayments) : true,
         gstApplicable: rt.gstApplicable !== undefined ? Boolean(rt.gstApplicable) : false,
@@ -1289,7 +1373,7 @@ export default function TenantDetailPage() {
         checkinTime: rt.checkinTime ?? (tenant as any).checkinTime ?? "",
         checkoutTime: rt.checkoutTime ?? (tenant as any).checkoutTime ?? "",
         lastMeterReading: String(rt.lastMeterReading ?? (tenant as any).lastMeterReading ?? ""),
-        lastReadingDate: rt.lastReadingDate ? new Date(rt.lastReadingDate).toISOString().split("T")[0] : "",
+        lastReadingDate: safeDateIso(rt.lastReadingDate) || "",
         rentingType: rt.rentingType ?? (tenant as any).rentingType ?? "Bed",
         collectOnlinePayments: rt.collectOnlinePayments !== undefined ? Boolean(rt.collectOnlinePayments) : true,
         gstApplicable: rt.gstApplicable !== undefined ? Boolean(rt.gstApplicable) : false,
@@ -3973,7 +4057,7 @@ export default function TenantDetailPage() {
                             <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold border border-emerald-300">
                               Fully Signed ✓
                             </Badge>
-                          ) : matchingAgreement.status === "pending_owner_sign" ? (
+                          ) : (matchingAgreement.status as string) === "pending_owner_sign" ? (
                             <Badge className="bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 font-bold border border-amber-300">
                               Tenant eSigned • Action Required: Sign via Aadhaar
                             </Badge>
@@ -3991,7 +4075,7 @@ export default function TenantDetailPage() {
                       </div>
 
                       <div className="flex items-center gap-2 flex-wrap">
-                        {matchingAgreement.status === "pending_owner_sign" && matchingAgreement.signingDirectUrl && (
+                        {(matchingAgreement.status as string) === "pending_owner_sign" && matchingAgreement.signingDirectUrl && (
                           <Button
                             size="sm"
                             className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-8 gap-1.5 text-xs shadow-xs cursor-pointer"
@@ -4042,7 +4126,7 @@ export default function TenantDetailPage() {
                     </div>
 
                     {/* Informative banners based on signature status */}
-                    {matchingAgreement.status === "pending_owner_sign" && (
+                    {(matchingAgreement.status as string) === "pending_owner_sign" && (
                       <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-900 dark:text-amber-200">
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-amber-600 shrink-0" />
@@ -4721,5 +4805,13 @@ export default function TenantDetailPage() {
         )}
       </div>
     </CanAccessPage>
+  );
+}
+
+export default function TenantDetailPage() {
+  return (
+    <TenantProfileErrorBoundary>
+      <TenantDetailContent />
+    </TenantProfileErrorBoundary>
   );
 }

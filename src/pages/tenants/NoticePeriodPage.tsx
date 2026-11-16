@@ -159,9 +159,9 @@ export default function NoticePeriodPage() {
       }
 
       const reason =
-        t.notice?.reason || (t as any).noticeReason || (t as any).reason || (t as any).vacateReason || "";
+        (t.notice as any)?.reason || (t as any).noticeReason || (t as any).reason || (t as any).vacateReason || "";
       const remarks =
-        t.notice?.remarks || (t as any).noticeRemarks || (t as any).remarks || (t as any).vacateRemarks || "";
+        (t.notice as any)?.remarks || (t as any).noticeRemarks || (t as any).remarks || (t as any).vacateRemarks || "";
 
       return {
         ...t,
@@ -493,7 +493,7 @@ export default function NoticePeriodPage() {
                   <SearchInput
                     placeholder="Search name, room, phone..."
                     value={search}
-                    onChange={setSearch}
+                    onChange={(e) => setSearch(e.target.value)}
                   />
                 </div>
               </div>

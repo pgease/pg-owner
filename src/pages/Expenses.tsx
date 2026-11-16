@@ -85,7 +85,7 @@ const Expenses = () => {
         let remote = await listOps(selectedPgId, "expense");
         const local = loadExpenses().filter((item) => item.propertyId === selectedPgId);
         if (remote.length === 0 && local.length > 0) {
-          await importOps(selectedPgId, "expense", local);
+          await importOps(selectedPgId, "expense", local as any);
           remote = await listOps(selectedPgId, "expense");
         }
         if (!cancelled) {
@@ -171,7 +171,7 @@ const Expenses = () => {
 
     if (selectedPgId) {
       try {
-        const saved = await createOps(selectedPgId, "expense", newItem);
+        const saved = await createOps(selectedPgId, "expense", newItem as any);
         newItem.id = saved.id;
       } catch (error) {
         toast({ title: error instanceof Error ? error.message : "Saved on this device only", variant: "destructive" });

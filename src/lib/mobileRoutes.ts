@@ -17,6 +17,7 @@ export function getParentRoute(pathname: string): string {
   if (pathname.startsWith("/rent-payments/")) return "/rent-payments";
   if (pathname.startsWith("/my-pgs/")) return "/my-pgs";
   if (pathname.startsWith("/post-pg") || pathname.startsWith("/public-listing") || pathname === "/bank") return "/my-pgs";
+  if (pathname.startsWith("/inventory") || pathname.startsWith("/settings/inventory")) return "/settings";
   if (pathname.startsWith("/team/")) return "/team";
   if (pathname.startsWith("/settings")) return "/settings";
   return "/dashboard";
@@ -46,6 +47,7 @@ const TITLE_RULES: { test: (path: string) => boolean; title: string }[] = [
   { test: (p) => p.startsWith("/team") || p.startsWith("/staff"), title: "Staff" },
   { test: (p) => p.startsWith("/reports"), title: "Reports" },
   { test: (p) => p.startsWith("/expenses"), title: "Expenses" },
+  { test: (p) => p.startsWith("/inventory") || p.startsWith("/settings/inventory"), title: "Inventory" },
   { test: (p) => p.startsWith("/plans") || p.startsWith("/billing"), title: "Plans" },
   { test: (p) => p.startsWith("/settings"), title: "Settings" },
   { test: (p) => p.startsWith("/support"), title: "Support" },

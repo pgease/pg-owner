@@ -375,7 +375,7 @@ export default function ReferralsPage() {
                             )}
                           </td>
                           <td className="py-3 px-5 text-right text-[11px] text-muted-foreground">
-                            {formatDate(ref.joinedAt || ref.createdAt)}
+                            {formatDate(ref.joinedAt || (ref as any).createdAt || ref.creditedAt)}
                           </td>
                         </tr>
                       ))}

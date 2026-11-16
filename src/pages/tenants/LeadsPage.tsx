@@ -86,7 +86,7 @@ export default function LeadsPage() {
         let remote = await listOps(selectedPgId, "lead");
         const local = loadLeads().filter((lead) => lead.pgId === selectedPgId);
         if (remote.length === 0 && local.length > 0) {
-          await importOps(selectedPgId, "lead", local);
+          await importOps(selectedPgId, "lead", local as any);
           remote = await listOps(selectedPgId, "lead");
           const rest = loadLeads().filter((lead) => lead.pgId !== selectedPgId);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(rest));
@@ -173,7 +173,7 @@ export default function LeadsPage() {
 
     if (selectedPgId) {
       try {
-        const saved = await createOps(selectedPgId, "lead", newLead);
+        const saved = await createOps(selectedPgId, "lead", newLead as any);
         newLead.id = saved.id;
       } catch (error) {
         toast({ title: error instanceof Error ? error.message : "Saved on this device only", variant: "destructive" });

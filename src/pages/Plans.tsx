@@ -55,19 +55,19 @@ export default function Plans() {
       return plansData.plans;
     }
     if (plansData?.catalog?.name || (plansData as any)?.name) {
-      const cat = plansData.catalog || plansData;
+      const cat = (plansData.catalog || plansData) as any;
       return [
         {
           id: (cat as any).id || (plansData as any)?.id || "pro",
           name: cat.name || "PG Ease Pro",
-          displayName: (cat as any).displayName || cat.name || "PG Ease Pro",
+          displayName: cat.displayName || cat.name || "PG Ease Pro",
           description:
-            (cat as any).description ||
+            cat.description ||
             "Complete PG management system with rent collection, tenant KYC, and automated reminders.",
           features: cat.features || (plansData as any)?.features || [],
           offer: cat.offer || (plansData as any)?.offer,
           cycles: cat.cycles || (plansData as any)?.cycles,
-          pricePerBed: (cat as any).pricePerBed,
+          pricePerBed: cat.pricePerBed,
         },
       ];
     }
@@ -211,14 +211,14 @@ export default function Plans() {
   const strikeRate = billingCycle === "annual" ? activeYearlyStrike : activeMonthlyStrike;
 
   const subtotal = unitRate * selectedBeds;
-  const gstPercent = Number(plansData?.gstPercent ?? (plansData as any)?.catalog?.gstPercent ?? 18);
+  const gstPercent = Number((plansData as any)?.gstPercent ?? (plansData as any)?.catalog?.gstPercent ?? 18);
   const gstAmount = Math.round(subtotal * gstPercent) / 100;
   const planTotal = Math.round((subtotal + gstAmount) * 100) / 100;
 
   const activeOfferBadge =
     activePlan?.offer?.badge ||
     (activePlan?.offer?.enabled ? activePlan?.offer?.badge : null) ||
-    plansData?.offer?.badge ||
+    (plansData as any)?.offer?.badge ||
     null;
 
   const kycText = (() => {

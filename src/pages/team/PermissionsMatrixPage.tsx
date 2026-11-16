@@ -413,7 +413,7 @@ export default function PermissionsMatrixPage() {
               </CardTitle>
             </CardHeader>
             <div className="overflow-x-auto">
-              <Table variant="compact">
+              <Table className="table-compact">
                 <TableHeader className="bg-muted/40 text-xs">
                   <TableRow>
                     <TableHead className="w-[320px]">Daily Action</TableHead>

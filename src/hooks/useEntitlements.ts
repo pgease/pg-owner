@@ -331,7 +331,7 @@ export function useEntitlements(): EntitlementsInfo {
     const serverDisplayName =
       apiPayload?.displayName ||
       apiPayload?.planDisplayName ||
-      currentPlanData?.currentPlan?.displayName ||
+      (currentPlanData?.currentPlan as any)?.displayName ||
       currentPlanData?.currentPlan?.name ||
       apiSub?.planName;
 
