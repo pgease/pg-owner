@@ -64,6 +64,13 @@ export const EasebuzzGatewayCard = () => {
 
   useEffect(() => {
     fetchSettings();
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data?.type === "EASEBUZZ_KYC_COMPLETED") {
+        fetchSettings();
+      }
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
   }, []);
 
   const handleStartKyc = async () => {
@@ -97,6 +104,14 @@ export const EasebuzzGatewayCard = () => {
         toast({
           title: "KYC Portal Ready",
           description: "Complete your verification form in the popup window.",
+        });
+      } else if (res.submerchant || (res as any).submerchantId) {
+        if (popup && !popup.closed) {
+          popup.close();
+        }
+        toast({
+          title: "Sub-Merchant Account Created",
+          description: "Your Easebuzz onboarding is in progress. Status is pending KYC review.",
         });
       } else {
         if (popup && !popup.closed) {
@@ -169,12 +184,9 @@ export const EasebuzzGatewayCard = () => {
         if (popup && !popup.closed) {
           popup.close();
         }
-        const msg = "Easebuzz did not return a valid KYC access link.";
-        setKycError(msg);
         toast({
-          title: "Could not refresh KYC link",
-          description: msg,
-          variant: "destructive",
+          title: "KYC Status Checked",
+          description: "Sub-merchant verification is currently under review.",
         });
       }
       await fetchSettings();
