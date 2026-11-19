@@ -12,11 +12,14 @@ import {
   EyeOff,
   RefreshCw,
   Check,
-  Clock,
   Plus,
   Trash2,
   Star,
   CreditCard,
+  Zap,
+  Sparkles,
+  ArrowRight,
+  Pencil,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,6 +50,8 @@ import {
   setPrimarySettlementBankAccount,
   deleteSettlementBankAccount,
   lookupIfsc,
+  getPaymentSettings,
+  updatePaymentSettings,
   type SettlementBankAccountItem,
   type IfscLookupResponse,
 } from "@/api/propertyOwner";
@@ -68,16 +73,18 @@ export const BankAccountManager = () => {
   // List of accounts & Primary
   const [accounts, setAccounts] = useState<SettlementBankAccountItem[]>([]);
   const [primaryAccount, setPrimaryAccount] = useState<SettlementBankAccountItem | null>(null);
+  const [ownerUpiId, setOwnerUpiId] = useState<string>("");
 
   // Selected account for Standee QR
   const [selectedForQr, setSelectedForQr] = useState<string>("");
 
-  // Add Account Modal State
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  // Add / Edit Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTab, setModalTab] = useState<"bank" | "upi">("bank");
   const [isSaving, setIsSaving] = useState(false);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
 
-  // Form State
+  // Bank Form State
   const [accountHolder, setAccountHolder] = useState("");
   const [bankName, setBankName] = useState("");
   const [branch, setBranch] = useState("");
@@ -85,9 +92,13 @@ export const BankAccountManager = () => {
   const [confirmAccountNumber, setConfirmAccountNumber] = useState("");
   const [ifscCode, setIfscCode] = useState("");
   const [accountType, setAccountType] = useState<"savings" | "current">("current");
-  const [upiId, setUpiId] = useState("");
-  const [addErrors, setAddErrors] = useState<string[]>([]);
   const [isPrimaryNew, setIsPrimaryNew] = useState(false);
+  const [bankErrors, setBankErrors] = useState<string[]>([]);
+
+  // UPI Form State
+  const [upiInput, setUpiInput] = useState("");
+  const [upiPayeeName, setUpiPayeeName] = useState("");
+  const [upiErrors, setUpiErrors] = useState<string[]>([]);
 
   // IFSC Lookup State
   const [isLookingUpIfsc, setIsLookingUpIfsc] = useState(false);
@@ -97,14 +108,18 @@ export const BankAccountManager = () => {
   // Delete Confirmation State
   const [accountToDelete, setAccountToDelete] = useState<SettlementBankAccountItem | null>(null);
 
-  // 1. Fetch settlement bank accounts
+  // 1. Fetch settlement bank accounts and owner payment settings
   const fetchAccounts = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await getSettlementBankAccounts();
-      if (res?.success && Array.isArray(res.accounts)) {
-        setAccounts(res.accounts);
-        const prim = res.primaryAccount || res.accounts.find((a) => a.isPrimary) || res.accounts[0] || null;
+      const [accountsRes, settingsRes] = await Promise.allSettled([
+        getSettlementBankAccounts(),
+        getPaymentSettings(),
+      ]);
+
+      if (accountsRes.status === "fulfilled" && accountsRes.value?.success && Array.isArray(accountsRes.value.accounts)) {
+        setAccounts(accountsRes.value.accounts);
+        const prim = accountsRes.value.primaryAccount || accountsRes.value.accounts.find((a) => a.isPrimary) || accountsRes.value.accounts[0] || null;
         setPrimaryAccount(prim);
         if (prim && !selectedForQr) {
           setSelectedForQr(prim.id);
@@ -113,8 +128,12 @@ export const BankAccountManager = () => {
         setAccounts([]);
         setPrimaryAccount(null);
       }
+
+      if (settingsRes.status === "fulfilled" && settingsRes.value?.upiId) {
+        setOwnerUpiId(settingsRes.value.upiId.trim());
+      }
     } catch (err: unknown) {
-      console.warn("Could not fetch settlement bank accounts from backend:", err);
+      console.warn("Could not fetch settlement bank accounts:", err);
       // Fallback check from localStorage
       const cached = localStorage.getItem(`pgease_bank_details_${currentOwner?.name || "default"}`);
       if (cached) {
@@ -128,6 +147,7 @@ export const BankAccountManager = () => {
           setAccounts([fallbackAcc]);
           setPrimaryAccount(fallbackAcc);
           setSelectedForQr("local_default");
+          if (parsed.upiId) setOwnerUpiId(parsed.upiId);
         } catch {
           setAccounts([]);
         }
@@ -141,7 +161,7 @@ export const BankAccountManager = () => {
     fetchAccounts();
   }, [fetchAccounts]);
 
-  // 2. Real-time debounced IFSC lookup in Add Modal
+  // 2. Real-time debounced IFSC lookup in Bank Form
   useEffect(() => {
     const clean = ifscCode.trim().toUpperCase();
     if (clean.length !== 11) {
@@ -189,47 +209,49 @@ export const BankAccountManager = () => {
     };
   }, [ifscCode]);
 
-  // Reset Add Form
-  const resetAddForm = () => {
-    setAccountHolder(currentOwner?.name || "");
-    setBankName("");
-    setBranch("");
-    setAccountNumber("");
-    setConfirmAccountNumber("");
-    setIfscCode("");
-    setAccountType("current");
-    setUpiId("");
-    setAddErrors([]);
-    setIsPrimaryNew(accounts.length === 0);
-    setIfscResult(null);
-    setIfscError(null);
+  // Open modal with specific tab
+  const handleOpenModal = (tab: "bank" | "upi") => {
+    setModalTab(tab);
+    setBankErrors([]);
+    setUpiErrors([]);
+    if (tab === "bank") {
+      setAccountHolder(currentOwner?.name || "");
+      setBankName("");
+      setBranch("");
+      setAccountNumber("");
+      setConfirmAccountNumber("");
+      setIfscCode("");
+      setAccountType("current");
+      setIsPrimaryNew(accounts.length === 0);
+      setIfscResult(null);
+      setIfscError(null);
+    } else {
+      setUpiInput(ownerUpiId || primaryAccount?.upiId || "");
+      setUpiPayeeName(selectedPg?.name || currentOwner?.name || "PG Ease Stay");
+    }
+    setIsModalOpen(true);
   };
 
-  const handleOpenAddModal = () => {
-    resetAddForm();
-    setIsAddModalOpen(true);
-  };
-
-  // 3. Add Bank Account
-  const handleAddAccount = async (e: React.FormEvent) => {
+  // 3. Save Bank Account (ONLY Bank fields, NO UPI)
+  const handleSaveBankAccount = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const cleanAcc = accountNumber.replace(/\s/g, "");
     const cleanIfsc = ifscCode.trim().toUpperCase();
-    const cleanUpi = upiId.trim();
     const problems: string[] = [];
+
     if (!accountHolder.trim()) problems.push("Account holder name is required.");
     if (!/^\d{9,18}$/.test(cleanAcc)) problems.push("Account number must be 9 to 18 digits.");
     if (cleanAcc !== confirmAccountNumber.replace(/\s/g, "")) problems.push("Account numbers do not match.");
-    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(cleanIfsc)) problems.push("Enter a real IFSC, like HDFC0001234.");
-    if (cleanUpi && !/^[\w.\-]{2,}@[A-Za-z]{2,}$/.test(cleanUpi)) problems.push("UPI ID must look like name@bank.");
+    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(cleanIfsc)) problems.push("Enter a valid 11-digit IFSC code (e.g. HDFC0001234).");
+
     if (problems.length > 0) {
-      setAddErrors(problems);
+      setBankErrors(problems);
       return;
     }
-    setAddErrors([]);
-
+    setBankErrors([]);
     setIsSaving(true);
+
     const payload = {
       accountHolderName: accountHolder.trim(),
       accountNumber: cleanAcc,
@@ -237,7 +259,6 @@ export const BankAccountManager = () => {
       bankName: bankName.trim() || ifscResult?.bank || "Bank Account",
       branch: branch.trim() || ifscResult?.branch || "",
       accountType,
-      upiId: upiId.trim(),
       isPrimary: isPrimaryNew || accounts.length === 0,
     };
 
@@ -250,10 +271,9 @@ export const BankAccountManager = () => {
 
         toast({
           title: "Bank Account Added! 🎉",
-          description: `Linked ${res.account?.bankName || payload.bankName} (••••${cleanAcc.slice(-4)}) to your settlements.`,
+          description: `Linked ${res.account?.bankName || payload.bankName} (••••${cleanAcc.slice(-4)}) successfully.`,
         });
-        setIsAddModalOpen(false);
-        resetAddForm();
+        setIsModalOpen(false);
       } else {
         throw new Error(res?.message || "Failed to add bank account");
       }
@@ -268,7 +288,60 @@ export const BankAccountManager = () => {
     }
   };
 
-  // 4. Set as Primary
+  // 4. Save UPI ID (ONLY UPI fields, NO Bank/IFSC)
+  const handleSaveUpiId = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const cleanUpi = upiInput.trim().toLowerCase();
+    const problems: string[] = [];
+
+    if (!cleanUpi) {
+      problems.push("UPI ID is required.");
+    } else if (!/^[\w.\-]{2,}@[a-zA-Z]{2,}$/.test(cleanUpi)) {
+      problems.push("Invalid UPI ID format. Must look like name@bank (e.g. rahul@okhdfcbank, shreepg@icici).");
+    }
+
+    if (problems.length > 0) {
+      setUpiErrors(problems);
+      return;
+    }
+    setUpiErrors([]);
+    setIsSaving(true);
+
+    try {
+      const res = await updatePaymentSettings({
+        paymentMode: "MANUAL",
+        upiId: cleanUpi,
+      });
+
+      setOwnerUpiId(cleanUpi);
+
+      // If we have accounts, update the primary account's UPI in state
+      if (primaryAccount) {
+        const updatedAccounts = accounts.map((acc) =>
+          acc.id === primaryAccount.id ? { ...acc, upiId: cleanUpi } : acc
+        );
+        setAccounts(updatedAccounts);
+        setPrimaryAccount({ ...primaryAccount, upiId: cleanUpi });
+      }
+
+      toast({
+        title: "UPI ID Saved! 🎉",
+        description: `Standee QR is now active for ${cleanUpi}.`,
+      });
+      setIsModalOpen(false);
+    } catch (err: unknown) {
+      toast({
+        title: "Failed to update UPI ID",
+        description: (err as Error)?.message || "Please check the format and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // 5. Set as Primary
   const handleSetPrimary = async (accId: string) => {
     setActionInProgress(accId);
     try {
@@ -279,7 +352,7 @@ export const BankAccountManager = () => {
         setSelectedForQr(accId);
         toast({
           title: "Primary Account Updated ⭐",
-          description: "New rent collections and payments will default to this account.",
+          description: "New rent collections will default to this account.",
         });
       }
     } catch (err: unknown) {
@@ -293,7 +366,7 @@ export const BankAccountManager = () => {
     }
   };
 
-  // 5. Delete Account
+  // 6. Delete Account
   const handleDeleteAccount = async () => {
     if (!accountToDelete) return;
     const accId = accountToDelete.id;
@@ -335,17 +408,15 @@ export const BankAccountManager = () => {
     setRevealedAccounts((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // Helper for masking account number
   const formatMaskedAccount = (num: string) => {
     if (!num) return "—";
     if (num.length <= 4) return num;
-    const lastFour = num.slice(-4);
-    return `•••• •••• ${lastFour}`;
+    return `•••• •••• ${num.slice(-4)}`;
   };
 
-  // Active account for QR display
+  // Active account and UPI for QR Standee
   const activeQrAccount = accounts.find((a) => a.id === selectedForQr) || primaryAccount || accounts[0] || null;
-  const activeUpiId = activeQrAccount?.upiId?.trim() || "";
+  const activeUpiId = activeQrAccount?.upiId?.trim() || ownerUpiId?.trim() || "";
   const upiQrString = activeUpiId
     ? `upi://pay?pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent(
         selectedPg?.name || activeQrAccount?.accountHolderName || currentOwner?.name || "PG Ease Stay"
@@ -366,8 +437,8 @@ export const BankAccountManager = () => {
 
   return (
     <div className="space-y-6 max-w-5xl animate-fade-in">
-      {/* VERIFIED SETTLEMENT BANNER */}
-      <div className="rounded-2xl border border-emerald-300/80 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+      {/* 1. PROFESSIONAL SETTLEMENT BANNER */}
+      <div className="rounded-2xl border border-emerald-300/80 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
         <div className="flex items-center gap-3.5">
           <div className="h-12 w-12 rounded-2xl bg-emerald-500/15 flex items-center justify-center text-emerald-600 shrink-0 font-black">
             <ShieldCheck className="h-6 w-6" />
@@ -375,69 +446,82 @@ export const BankAccountManager = () => {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-bold text-slate-800 dark:text-slate-100 text-sm sm:text-base">
-                Direct Bank Payouts & Multiple Accounts
+                Direct Rent Settlements & Standee QR
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                 0% Gateway Fee
               </span>
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-xl leading-relaxed">
-              Add multiple bank accounts or UPI IDs and assign them to specific tenants for custom rent collections.
+              Add verified bank accounts for direct tenant deposits and configure your reception UPI standee QR.
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Badge variant="outline" className="text-xs px-3 py-1 font-semibold text-emerald-700 border-emerald-300">
-            T+1 Settlement
-          </Badge>
+        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
           <Button
             size="sm"
-            onClick={handleOpenAddModal}
-            className="bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs gap-1.5 shadow-sm"
+            variant="outline"
+            onClick={() => handleOpenModal("bank")}
+            className="flex-1 sm:flex-initial rounded-xl text-xs gap-1.5 font-semibold border-slate-300 hover:bg-slate-100 dark:border-slate-700"
           >
-            <Plus className="h-4 w-4" /> Add Account / UPI
+            <Building className="h-3.5 w-3.5 text-teal-600" /> + Add Bank Account
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => handleOpenModal("upi")}
+            className="flex-1 sm:flex-initial bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs gap-1.5 shadow-xs"
+          >
+            <QrCode className="h-3.5 w-3.5" /> + Set Up UPI
           </Button>
         </div>
       </div>
 
+      {/* 2. MAIN 2-COLUMN LAYOUT */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* LEFT COLUMN: LIST OF LINKED ACCOUNTS */}
+        {/* LEFT COLUMN: LINKED BANK ACCOUNTS */}
         <div className="lg:col-span-7 space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                <CreditCard className="h-4 w-4 text-teal-600" /> Linked Accounts ({accounts.length})
+                <Building className="h-4 w-4 text-teal-600" /> Bank Accounts (IMPS / NEFT)
+                <Badge variant="secondary" className="text-xs font-mono px-2 py-0">
+                  {accounts.length}
+                </Badge>
               </h3>
               <p className="text-xs text-muted-foreground">
-                Manage your settlement accounts and assign them to tenants.
+                Verified bank accounts for tenant settlements and manual bank transfers.
               </p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={fetchAccounts}
-              className="h-8 text-xs gap-1 text-muted-foreground"
-            >
-              <RefreshCw className="h-3 w-3" /> Refresh
-            </Button>
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchAccounts}
+                className="h-8 text-xs gap-1 text-muted-foreground rounded-xl"
+                title="Refresh accounts"
+              >
+                <RefreshCw className="h-3 w-3" /> Refresh
+              </Button>
+            </div>
           </div>
 
+          {/* EMPTY STATE FOR BANK ACCOUNTS */}
           {accounts.length === 0 ? (
-            <Card className="rounded-2xl border-dashed border-2 p-8 text-center space-y-3">
+            <Card className="rounded-2xl border-dashed border-2 p-8 text-center space-y-3 bg-muted/10">
               <div className="h-12 w-12 rounded-full bg-teal-50 dark:bg-teal-950 mx-auto flex items-center justify-center text-teal-600">
                 <Building className="h-6 w-6" />
               </div>
               <div className="space-y-1">
                 <p className="font-bold text-sm text-foreground">No Bank Account Linked</p>
-                <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-                  Add your bank account or UPI ID to start receiving direct payouts with zero commission.
+                <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                  Add your bank account number and IFSC code to receive direct tenant deposits with zero commission.
                 </p>
               </div>
               <Button
-                onClick={handleOpenAddModal}
+                onClick={() => handleOpenModal("bank")}
                 className="bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs gap-1.5"
               >
-                <Plus className="h-4 w-4" /> Add Your First Account
+                <Plus className="h-4 w-4" /> Add Bank Account
               </Button>
             </Card>
           ) : (
@@ -543,46 +627,17 @@ export const BankAccountManager = () => {
                       </div>
                     </div>
 
-                    {/* UPI Box if available */}
-                    {acc.upiId && (
-                      <div className="p-2.5 rounded-xl bg-muted/30 border border-border/70 flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-bold text-muted-foreground uppercase">UPI:</span>
-                          <span className="font-mono font-bold text-foreground text-xs">{acc.upiId}</span>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 px-2 text-[10px] gap-1"
-                          onClick={() => copyUpi(acc.upiId!)}
-                        >
-                          {isCopiedUpi === acc.upiId ? (
-                            <Check className="h-3 w-3 text-emerald-600" />
-                          ) : (
-                            <Copy className="h-3 w-3" />
-                          )}
-                          {isCopiedUpi === acc.upiId ? "Copied" : "Copy"}
-                        </Button>
-                      </div>
-                    )}
-
                     {/* Footer Actions */}
                     <div className="pt-2 border-t flex items-center justify-between text-[11px]">
                       <span className="text-muted-foreground flex items-center gap-1">
                         <CheckCircle2 className={cn("h-3 w-3", acc.isVerified ? "text-emerald-600" : "text-amber-600")} />
-                        {acc.isVerified ? "Verified for tenant settlements" : "Not verified — check IFSC, account number and UPI"}
+                        {acc.isVerified ? "Verified for tenant settlements" : "Valid IFSC format registered"}
                       </span>
-                      <Button
-                        size="sm"
-                        variant={isThisForQr ? "default" : "outline"}
-                        className={cn(
-                          "h-6 text-[10px] rounded-lg gap-1 px-2 font-semibold",
-                          isThisForQr ? "bg-teal-600 text-white" : ""
-                        )}
-                        onClick={() => setSelectedForQr(acc.id)}
-                      >
-                        <QrCode className="h-3 w-3" /> {isThisForQr ? "Standee Active" : "View QR Standee"}
-                      </Button>
+                      {acc.upiId ? (
+                        <Badge variant="outline" className="font-mono text-[10px] text-teal-700 border-teal-300">
+                          UPI: {acc.upiId}
+                        </Badge>
+                      ) : null}
                     </div>
                   </CardContent>
                 </Card>
@@ -602,111 +657,124 @@ export const BankAccountManager = () => {
                 Scan using any UPI app (GPay, PhonePe, Paytm, BHIM)
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center p-6 text-center space-y-4">
-              {/* Account Selector for QR */}
-              {accounts.length > 1 && (
-                <div className="w-full text-left space-y-1">
-                  <Label className="text-[11px] font-semibold text-muted-foreground">
-                    Standee QR Account
-                  </Label>
-                  <Select value={selectedForQr} onValueChange={(val) => setSelectedForQr(val)}>
-                    <SelectTrigger className="h-8 text-xs rounded-xl">
-                      <SelectValue placeholder="Select account" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {accounts.map((acc) => (
-                        <SelectItem key={acc.id} value={acc.id}>
-                          {acc.bankName || "Account"} (••••{acc.accountNumber?.slice(-4)})
-                          {acc.isPrimary ? " [Primary]" : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
 
+            <CardContent className="flex flex-col items-center justify-center p-6 text-center space-y-4">
               {activeUpiId ? (
                 <>
+                  {/* Standee Frame Card */}
                   <div
-                    className="p-4 rounded-2xl bg-white border-2 border-dashed border-teal-300 shadow-md flex items-center justify-center"
+                    className="p-5 rounded-2xl bg-white border-2 border-dashed border-teal-300 shadow-md flex flex-col items-center justify-center space-y-3 w-full max-w-[260px]"
                     role="img"
                     aria-label={`UPI QR for ${selectedPg?.name || "this PG"}, payee ${activeUpiId}`}
                   >
+                    <div className="text-center">
+                      <p className="font-extrabold text-sm text-slate-900 tracking-tight">
+                        {selectedPg?.name || "Your PG Property"}
+                      </p>
+                      <p className="text-[10px] font-semibold text-teal-600 uppercase tracking-wider">
+                        Scan & Pay Rent
+                      </p>
+                    </div>
+
                     <QRCodeSVG
                       value={upiQrString}
                       size={180}
                       level="M"
-                      includeMargin={true}
+                      includeMargin={false}
                       className="mx-auto rounded-lg"
                       title={`UPI QR for ${selectedPg?.name || "this PG"}`}
                     />
+
+                    <div className="flex items-center justify-center gap-1.5 pt-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[10px] font-bold text-slate-500 uppercase">
+                        All UPI Apps Accepted
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <p className="font-extrabold text-sm text-foreground">
-                      {selectedPg?.name || "Your PG Property"}
-                    </p>
+                  <div className="space-y-1.5 w-full">
                     <div className="flex items-center justify-center gap-1.5">
-                      <Badge variant="secondary" className="font-mono text-[11px] px-2.5 py-0.5">
+                      <Badge variant="secondary" className="font-mono text-[11px] px-3 py-1 font-bold">
                         {activeUpiId}
                       </Badge>
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
                         onClick={() => copyUpi(activeUpiId)}
                         title="Copy UPI ID"
                       >
-                        <Copy className="h-3 w-3" />
+                        {isCopiedUpi === activeUpiId ? (
+                          <Check className="h-3.5 w-3.5 text-emerald-600" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
                       </Button>
                     </div>
+
                     {activeQrAccount && (
                       <p className="text-[11px] text-muted-foreground">
-                        Payout to: {activeQrAccount.bankName} (••••{activeQrAccount.accountNumber?.slice(-4)})
+                        Settlement to: {activeQrAccount.bankName} (••••{activeQrAccount.accountNumber?.slice(-4)})
                       </p>
                     )}
                   </div>
 
-                  <div className="flex gap-2 w-full pt-2">
+                  {/* Actions for Configured QR */}
+                  <div className="space-y-2 w-full pt-2">
+                    <div className="flex gap-2 w-full">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 rounded-xl text-xs gap-1.5 font-semibold"
+                        onClick={() =>
+                          toast({
+                            title: "Standee PDF Ready 📄",
+                            description: "Use Print or Save as PDF to print this standee for your reception.",
+                          })
+                        }
+                      >
+                        <Download className="h-3.5 w-3.5" /> Download Standee
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-xl text-xs px-3"
+                        onClick={() => window.print()}
+                        title="Print Standee"
+                      >
+                        <Printer className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      className="flex-1 rounded-xl text-xs gap-1.5 font-semibold"
-                      onClick={() =>
-                        toast({
-                          title: "Standee PDF Ready 📄",
-                          description: "Print this standee to display at your reception.",
-                        })
-                      }
+                      onClick={() => handleOpenModal("upi")}
+                      className="w-full text-xs text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-950/40 rounded-xl gap-1.5"
                     >
-                      <Download className="h-3.5 w-3.5" /> Download Standee
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-xl text-xs px-3"
-                      onClick={() => window.print()}
-                      title="Print Standee"
-                    >
-                      <Printer className="h-3.5 w-3.5" />
+                      <Pencil className="h-3 w-3" /> Change UPI ID
                     </Button>
                   </div>
                 </>
               ) : (
+                /* EMPTY STATE FOR UPI STANDEE */
                 <div className="p-6 rounded-2xl bg-amber-50/70 border border-amber-200 text-center space-y-3 w-full">
-                  <AlertCircle className="h-8 w-8 text-amber-600 mx-auto" />
+                  <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 mx-auto">
+                    <QrCode className="h-5 w-5" />
+                  </div>
                   <div className="space-y-1">
                     <p className="font-bold text-sm text-amber-900">No UPI ID Added</p>
                     <p className="text-xs text-amber-700">
-                      Please add a UPI ID (e.g. name@bank) to your bank account to generate and download the collection standee QR.
+                      Configure your UPI ID (e.g. name@bank) to generate and download your custom collection standee QR.
                     </p>
                   </div>
                   <Button
                     size="sm"
-                    onClick={() => setIsAddModalOpen(true)}
-                    className="gap-1.5 text-xs bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-xs"
+                    onClick={() => handleOpenModal("upi")}
+                    className="gap-1.5 text-xs bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-xs font-bold"
                   >
-                    <Plus className="h-3.5 w-3.5" /> Add Bank Account / UPI ID
+                    <Plus className="h-3.5 w-3.5" /> Set Up UPI ID
                   </Button>
                 </div>
               )}
@@ -715,163 +783,213 @@ export const BankAccountManager = () => {
         </div>
       </div>
 
-      {/* DIALOG: ADD NEW SETTLEMENT ACCOUNT */}
-      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
-              <Building className="h-4 w-4 text-teal-600" /> Add Bank Account / UPI
+      {/* 3. DEDICATED DIALOG: CLEAN TABBED SETUP (BANK vs UPI) */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-md p-6">
+          <DialogHeader className="space-y-1">
+            <DialogTitle className="text-base font-bold flex items-center gap-2">
+              {modalTab === "bank" ? (
+                <>
+                  <Building className="h-4 w-4 text-teal-600" /> Add Bank Account
+                </>
+              ) : (
+                <>
+                  <QrCode className="h-4 w-4 text-teal-600" /> Set Up Collection UPI ID
+                </>
+              )}
             </DialogTitle>
             <DialogDescription className="text-xs">
-              Link another settlement account or UPI ID to collect rent directly from tenants.
+              {modalTab === "bank"
+                ? "Enter your bank details for direct tenant deposits and settlements."
+                : "Enter your UPI ID to generate your custom reception standee QR."}
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleAddAccount} className="space-y-3.5 text-xs py-2">
-            {addErrors.length > 0 && (
-              <ul className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-red-700 space-y-1" role="alert">
-                {addErrors.map((err) => (
-                  <li key={err}>{err}</li>
-                ))}
-              </ul>
-            )}
-            {/* Account Holder Name */}
-            <div className="space-y-1">
-              <Label htmlFor={`${formId}-holder`} className="text-xs font-semibold">
-                Account Holder Name *
-              </Label>
-              <Input
-                id={`${formId}-holder`}
-                value={accountHolder}
-                onChange={(e) => setAccountHolder(e.target.value)}
-                placeholder="e.g. Rahul Sharma or Shree PG Enterprises"
-                required
-                className="h-9 text-xs rounded-xl font-medium"
-              />
-            </div>
+          {/* TAB SELECTOR: BANK vs UPI */}
+          <div className="grid grid-cols-2 p-1 bg-muted/60 rounded-xl my-2 text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => {
+                setModalTab("bank");
+                setBankErrors([]);
+              }}
+              className={cn(
+                "py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all",
+                modalTab === "bank"
+                  ? "bg-background text-foreground shadow-xs font-bold"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Building className="h-3.5 w-3.5 text-teal-600" />
+              Bank Account
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setModalTab("upi");
+                setUpiErrors([]);
+                if (!upiInput) setUpiInput(ownerUpiId || primaryAccount?.upiId || "");
+                if (!upiPayeeName) setUpiPayeeName(selectedPg?.name || currentOwner?.name || "PG Ease Stay");
+              }}
+              className={cn(
+                "py-2 px-3 rounded-lg flex items-center justify-center gap-1.5 transition-all",
+                modalTab === "upi"
+                  ? "bg-background text-foreground shadow-xs font-bold"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <QrCode className="h-3.5 w-3.5 text-teal-600" />
+              UPI ID (VPA)
+            </button>
+          </div>
 
-            {/* IFSC Code with Real-Time Lookup */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <Label htmlFor={`${formId}-ifsc`} className="text-xs font-semibold">
-                  IFSC Code *
+          {/* TAB CONTENT 1: BANK ACCOUNT ONLY */}
+          {modalTab === "bank" && (
+            <form onSubmit={handleSaveBankAccount} className="space-y-3.5 text-xs pt-1">
+              {bankErrors.length > 0 && (
+                <ul className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-red-700 space-y-1" role="alert">
+                  {bankErrors.map((err) => (
+                    <li key={err}>{err}</li>
+                  ))}
+                </ul>
+              )}
+
+              {/* Account Holder Name */}
+              <div className="space-y-1">
+                <Label htmlFor={`${formId}-holder`} className="text-xs font-semibold">
+                  Account Holder Name *
                 </Label>
-                {isLookingUpIfsc && (
-                  <span className="text-[10px] text-teal-600 flex items-center gap-1 font-medium animate-pulse">
-                    <RefreshCw className="h-2.5 w-2.5 animate-spin" /> Verifying...
-                  </span>
-                )}
-              </div>
-              <div className="relative">
                 <Input
-                  id={`${formId}-ifsc`}
-                  value={ifscCode}
-                  onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
-                  placeholder="e.g. HDFC0000001"
-                  maxLength={11}
+                  id={`${formId}-holder`}
+                  value={accountHolder}
+                  onChange={(e) => setAccountHolder(e.target.value)}
+                  placeholder="e.g. Rahul Sharma or Shree PG Enterprises"
                   required
-                  className={cn(
-                    "h-9 text-xs rounded-xl uppercase font-mono tracking-wider",
-                    ifscResult ? "border-emerald-500 pr-8" : "",
-                    ifscError ? "border-destructive pr-8" : ""
-                  )}
+                  className="h-9 text-xs rounded-xl font-medium"
                 />
-                {ifscResult && (
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600 absolute right-2.5 top-2.5" />
-                )}
-                {ifscError && (
-                  <AlertCircle className="h-4 w-4 text-destructive absolute right-2.5 top-2.5" />
-                )}
               </div>
 
-              {/* IFSC Lookup Success Preview */}
-              {ifscResult && (
-                <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 text-emerald-800 dark:text-emerald-300 text-[11px] flex items-center gap-2">
-                  <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                  <div>
-                    <span className="font-bold">{ifscResult.bank}</span>
-                    {ifscResult.branch && ` — ${ifscResult.branch}`}
-                    {ifscResult.city && ` (${ifscResult.city})`}
-                  </div>
+              {/* IFSC Code with Real-Time Lookup */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor={`${formId}-ifsc`} className="text-xs font-semibold">
+                    IFSC Code *
+                  </Label>
+                  {isLookingUpIfsc && (
+                    <span className="text-[10px] text-teal-600 flex items-center gap-1 font-medium animate-pulse">
+                      <RefreshCw className="h-2.5 w-2.5 animate-spin" /> Verifying...
+                    </span>
+                  )}
                 </div>
-              )}
-
-              {/* IFSC Error Warning */}
-              {ifscError && (
-                <p className="text-[10px] text-destructive flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" /> {ifscError}
-                </p>
-              )}
-            </div>
-
-            {/* Bank Name & Branch */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor={`${formId}-bankName`} className="text-xs">
-                  Bank Name
-                </Label>
-                <Input
-                  id={`${formId}-bankName`}
-                  value={bankName}
-                  onChange={(e) => setBankName(e.target.value)}
-                  placeholder="e.g. HDFC Bank"
-                  className="h-9 text-xs rounded-xl font-medium"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label htmlFor={`${formId}-branch`} className="text-xs">
-                  Branch
-                </Label>
-                <Input
-                  id={`${formId}-branch`}
-                  value={branch}
-                  onChange={(e) => setBranch(e.target.value)}
-                  placeholder="e.g. Nariman Point"
-                  className="h-9 text-xs rounded-xl font-medium"
-                />
-              </div>
-            </div>
-
-            {/* Account Number & Confirm */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor={`${formId}-accNum`} className="text-xs font-semibold">
-                  Account Number *
-                </Label>
-                <Input
-                  id={`${formId}-accNum`}
-                  value={accountNumber}
-                  onChange={(e) => setAccountNumber(e.target.value.replace(/\s+/g, ""))}
-                  type="password"
-                  placeholder="Enter account number"
-                  required
-                  className="h-9 text-xs rounded-xl font-mono"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label htmlFor={`${formId}-confirmAcc`} className="text-xs font-semibold">
-                  Confirm Account *
-                </Label>
-                <Input
-                  id={`${formId}-confirmAcc`}
-                  value={confirmAccountNumber}
-                  onChange={(e) => setConfirmAccountNumber(e.target.value.replace(/\s+/g, ""))}
-                  placeholder="Re-enter account number"
-                  required
-                  className={cn(
-                    "h-9 text-xs rounded-xl font-mono",
-                    confirmAccountNumber && accountNumber !== confirmAccountNumber
-                      ? "border-destructive focus-visible:ring-destructive"
-                      : ""
+                <div className="relative">
+                  <Input
+                    id={`${formId}-ifsc`}
+                    value={ifscCode}
+                    onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
+                    placeholder="e.g. HDFC0000001"
+                    maxLength={11}
+                    required
+                    className={cn(
+                      "h-9 text-xs rounded-xl uppercase font-mono tracking-wider",
+                      ifscResult ? "border-emerald-500 pr-8" : "",
+                      ifscError ? "border-destructive pr-8" : ""
+                    )}
+                  />
+                  {ifscResult && (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 absolute right-2.5 top-2.5" />
                   )}
-                />
-              </div>
-            </div>
+                  {ifscError && (
+                    <AlertCircle className="h-4 w-4 text-destructive absolute right-2.5 top-2.5" />
+                  )}
+                </div>
 
-            {/* Account Type & UPI VPA */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* IFSC Lookup Success Preview */}
+                {ifscResult && (
+                  <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 text-emerald-800 dark:text-emerald-300 text-[11px] flex items-center gap-2">
+                    <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                    <div>
+                      <span className="font-bold">{ifscResult.bank}</span>
+                      {ifscResult.branch && ` — ${ifscResult.branch}`}
+                      {ifscResult.city && ` (${ifscResult.city})`}
+                    </div>
+                  </div>
+                )}
+
+                {/* IFSC Error Warning */}
+                {ifscError && (
+                  <p className="text-[10px] text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> {ifscError}
+                  </p>
+                )}
+              </div>
+
+              {/* Bank Name & Branch */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor={`${formId}-bankName`} className="text-xs">
+                    Bank Name
+                  </Label>
+                  <Input
+                    id={`${formId}-bankName`}
+                    value={bankName}
+                    onChange={(e) => setBankName(e.target.value)}
+                    placeholder="e.g. HDFC Bank"
+                    className="h-9 text-xs rounded-xl font-medium"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor={`${formId}-branch`} className="text-xs">
+                    Branch
+                  </Label>
+                  <Input
+                    id={`${formId}-branch`}
+                    value={branch}
+                    onChange={(e) => setBranch(e.target.value)}
+                    placeholder="e.g. Nariman Point"
+                    className="h-9 text-xs rounded-xl font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* Account Number & Confirm */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor={`${formId}-accNum`} className="text-xs font-semibold">
+                    Account Number *
+                  </Label>
+                  <Input
+                    id={`${formId}-accNum`}
+                    value={accountNumber}
+                    onChange={(e) => setAccountNumber(e.target.value.replace(/\s+/g, ""))}
+                    type="password"
+                    placeholder="Enter account number"
+                    required
+                    className="h-9 text-xs rounded-xl font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor={`${formId}-confirmAcc`} className="text-xs font-semibold">
+                    Confirm Account *
+                  </Label>
+                  <Input
+                    id={`${formId}-confirmAcc`}
+                    value={confirmAccountNumber}
+                    onChange={(e) => setConfirmAccountNumber(e.target.value.replace(/\s+/g, ""))}
+                    placeholder="Re-enter account number"
+                    required
+                    className={cn(
+                      "h-9 text-xs rounded-xl font-mono",
+                      confirmAccountNumber && accountNumber !== confirmAccountNumber
+                        ? "border-destructive focus-visible:ring-destructive"
+                        : ""
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Account Type */}
               <div className="space-y-1">
                 <Label className="text-xs font-semibold">Account Type</Label>
                 <Select
@@ -888,57 +1006,140 @@ export const BankAccountManager = () => {
                 </Select>
               </div>
 
+              {/* Set as Primary Checkbox */}
+              <div className="pt-1 flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id={`${formId}-primary`}
+                  checked={isPrimaryNew}
+                  onChange={(e) => setIsPrimaryNew(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                />
+                <Label htmlFor={`${formId}-primary`} className="text-xs cursor-pointer font-medium text-muted-foreground">
+                  Set as default primary account for rent collections
+                </Label>
+              </div>
+
+              <DialogFooter className="pt-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsModalOpen(false)}
+                  className="rounded-xl text-xs"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSaving}
+                  className="bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs gap-1.5"
+                >
+                  {isSaving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+                  Add Bank Account
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+
+          {/* TAB CONTENT 2: UPI ID ONLY */}
+          {modalTab === "upi" && (
+            <form onSubmit={handleSaveUpiId} className="space-y-4 text-xs pt-1">
+              {upiErrors.length > 0 && (
+                <ul className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-red-700 space-y-1" role="alert">
+                  {upiErrors.map((err) => (
+                    <li key={err}>{err}</li>
+                  ))}
+                </ul>
+              )}
+
+              {/* UPI ID (VPA) */}
               <div className="space-y-1">
-                <Label htmlFor={`${formId}-upi`} className="text-xs font-semibold">
-                  UPI ID (Optional)
+                <Label htmlFor={`${formId}-upiId`} className="text-xs font-semibold">
+                  UPI ID (VPA) *
                 </Label>
                 <Input
-                  id={`${formId}-upi`}
-                  value={upiId}
-                  onChange={(e) => setUpiId(e.target.value)}
-                  placeholder="e.g. yourname@okhdfcbank"
+                  id={`${formId}-upiId`}
+                  value={upiInput}
+                  onChange={(e) => setUpiInput(e.target.value.toLowerCase())}
+                  placeholder="e.g. rahul@okaxis or shreepg@icici"
+                  required
+                  className="h-9 text-xs rounded-xl font-mono font-medium"
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Enter your VPA linked to GPay, PhonePe, Paytm, or BHIM.
+                </p>
+              </div>
+
+              {/* Display / Payee Name */}
+              <div className="space-y-1">
+                <Label htmlFor={`${formId}-payeeName`} className="text-xs font-semibold">
+                  Payee / PG Name on Standee *
+                </Label>
+                <Input
+                  id={`${formId}-payeeName`}
+                  value={upiPayeeName}
+                  onChange={(e) => setUpiPayeeName(e.target.value)}
+                  placeholder="e.g. Shivam PG / Rahul Sharma"
+                  required
                   className="h-9 text-xs rounded-xl font-medium"
                 />
               </div>
-            </div>
 
-            {/* Set as Primary Checkbox */}
-            <div className="pt-2 flex items-center gap-2">
-              <input
-                type="checkbox"
-                id={`${formId}-primary`}
-                checked={isPrimaryNew}
-                onChange={(e) => setIsPrimaryNew(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-              />
-              <Label htmlFor={`${formId}-primary`} className="text-xs cursor-pointer font-medium">
-                Set as default primary account for rent collections
-              </Label>
-            </div>
+              {/* Real-time Standee QR Preview inside modal */}
+              {upiInput.trim() && /^[\w.\-]{2,}@[a-zA-Z]{2,}$/.test(upiInput.trim()) && (
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-teal-200 dark:border-teal-900/50 flex items-center gap-3">
+                  <div className="p-1.5 bg-white rounded-lg border shadow-xs shrink-0">
+                    <QRCodeSVG
+                      value={`upi://pay?pa=${encodeURIComponent(upiInput.trim())}&pn=${encodeURIComponent(
+                        upiPayeeName.trim() || "PG Ease"
+                      )}&cu=INR`}
+                      size={64}
+                      level="M"
+                    />
+                  </div>
+                  <div className="space-y-0.5 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-xs text-foreground truncate">
+                        {upiPayeeName || "PG Property"}
+                      </span>
+                      <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 text-[9px] font-bold py-0">
+                        Live Preview
+                      </Badge>
+                    </div>
+                    <p className="font-mono text-[11px] text-teal-700 dark:text-teal-400 font-bold truncate">
+                      {upiInput.trim()}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      Ready for instant tenant payments.
+                    </p>
+                  </div>
+                </div>
+              )}
 
-            <DialogFooter className="pt-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsAddModalOpen(false)}
-                className="rounded-xl text-xs"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSaving}
-                className="bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs gap-1.5"
-              >
-                {isSaving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
-                Add Account
-              </Button>
-            </DialogFooter>
-          </form>
+              <DialogFooter className="pt-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsModalOpen(false)}
+                  className="rounded-xl text-xs"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSaving}
+                  className="bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs gap-1.5"
+                >
+                  {isSaving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                  Save UPI ID
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
 
-      {/* DIALOG: CONFIRM DELETE */}
+      {/* 4. DIALOG: CONFIRM DELETE ACCOUNT */}
       <Dialog open={Boolean(accountToDelete)} onOpenChange={(open) => !open && setAccountToDelete(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
