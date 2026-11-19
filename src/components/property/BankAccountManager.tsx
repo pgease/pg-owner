@@ -345,10 +345,12 @@ export const BankAccountManager = () => {
 
   // Active account for QR display
   const activeQrAccount = accounts.find((a) => a.id === selectedForQr) || primaryAccount || accounts[0] || null;
-  const activeUpiId = activeQrAccount?.upiId || "pgease@icici";
-  const upiQrString = `upi://pay?pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent(
-    selectedPg?.name || activeQrAccount?.accountHolderName || currentOwner?.name || "PG Ease Stay"
-  )}&cu=INR`;
+  const activeUpiId = activeQrAccount?.upiId?.trim() || "";
+  const upiQrString = activeUpiId
+    ? `upi://pay?pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent(
+        selectedPg?.name || activeQrAccount?.accountHolderName || currentOwner?.name || "PG Ease Stay"
+      )}&cu=INR`
+    : "";
 
   if (isLoading) {
     return (
@@ -623,70 +625,91 @@ export const BankAccountManager = () => {
                 </div>
               )}
 
-              <div
-                className="p-4 rounded-2xl bg-white border-2 border-dashed border-teal-300 shadow-md flex items-center justify-center"
-                role="img"
-                aria-label={`UPI QR for ${selectedPg?.name || "this PG"}, payee ${activeUpiId}`}
-              >
-                <QRCodeSVG
-                  value={upiQrString}
-                  size={180}
-                  level="M"
-                  includeMargin={true}
-                  className="mx-auto rounded-lg"
-                  title={`UPI QR for ${selectedPg?.name || "this PG"}`}
-                />
-              </div>
+              {activeUpiId ? (
+                <>
+                  <div
+                    className="p-4 rounded-2xl bg-white border-2 border-dashed border-teal-300 shadow-md flex items-center justify-center"
+                    role="img"
+                    aria-label={`UPI QR for ${selectedPg?.name || "this PG"}, payee ${activeUpiId}`}
+                  >
+                    <QRCodeSVG
+                      value={upiQrString}
+                      size={180}
+                      level="M"
+                      includeMargin={true}
+                      className="mx-auto rounded-lg"
+                      title={`UPI QR for ${selectedPg?.name || "this PG"}`}
+                    />
+                  </div>
 
-              <div className="space-y-1">
-                <p className="font-extrabold text-sm text-foreground">
-                  {selectedPg?.name || "Your PG Property"}
-                </p>
-                <div className="flex items-center justify-center gap-1.5">
-                  <Badge variant="secondary" className="font-mono text-[11px] px-2.5 py-0.5">
-                    {activeUpiId}
-                  </Badge>
+                  <div className="space-y-1">
+                    <p className="font-extrabold text-sm text-foreground">
+                      {selectedPg?.name || "Your PG Property"}
+                    </p>
+                    <div className="flex items-center justify-center gap-1.5">
+                      <Badge variant="secondary" className="font-mono text-[11px] px-2.5 py-0.5">
+                        {activeUpiId}
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+                        onClick={() => copyUpi(activeUpiId)}
+                        title="Copy UPI ID"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    {activeQrAccount && (
+                      <p className="text-[11px] text-muted-foreground">
+                        Payout to: {activeQrAccount.bankName} (••••{activeQrAccount.accountNumber?.slice(-4)})
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2 w-full pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 rounded-xl text-xs gap-1.5 font-semibold"
+                      onClick={() =>
+                        toast({
+                          title: "Standee PDF Ready 📄",
+                          description: "Print this standee to display at your reception.",
+                        })
+                      }
+                    >
+                      <Download className="h-3.5 w-3.5" /> Download Standee
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-xl text-xs px-3"
+                      onClick={() => window.print()}
+                      title="Print Standee"
+                    >
+                      <Printer className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="p-6 rounded-2xl bg-amber-50/70 border border-amber-200 text-center space-y-3 w-full">
+                  <AlertCircle className="h-8 w-8 text-amber-600 mx-auto" />
+                  <div className="space-y-1">
+                    <p className="font-bold text-sm text-amber-900">No UPI ID Added</p>
+                    <p className="text-xs text-amber-700">
+                      Please add a UPI ID (e.g. name@bank) to your bank account to generate and download the collection standee QR.
+                    </p>
+                  </div>
                   <Button
                     size="sm"
-                    variant="ghost"
-                    className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-                    onClick={() => copyUpi(activeUpiId)}
-                    title="Copy UPI ID"
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="gap-1.5 text-xs bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-xs"
                   >
-                    <Copy className="h-3 w-3" />
+                    <Plus className="h-3.5 w-3.5" /> Add Bank Account / UPI ID
                   </Button>
                 </div>
-                {activeQrAccount && (
-                  <p className="text-[11px] text-muted-foreground">
-                    Payout to: {activeQrAccount.bankName} (••••{activeQrAccount.accountNumber?.slice(-4)})
-                  </p>
-                )}
-              </div>
-
-              <div className="flex gap-2 w-full pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 rounded-xl text-xs gap-1.5 font-semibold"
-                  onClick={() =>
-                    toast({
-                      title: "Standee PDF Ready 📄",
-                      description: "Print this standee to display at your reception.",
-                    })
-                  }
-                >
-                  <Download className="h-3.5 w-3.5" /> Download Standee
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-xl text-xs px-3"
-                  onClick={() => window.print()}
-                  title="Print Standee"
-                >
-                  <Printer className="h-3.5 w-3.5" />
-                </Button>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>

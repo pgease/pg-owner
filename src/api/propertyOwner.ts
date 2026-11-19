@@ -4077,5 +4077,66 @@ export async function deleteTenantDue(
   );
 }
 
+/**
+ * Payment verification item from GET /property-owners/payment-verifications
+ */
+export interface PaymentVerificationItem {
+  id: string;
+  transactionNumber: string;
+  tenantId: string;
+  tenantName: string;
+  tenantPhone?: string;
+  propertyId: string;
+  propertyName?: string;
+  roomId?: string;
+  roomNumber?: string;
+  bedNumber?: string;
+  roomBed?: string;
+  amount: number;
+  amountClaimed?: number;
+  utr: string;
+  utrNumber?: string;
+  screenshotUrl?: string;
+  paymentProofUrl?: string;
+  submittedDate?: string;
+  submittedAt?: string;
+  month?: number | string;
+  periodMonth?: number;
+  periodYear?: number;
+  status: "pending_verification" | "success" | "rejected" | "pending" | "approved";
+  rejectionReason?: string;
+  rentCollectionId?: string;
+  notes?: string;
+}
+
+export async function getPaymentVerifications(params?: {
+  status?: string;
+  propertyId?: string;
+}): Promise<{ success: boolean; data: PaymentVerificationItem[]; total: number }> {
+  const query = new URLSearchParams();
+  if (params?.status) query.set("status", params.status);
+  if (params?.propertyId) query.set("propertyId", params.propertyId);
+  const qStr = query.toString();
+  return httpRequest<{ success: boolean; data: PaymentVerificationItem[]; total: number }>(
+    `${PROPERTY_OWNER_BASE}/payment-verifications${qStr ? `?${qStr}` : ""}`,
+    { auth: true }
+  );
+}
+
+export async function approvePaymentVerification(txnId: string): Promise<any> {
+  return httpRequest<any>(
+    `${PROPERTY_OWNER_BASE}/payment-verifications/${encodeURIComponent(txnId)}/approve`,
+    { method: "POST", auth: true }
+  );
+}
+
+export async function rejectPaymentVerification(txnId: string, reason?: string): Promise<any> {
+  return httpRequest<any>(
+    `${PROPERTY_OWNER_BASE}/payment-verifications/${encodeURIComponent(txnId)}/reject`,
+    { method: "POST", auth: true, body: { reason } }
+  );
+}
+
+
 
 

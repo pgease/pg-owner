@@ -54,6 +54,7 @@ import {
 } from "@/components/ui/select";
 import { useApp } from "@/context/AppContext";
 import { toast } from "@/components/ui/use-toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   usePostManualRentMutation,
   useRentCollectionDashboard,
@@ -65,6 +66,10 @@ import { useEntitlements } from "@/hooks/useEntitlements";
 import { TrialExpiredGateModal } from "@/components/common/TrialExpiredGateModal";
 import {
   sendWhatsAppRentReminder,
+  getPaymentVerifications,
+  approvePaymentVerification,
+  rejectPaymentVerification,
+  type PaymentVerificationItem,
   type RentDashboardTenantRow,
   type RentCollectionHistoryItem,
   type RentCollectionHistoryParams,
@@ -138,23 +143,6 @@ function exportStatusLabel(status: string) {
   if (status === "verification_pending") return "Verification pending";
   return status ? status.charAt(0).toUpperCase() + status.slice(1) : "Pending";
 }
-
-interface PaymentVerificationItem {
-  id: string;
-  tenantId: string;
-  roomTenantId: string;
-  tenantName: string;
-  roomNumber: string;
-  amountClaimed: number;
-  utrNumber: string;
-  screenshotUrl?: string;
-  submittedAt: string;
-  status: "pending" | "approved" | "rejected";
-  rejectionReason?: string;
-}
-
-// Stored / simulated offline payment proofs for Lite Plan
-const INITIAL_VERIFICATIONS: PaymentVerificationItem[] = [];
 
 export const RentPayments = () => {
   const navigate = useNavigate();
@@ -256,11 +244,25 @@ export const RentPayments = () => {
   const [selectedPassbookTenant, setSelectedPassbookTenant] = useState<any | null>(null);
 
   // Verification Queue
-  const [verifications, setVerifications] = useState<PaymentVerificationItem[]>(INITIAL_VERIFICATIONS);
+  const queryClient = useQueryClient();
+
+  // Verification Queue loaded from GET /property-owners/payment-verifications
+  const verificationsQuery = useQuery({
+    queryKey: ["payment-verifications", selectedPgId],
+    queryFn: () => getPaymentVerifications({ status: "pending_verification", propertyId: selectedPgId || undefined }),
+    refetchInterval: 30000,
+  });
+
+  const verifications = useMemo(() => {
+    return Array.isArray(verificationsQuery.data?.data) ? verificationsQuery.data.data : [];
+  }, [verificationsQuery.data]);
+
   const [activeVerification, setActiveVerification] = useState<PaymentVerificationItem | null>(null);
   const [verificationDrawerOpen, setVerificationDrawerOpen] = useState(false);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
 
   // Payment Link Dialog
   const [paymentLinkTenant, setPaymentLinkTenant] = useState<{
@@ -456,7 +458,9 @@ export const RentPayments = () => {
 
       // Check if UTR verification is pending for this tenant
       const hasPendingVerification = verifications.some(
-        (v) => (v.tenantId === tId || v.tenantName.toLowerCase() === name.toLowerCase()) && v.status === "pending"
+        (v) =>
+          (v.tenantId === tId || v.tenantName.toLowerCase() === name.toLowerCase()) &&
+          (v.status === "pending" || v.status === "pending_verification")
       );
 
       const dueDayRaw = row.rentDueDate ?? row.dueDay ?? row.rent_due_date ?? 5;
@@ -518,8 +522,16 @@ export const RentPayments = () => {
           if (days < lastDay) amountDue = Math.round((rent * days) / lastDay);
         }
 
+        const hasPendingVerification = verifications.some(
+          (v) =>
+            (v.tenantId === tId || v.tenantName.toLowerCase() === name.toLowerCase()) &&
+            (v.status === "pending" || v.status === "pending_verification")
+        );
+
         let st: "paid" | "partial" | "pending" | "overdue" | "verification_pending" = "pending";
-        if (overdueDays > 0 && amountDue > 0) {
+        if (hasPendingVerification) {
+          st = "verification_pending";
+        } else if (overdueDays > 0 && amountDue > 0) {
           st = "overdue";
         }
 
@@ -658,56 +670,63 @@ export const RentPayments = () => {
     }
   };
 
-  // UTR Proof Approval
+  // UTR Proof Approval via live API
   const handleApproveVerification = async (item: PaymentVerificationItem) => {
+    setIsApproving(true);
     try {
-      await manualMut.mutateAsync({
-        roomTenantId: item.roomTenantId,
-        tenantId: item.tenantId,
-        periodMonth: month,
-        periodYear: year,
-        amountPaid: item.amountClaimed,
-        paymentMethod: "upi",
-        reference: item.utrNumber || undefined,
-      });
-
-      setVerifications((prev) =>
-        prev.map((v) => (v.id === item.id ? { ...v, status: "approved" as const } : v))
-      );
+      await approvePaymentVerification(item.id);
 
       toast({
         title: "Payment proof verified & approved",
-        description: `UTR ${item.utrNumber} verified for ${item.tenantName}. Credited ${formatINR(item.amountClaimed)}.`,
+        description: `UTR ${item.utrNumber || item.utr} verified for ${item.tenantName}. Credited ${formatINR(item.amountClaimed || item.amount)} and WhatsApp receipt alert sent.`,
       });
       setVerificationDrawerOpen(false);
+      void verificationsQuery.refetch();
       void rentQuery.refetch();
+      queryClient.invalidateQueries({ queryKey: ["payment-verifications"] });
+      queryClient.invalidateQueries({ queryKey: ["rent-collection"] });
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
     } catch (e: any) {
       toast({
         title: "Could not approve verification",
         description: e?.message || "Network error. Try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsApproving(false);
     }
   };
 
-  // UTR Proof Rejection
-  const handleRejectVerification = () => {
+  // UTR Proof Rejection via live API
+  const handleRejectVerification = async () => {
     if (!activeVerification) return;
-    setVerifications((prev) =>
-      prev.map((v) =>
-        v.id === activeVerification.id
-          ? { ...v, status: "rejected" as const, rejectionReason: rejectionReason || "UTR reference not found in bank ledger" }
-          : v
-      )
-    );
-    toast({
-      title: "Payment proof rejected",
-      description: `Tenant will be notified to resubmit valid transaction reference.`,
-      variant: "destructive",
-    });
-    setRejectModalOpen(false);
-    setVerificationDrawerOpen(false);
-    setRejectionReason("");
+    setIsRejecting(true);
+    try {
+      const reasonText = rejectionReason.trim() || "UTR reference not found in bank ledger statement";
+      await rejectPaymentVerification(activeVerification.id, reasonText);
+
+      toast({
+        title: "Payment proof rejected",
+        description: `Tenant will be notified on WhatsApp to resubmit transaction reference.`,
+        variant: "destructive",
+      });
+      setRejectModalOpen(false);
+      setVerificationDrawerOpen(false);
+      setRejectionReason("");
+      void verificationsQuery.refetch();
+      void rentQuery.refetch();
+      queryClient.invalidateQueries({ queryKey: ["payment-verifications"] });
+      queryClient.invalidateQueries({ queryKey: ["rent-collection"] });
+      queryClient.invalidateQueries({ queryKey: ["tenants"] });
+    } catch (e: any) {
+      toast({
+        title: "Could not reject payment proof",
+        description: e?.message || "Failed to submit rejection. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRejecting(false);
+    }
   };
 
   // Export to CSV
@@ -944,9 +963,9 @@ export const RentPayments = () => {
               />
               <MetricDisplay
                 label="Verification queue"
-                value={verifications.filter((v) => v.status === "pending").length}
+                value={verifications.filter((v) => v.status === "pending" || v.status === "pending_verification").length}
                 subText="Lite manual UTR proofs"
-                tone={verifications.filter((v) => v.status === "pending").length > 0 ? "warning" : "default"}
+                tone={verifications.filter((v) => v.status === "pending" || v.status === "pending_verification").length > 0 ? "warning" : "default"}
                 to="#verification-queue"
               />
             </div>
@@ -983,11 +1002,11 @@ export const RentPayments = () => {
               </div>
 
               {/* Verification Queue Quick Alert */}
-              {verifications.filter((v) => v.status === "pending").length > 0 && (
+              {verifications.filter((v) => v.status === "pending" || v.status === "pending_verification").length > 0 && (
                 <div className="flex items-center gap-2 text-xs bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1.5 rounded-sm">
                   <Clock className="h-3.5 w-3.5 text-amber-600 shrink-0" />
                   <span>
-                    <strong>{verifications.filter((v) => v.status === "pending").length} payment proof(s)</strong> waiting for UTR review.
+                    <strong>{verifications.filter((v) => v.status === "pending" || v.status === "pending_verification").length} payment proof(s)</strong> waiting for UTR review.
                   </span>
                   <button
                     type="button"
@@ -1125,7 +1144,7 @@ export const RentPayments = () => {
                         type="button"
                         className="flex h-11 flex-1 items-center justify-center rounded-full bg-[#FFE7CC] text-[13px] font-medium text-[#FF8800]"
                         onClick={() => {
-                          const v = verifications.find((item) => item.tenantId === row.tenantId || item.tenantName === row.tenantName);
+                          const v = verifications.find((item) => item.tenantId === row.tenantId || item.tenantName.toLowerCase() === row.tenantName.toLowerCase());
                           if (v) {
                             setActiveVerification(v);
                             setVerificationDrawerOpen(true);
@@ -1265,7 +1284,7 @@ export const RentPayments = () => {
                             variant="secondary"
                             className="h-7 px-2.5 text-xs border-amber-300 text-amber-800 bg-amber-50 hover:bg-amber-100"
                             onClick={() => {
-                              const v = verifications.find((item) => item.tenantId === row.tenantId || item.tenantName === row.tenantName);
+                              const v = verifications.find((item) => item.tenantId === row.tenantId || item.tenantName.toLowerCase() === row.tenantName.toLowerCase());
                               if (v) {
                                 setActiveVerification(v);
                                 setVerificationDrawerOpen(true);
@@ -2046,25 +2065,27 @@ export const RentPayments = () => {
                     <span className="font-semibold text-[var(--gray-900)]">{activeVerification.tenantName}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-[var(--gray-500)]">Room</span>
-                    <span className="font-semibold text-[var(--gray-900)]">Room {activeVerification.roomNumber}</span>
+                    <span className="text-[var(--gray-500)]">Room / Bed</span>
+                    <span className="font-semibold text-[var(--gray-900)]">
+                      {activeVerification.roomBed || (activeVerification.roomNumber ? `Room ${activeVerification.roomNumber}` : "—")}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-[var(--gray-500)]">Amount Claimed</span>
                     <span className="font-bold text-sm text-[var(--gray-900)] tabular-nums">
-                      {formatINR(activeVerification.amountClaimed)}
+                      {formatINR(activeVerification.amountClaimed || activeVerification.amount)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center pt-1 border-t border-[var(--gray-200)]">
                     <span className="text-[var(--gray-500)]">UTR / Ref Number</span>
                     <span className="font-mono font-bold text-[var(--brand-700)] bg-[var(--brand-50)] px-2 py-0.5 rounded-sm">
-                      {activeVerification.utrNumber}
+                      {activeVerification.utrNumber || activeVerification.utr}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-[var(--gray-500)]">Submitted At</span>
                     <span className="text-[var(--gray-600)] tabular-nums">
-                      {formatDate(activeVerification.submittedAt)}
+                      {formatDate(activeVerification.submittedAt || activeVerification.submittedDate)}
                     </span>
                   </div>
                 </div>
@@ -2074,14 +2095,45 @@ export const RentPayments = () => {
                   <span className="text-xs font-semibold text-[var(--gray-700)] block">
                     Payment Screenshot / Receipt
                   </span>
-                  <div className="border border-[var(--gray-200)] rounded-md bg-[var(--gray-50)] p-6 text-center text-[var(--gray-500)] space-y-2">
-                    <div className="h-10 w-10 mx-auto rounded-full bg-white border border-[var(--gray-200)] flex items-center justify-center text-[var(--gray-400)]">
-                      <Receipt className="h-5 w-5" />
+                  {activeVerification.screenshotUrl ? (
+                    <div className="border border-[var(--gray-200)] rounded-xl bg-white p-2 text-center space-y-2">
+                      <a
+                        href={activeVerification.screenshotUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block group relative overflow-hidden rounded-lg bg-[var(--gray-50)]"
+                      >
+                        <img
+                          src={activeVerification.screenshotUrl}
+                          alt={`Proof for UTR ${activeVerification.utrNumber || activeVerification.utr}`}
+                          className="max-h-72 w-auto mx-auto object-contain rounded-lg border border-[var(--gray-200)]"
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all text-white text-xs font-semibold gap-1.5">
+                          <ExternalLink className="h-4 w-4" /> Open full image
+                        </div>
+                      </a>
+                      <div className="flex items-center justify-between px-1 text-[11px] text-[var(--gray-500)]">
+                        <span>Click preview to open full image</span>
+                        <a
+                          href={activeVerification.screenshotUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-primary font-semibold flex items-center gap-1 hover:underline"
+                        >
+                          <ExternalLink className="h-3 w-3" /> View original
+                        </a>
+                      </div>
                     </div>
-                    <p className="font-medium text-[var(--gray-800)]">UPI Payment Screenshot</p>
-                    <p className="text-[11px]">UTR: {activeVerification.utrNumber}</p>
-                    <p className="text-[11px] text-[var(--gray-400)]">Uploaded by tenant via Lite QR payment</p>
-                  </div>
+                  ) : (
+                    <div className="border border-[var(--gray-200)] rounded-md bg-[var(--gray-50)] p-6 text-center text-[var(--gray-500)] space-y-2">
+                      <div className="h-10 w-10 mx-auto rounded-full bg-white border border-[var(--gray-200)] flex items-center justify-center text-[var(--gray-400)]">
+                        <Receipt className="h-5 w-5" />
+                      </div>
+                      <p className="font-medium text-[var(--gray-800)]">No screenshot attached</p>
+                      <p className="text-[11px]">UTR: {activeVerification.utrNumber || activeVerification.utr}</p>
+                      <p className="text-[11px] text-[var(--gray-400)]">Tenant submitted direct UTR reference. Verify in bank statement.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -2092,6 +2144,7 @@ export const RentPayments = () => {
                 size="sm"
                 className="text-[#B42318] hover:bg-[#FEF1F0]"
                 onClick={() => setRejectModalOpen(true)}
+                disabled={isApproving || isRejecting}
               >
                 Reject Proof
               </Button>
@@ -2099,9 +2152,10 @@ export const RentPayments = () => {
                 size="sm"
                 className="gap-1.5"
                 onClick={() => activeVerification && handleApproveVerification(activeVerification)}
-                disabled={manualMut.isPending}
+                disabled={isApproving || isRejecting}
               >
-                <Check className="h-4 w-4" /> Approve & Credit Rent
+                {isApproving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                {isApproving ? "Approving..." : "Approve & Credit Rent"}
               </Button>
             </div>
           </SheetContent>
@@ -2138,8 +2192,9 @@ export const RentPayments = () => {
                 size="sm"
                 variant="destructive"
                 onClick={handleRejectVerification}
+                disabled={isRejecting || !rejectionReason.trim()}
               >
-                Confirm Rejection
+                {isRejecting ? "Rejecting..." : "Confirm Rejection"}
               </Button>
             </DialogFooter>
           </DialogContent>
