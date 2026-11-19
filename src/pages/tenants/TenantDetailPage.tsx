@@ -269,11 +269,75 @@ export function getStayDurationText(
   return { label: "Staying Since", text: stayText, isPast: false };
 }
 
+function safeFormatValue(val: unknown): React.ReactNode {
+  if (val === null || val === undefined) return "—";
+  if (React.isValidElement(val)) return val;
+  if (typeof val === "object") {
+    const obj = val as Record<string, unknown>;
+    if ("permanent" in obj || "current" in obj || "city" in obj || "state" in obj || "zipCode" in obj) {
+      const parts = [
+        obj.permanent || obj.current || obj.street,
+        obj.city,
+        obj.state,
+        obj.zipCode || obj.pincode,
+        obj.country,
+      ].filter((x) => typeof x === "string" && (x as string).trim().length > 0);
+      return parts.join(", ") || "—";
+    }
+    if ("name" in obj || "phone" in obj || "relation" in obj) {
+      const parts = [
+        obj.name,
+        obj.relation ? `(${obj.relation})` : null,
+        obj.phone,
+      ].filter((x) => typeof x === "string" && (x as string).trim().length > 0);
+      return parts.join(" - ") || "—";
+    }
+    try {
+      return JSON.stringify(val);
+    } catch {
+      return "—";
+    }
+  }
+  return String(val);
+}
+
+function safeAddressString(val: unknown): string {
+  if (!val) return "";
+  if (typeof val === "string") return val.trim();
+  if (typeof val === "object") {
+    const obj = val as Record<string, unknown>;
+    const parts = [
+      obj.permanent || obj.current || obj.street,
+      obj.city,
+      obj.state,
+      obj.zipCode || obj.pincode,
+      obj.country,
+    ].filter((x) => typeof x === "string" && (x as string).trim().length > 0);
+    return parts.join(", ");
+  }
+  return String(val);
+}
+
+function safeContactString(val: unknown): string {
+  if (!val) return "";
+  if (typeof val === "string") return val.trim();
+  if (typeof val === "object") {
+    const obj = val as Record<string, unknown>;
+    const parts = [
+      obj.name,
+      obj.relation ? `(${obj.relation})` : null,
+      obj.phone,
+    ].filter((x) => typeof x === "string" && (x as string).trim().length > 0);
+    return parts.join(" - ");
+  }
+  return String(val);
+}
+
 function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="grid grid-cols-1 gap-0.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] sm:gap-4 border-b border-border/60 py-2.5 last:border-0 items-center">
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      <span className="text-xs font-medium text-foreground sm:text-right break-words">{value ?? "—"}</span>
+      <span className="text-xs font-medium text-foreground sm:text-right break-words">{safeFormatValue(value)}</span>
     </div>
   );
 }
@@ -939,16 +1003,16 @@ function TenantDetailContent() {
         gender: (tenant as any).gender ?? (tenant as any).personalDetails?.gender ?? (tenant as any).tenant?.gender ?? "",
         tenantType: (tenant as any).tenantType ?? (tenant as any).personalDetails?.tenantType ?? (tenant as any).tenant?.tenantType ?? "Student",
         bloodGroup: (tenant as any).bloodGroup ?? (tenant as any).personalDetails?.bloodGroup ?? (tenant as any).tenant?.bloodGroup ?? "",
-        permanentAddress:
+        permanentAddress: safeAddressString(
           (tenant as any).personalDetails?.permanentAddress ||
           (tenant as any).tenant?.personalDetails?.permanentAddress ||
           (tenant as any).permanentAddress ||
           (tenant as any).tenant?.permanentAddress ||
           (tenant as any).address ||
           (tenant as any).tenant?.address ||
-          (tenant as any).personalDetails?.address ||
-          "",
-        currentAddress: (tenant as any).currentAddress ?? "",
+          (tenant as any).personalDetails?.address
+        ),
+        currentAddress: safeAddressString((tenant as any).currentAddress),
         permHouseNumber: (tenant as any).permHouseNumber ?? (tenant as any).personalDetails?.permHouseNumber ?? "",
         permStreet: (tenant as any).permStreet ?? (tenant as any).personalDetails?.permStreet ?? "",
         permLocality: (tenant as any).permLocality ?? (tenant as any).personalDetails?.permLocality ?? "",
@@ -969,7 +1033,7 @@ function TenantDetailContent() {
         govtIdNumber: (tenant as any).govtIdNumber ?? (tenant as any).govtId ?? (tenant as any).aadhaarNumber ?? "",
         foodPreference: (tenant as any).foodPreference ?? (tenant as any).foodPreferences ?? "",
         remarks: (tenant as any).remarks ?? "",
-        emergencyContact: tenant.emergencyContact ?? "",
+        emergencyContact: safeContactString(tenant.emergencyContact),
         workAddress: tenant.workAddress ?? "",
 
         // GST Details
@@ -1408,21 +1472,21 @@ function TenantDetailContent() {
         gender: (tenant as any).gender ?? (tenant as any).personalDetails?.gender ?? (tenant as any).tenant?.gender ?? "",
         tenantType: (tenant as any).tenantType ?? (tenant as any).personalDetails?.tenantType ?? (tenant as any).tenant?.tenantType ?? "Student",
         bloodGroup: (tenant as any).bloodGroup ?? (tenant as any).personalDetails?.bloodGroup ?? (tenant as any).tenant?.bloodGroup ?? "",
-        permanentAddress:
+        permanentAddress: safeAddressString(
           (tenant as any).personalDetails?.permanentAddress ||
           (tenant as any).tenant?.personalDetails?.permanentAddress ||
           (tenant as any).permanentAddress ||
           (tenant as any).tenant?.permanentAddress ||
           (tenant as any).address ||
           (tenant as any).tenant?.address ||
-          (tenant as any).personalDetails?.address ||
-          "",
-        currentAddress: (tenant as any).currentAddress ?? "",
+          (tenant as any).personalDetails?.address
+        ),
+        currentAddress: safeAddressString((tenant as any).currentAddress),
         nationality: (tenant as any).nationality ?? "Indian",
         govtIdNumber: (tenant as any).govtIdNumber ?? (tenant as any).govtId ?? (tenant as any).aadhaarNumber ?? "",
         foodPreference: (tenant as any).foodPreference ?? (tenant as any).foodPreferences ?? "",
         remarks: (tenant as any).remarks ?? "",
-        emergencyContact: tenant.emergencyContact ?? "",
+        emergencyContact: safeContactString(tenant.emergencyContact),
         workAddress: tenant.workAddress ?? "",
         gstNumber: (tenant as any).gstNumber ?? "",
         panNumber: (tenant as any).panNumber ?? "",
@@ -2919,15 +2983,16 @@ function TenantDetailContent() {
                       <DetailRow
                         label="Permanent Address"
                         value={
-                          form.permanentAddress ||
-                          (tenant as any).personalDetails?.permanentAddress ||
-                          (tenant as any).tenant?.personalDetails?.permanentAddress ||
-                          (tenant as any).permanentAddress ||
-                          (tenant as any).tenant?.permanentAddress ||
-                          (tenant as any).address ||
-                          (tenant as any).tenant?.address ||
-                          (tenant as any).personalDetails?.address ||
-                          "—"
+                          safeAddressString(
+                            form.permanentAddress ||
+                            (tenant as any).personalDetails?.permanentAddress ||
+                            (tenant as any).tenant?.personalDetails?.permanentAddress ||
+                            (tenant as any).permanentAddress ||
+                            (tenant as any).tenant?.permanentAddress ||
+                            (tenant as any).address ||
+                            (tenant as any).tenant?.address ||
+                            (tenant as any).personalDetails?.address
+                          ) || "—"
                         }
                       />
                     )}
@@ -3113,7 +3178,7 @@ function TenantDetailContent() {
                         />
                       </EditField>
                     ) : (
-                      <DetailRow label="Emergency Contact" value={form.emergencyContact || tenant.emergencyContact || "—"} />
+                      <DetailRow label="Emergency Contact" value={safeContactString(form.emergencyContact || tenant.emergencyContact) || "—"} />
                     )}
 
                     {editing ? (
