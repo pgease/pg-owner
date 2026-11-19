@@ -332,7 +332,7 @@ class TenantProfileErrorBoundary extends React.Component<ErrorBoundaryProps, Err
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("TenantProfile crashed:", error, errorInfo);
+    console.error("TenantProfile crashed:", error?.message || error, errorInfo?.componentStack || errorInfo);
   }
 
   render() {
@@ -347,6 +347,11 @@ class TenantProfileErrorBoundary extends React.Component<ErrorBoundaryProps, Err
             <p className="text-sm text-muted-foreground max-w-sm">
               We encountered an issue displaying this tenant profile. Please try going back to the tenants list.
             </p>
+            {this.state.error?.message && (
+              <p className="text-xs font-mono text-red-600 bg-red-50 p-2 rounded max-w-md mx-auto border border-red-200 mt-2">
+                {this.state.error.message}
+              </p>
+            )}
           </div>
           <div className="flex gap-2">
             <Button
@@ -365,7 +370,7 @@ class TenantProfileErrorBoundary extends React.Component<ErrorBoundaryProps, Err
             <Button
               variant="default"
               className="bg-teal-600 hover:bg-teal-700 text-white"
-              onClick={() => this.setState({ hasError: false })}
+              onClick={() => this.setState({ hasError: false, error: undefined })}
             >
               Try Again
             </Button>
@@ -571,7 +576,14 @@ function TenantDetailContent() {
 
   const effectiveTargetPropertyId = targetPropertyId || currentPropertyId || "";
   const targetRoomsQuery = useRoomsList(effectiveTargetPropertyId, undefined, undefined, { requireBlockAndFloor: false });
-  const targetRooms = targetRoomsQuery.data ?? [];
+  const rawRoomsData = targetRoomsQuery.data;
+  const targetRooms: any[] = Array.isArray(rawRoomsData)
+    ? rawRoomsData
+    : Array.isArray((rawRoomsData as any)?.rooms)
+    ? (rawRoomsData as any).rooms
+    : Array.isArray((rawRoomsData as any)?.data)
+    ? (rawRoomsData as any).data
+    : [];
 
   const handleConfirmMove = async () => {
     if (!tenant || !targetRoomId) {
@@ -1194,7 +1206,8 @@ function TenantDetailContent() {
     }
   };
 
-  const electricityDuesList = electricityData?.dues || [];
+  const rawElecDues = electricityData?.dues || (electricityData as any)?.data?.dues;
+  const electricityDuesList: any[] = Array.isArray(rawElecDues) ? rawElecDues : [];
   const hasActiveNotice = Boolean(
     (tenant as any).isOnNotice ||
     (tenant as any).is_on_notice ||
@@ -1209,10 +1222,11 @@ function TenantDetailContent() {
   const noticeVacateDate = tenant.expectedMoveOutDate || (tenant as any).notice?.vacateOn || (tenant as any).currentStay?.notice?.vacateOn || (tenant as any).currentStay?.vacateOn;
 
   const duesSummary = tenantDuesQuery.data?.data?.summary;
-  const itemizedDues = tenantDuesQuery.data?.data?.itemizedDues || [];
+  const rawItemized = tenantDuesQuery.data?.data?.itemizedDues || (tenantDuesQuery.data as any)?.itemizedDues;
+  const itemizedDues: any[] = Array.isArray(rawItemized) ? rawItemized : [];
 
   const passbookRows = (() => {
-    if (itemizedDues && itemizedDues.length > 0) {
+    if (Array.isArray(itemizedDues) && itemizedDues.length > 0) {
       return itemizedDues.map((d) => ({
         id: d.id,
         amount: d.amount,
@@ -3379,7 +3393,7 @@ function TenantDetailContent() {
 
                   <div className="p-4 bg-card">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                      {editing && ownerBankAccounts.length > 0 && (
+                      {editing && Array.isArray(ownerBankAccounts) && ownerBankAccounts.length > 0 && (
                         <div className="sm:col-span-2 space-y-1 pb-2">
                           <Label className="text-xs font-semibold">Assign Settlement Account for this Tenant</Label>
                           <Select
@@ -3389,7 +3403,7 @@ function TenantDetailContent() {
                                 setForm((prev) => ({ ...prev, bankAccountId: "" }));
                                 return;
                               }
-                              const matched = ownerBankAccounts.find((a) => a.id === accId);
+                              const matched = (Array.isArray(ownerBankAccounts) ? ownerBankAccounts : []).find((a) => a.id === accId);
                               if (matched) {
                                 setForm((prev) => ({
                                   ...prev,
@@ -3407,7 +3421,7 @@ function TenantDetailContent() {
                               <SelectValue placeholder="Select Bank / UPI Account" />
                             </SelectTrigger>
                             <SelectContent>
-                              {ownerBankAccounts.map((acc) => (
+                              {(Array.isArray(ownerBankAccounts) ? ownerBankAccounts : []).map((acc) => (
                                 <SelectItem key={acc.id} value={acc.id}>
                                   {acc.bankName || "Bank Account"} (••••{acc.accountNumber?.slice(-4)})
                                   {acc.isPrimary ? " [Owner Primary]" : ""}
@@ -3511,68 +3525,75 @@ function TenantDetailContent() {
                     </Button>
                   </CardHeader>
                   <CardContent className="p-4">
-                    {((tenant as any).recentPayments && (tenant as any).recentPayments.length > 0) ? (
-                      <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
-                        {(tenant as any).recentPayments.map((pay: any, pIdx: number) => {
-                          const payAmount = Number(pay.amount || pay.amountPaid || pay.amount_paid || 0);
-                          const payDate = pay.paidAt || pay.paid_at || pay.createdAt || pay.created_at;
-                          const method = pay.paymentMethod || pay.payment_method || "Payment";
-                          let noteText = "";
-                          if (typeof pay.notes === "object" && pay.notes !== null) {
-                            noteText = pay.notes.notes || "";
-                          } else if (typeof pay.notes === "string" && pay.notes.startsWith("{")) {
-                            try {
-                              const parsed = JSON.parse(pay.notes);
-                              noteText = parsed.notes || "";
-                            } catch(e) {}
-                          } else if (typeof pay.notes === "string") {
-                            noteText = pay.notes;
-                          }
-                          return (
-                            <div key={pay.id || pIdx} className="flex items-center gap-3 p-2.5 rounded-lg border bg-emerald-50/20 dark:bg-emerald-950/10">
-                              <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
-                                <CheckCircle2 className="h-4 w-4" />
+                    {(() => {
+                      const recentPaymentsList: any[] = Array.isArray((tenant as any)?.recentPayments)
+                        ? (tenant as any).recentPayments
+                        : Array.isArray((tenant as any)?.payments)
+                        ? (tenant as any).payments
+                        : [];
+                      return recentPaymentsList.length > 0 ? (
+                        <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                          {recentPaymentsList.map((pay: any, pIdx: number) => {
+                            const payAmount = Number(pay.amount || pay.amountPaid || pay.amount_paid || 0);
+                            const payDate = pay.paidAt || pay.paid_at || pay.createdAt || pay.created_at;
+                            const method = pay.paymentMethod || pay.payment_method || "Payment";
+                            let noteText = "";
+                            if (typeof pay.notes === "object" && pay.notes !== null) {
+                              noteText = pay.notes.notes || "";
+                            } else if (typeof pay.notes === "string" && pay.notes.startsWith("{")) {
+                              try {
+                                const parsed = JSON.parse(pay.notes);
+                                noteText = parsed.notes || "";
+                              } catch(e) {}
+                            } else if (typeof pay.notes === "string") {
+                              noteText = pay.notes;
+                            }
+                            return (
+                              <div key={pay.id || pIdx} className="flex items-center gap-3 p-2.5 rounded-lg border bg-emerald-50/20 dark:bg-emerald-950/10">
+                                <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
+                                  <CheckCircle2 className="h-4 w-4" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold text-foreground truncate">
+                                    {noteText || (pay.dueType ? formatHumanEnum(String(pay.dueType)) : `Rent via ${formatHumanEnum(String(method))}`)}
+                                  </p>
+                                  <p className="text-[10px] text-muted-foreground">
+                                    {payDate ? formatDateText(payDate) : "Recently"}
+                                  </p>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                                    +₹{payAmount.toLocaleString("en-IN")}
+                                  </p>
+                                  <Badge variant="outline" className="text-[9px] py-0 border-emerald-300 text-emerald-700 uppercase">
+                                    {pay.status || "Paid"}
+                                  </Badge>
+                                </div>
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold text-foreground truncate">
-                                  {noteText || (pay.dueType ? formatHumanEnum(String(pay.dueType)) : `Rent via ${formatHumanEnum(String(method))}`)}
-                                </p>
-                                <p className="text-[10px] text-muted-foreground">
-                                  {payDate ? formatDateText(payDate) : "Recently"}
-                                </p>
-                              </div>
-                              <div className="text-right shrink-0">
-                                <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                                  +₹{payAmount.toLocaleString("en-IN")}
-                                </p>
-                                <Badge variant="outline" className="text-[9px] py-0 border-emerald-300 text-emerald-700 uppercase">
-                                  {pay.status || "Paid"}
-                                </Badge>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="text-center py-6">
-                        <IndianRupee className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-                        <p className="text-xs text-muted-foreground mb-3">No payment records yet</p>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 text-xs text-teal-600 border-teal-600 hover:bg-teal-50 gap-1.5"
-                          onClick={() => {
-                            setPaymentForm((p) => ({
-                              ...p,
-                              amountPaid: Number(tenant.monthlyRent || rent || 0),
-                            }));
-                            setRecordPaymentOpen(true);
-                          }}
-                        >
-                          <IndianRupee className="h-3.5 w-3.5" /> Record Payment
-                        </Button>
-                      </div>
-                    )}
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="text-center py-6">
+                          <IndianRupee className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                          <p className="text-xs text-muted-foreground mb-3">No payment records yet</p>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs text-teal-600 border-teal-600 hover:bg-teal-50 gap-1.5"
+                            onClick={() => {
+                              setPaymentForm((p) => ({
+                                ...p,
+                                amountPaid: Number(tenant.monthlyRent || rent || 0),
+                              }));
+                              setRecordPaymentOpen(true);
+                            }}
+                          >
+                            + Record Payment
+                          </Button>
+                        </div>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
 
@@ -4377,37 +4398,53 @@ function TenantDetailContent() {
                   </Badge>
                 </div>
 
-                {loadingAgreementInv ? (
-                  <div className="p-3 text-center text-xs text-gray-400">
-                    <Loader2 className="h-4 w-4 animate-spin mx-auto mb-1 text-teal-600" />
-                    Loading room inventory snapshot...
-                  </div>
-                ) : !agreementInventory || agreementInventory.allResolved.length === 0 ? (
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start gap-2">
-                    <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                    <span>
-                      Room inventory template is not yet configured for Room {name ? tenantRoomNo(tenant) : ""}. Default inventory items will be attached. You can configure room templates under Settings &rarr; Room & Bed Inventory.
-                    </span>
-                  </div>
-                ) : (
-                  <div className="rounded-xl border border-gray-200 bg-gray-50/60 p-2.5 space-y-1.5 max-h-40 overflow-y-auto">
-                    <div className="text-[11px] font-semibold text-gray-700">
-                      Template: {agreementInventory.templateName || "Standard Double AC"}
+                {(() => {
+                  const resolvedItems = Array.isArray(agreementInventory?.allResolved)
+                    ? agreementInventory.allResolved
+                    : Array.isArray((agreementInventory as any)?.data?.allResolved)
+                    ? (agreementInventory as any).data.allResolved
+                    : [];
+
+                  if (loadingAgreementInv) {
+                    return (
+                      <div className="p-3 text-center text-xs text-gray-400">
+                        <Loader2 className="h-4 w-4 animate-spin mx-auto mb-1 text-teal-600" />
+                        Loading room inventory snapshot...
+                      </div>
+                    );
+                  }
+
+                  if (resolvedItems.length === 0) {
+                    return (
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                        <span>
+                          Room inventory template is not yet configured for Room {name ? tenantRoomNo(tenant) : ""}. Default inventory items will be attached. You can configure room templates under Settings &rarr; Room & Bed Inventory.
+                        </span>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="rounded-xl border border-gray-200 bg-gray-50/60 p-2.5 space-y-1.5 max-h-40 overflow-y-auto">
+                      <div className="text-[11px] font-semibold text-gray-700">
+                        Template: {agreementInventory?.templateName || "Standard Double AC"}
+                      </div>
+                      <div className="divide-y divide-gray-100 text-[11px]">
+                        {resolvedItems.map((item, idx) => (
+                          <div key={idx} className="py-1 flex items-center justify-between text-gray-600">
+                            <span className="font-medium text-gray-900">
+                              {item.name} ({item.qty}x)
+                            </span>
+                            <span className="text-gray-400">
+                              {item.shared ? "Shared Room Item" : "Bed Personal Item"} • {item.condition}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="divide-y divide-gray-100 text-[11px]">
-                      {agreementInventory.allResolved.map((item, idx) => (
-                        <div key={idx} className="py-1 flex items-center justify-between text-gray-600">
-                          <span className="font-medium text-gray-900">
-                            {item.name} ({item.qty}x)
-                          </span>
-                          <span className="text-gray-400">
-                            {item.shared ? "Shared Room Item" : "Bed Personal Item"} • {item.condition}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 <div className="p-2.5 bg-gray-50 rounded-xl border border-gray-200 text-[10px] text-gray-500 leading-relaxed italic">
                   "The Licensee acknowledges receipt of the items listed in Annexure A in the stated condition and shall return them in the same condition at the time of vacating, subject to normal wear and tear. The cost of repair or replacement for damage or loss beyond normal wear and tear may be deducted from the security deposit."

@@ -227,17 +227,18 @@ export async function getRoomInventory(pgId: string, roomId: string): Promise<Ro
     };
   }
   try {
-    const res = await httpRequest<RoomInventoryResponse>(`/pg/${pgId}/rooms/${roomId}/inventory`, {
+    const res = await httpRequest<any>(`/pg/${pgId}/rooms/${roomId}/inventory`, {
       auth: true,
       skipForceLogout: true,
     });
-    return res || {
-      roomId,
-      templateId: null,
-      templateName: null,
-      roomItems: [],
-      bedItems: {},
-      allResolved: [],
+    const payload = res?.data || res;
+    return {
+      roomId: payload?.roomId || roomId,
+      templateId: payload?.templateId || null,
+      templateName: payload?.templateName || null,
+      roomItems: Array.isArray(payload?.roomItems) ? payload.roomItems : [],
+      bedItems: payload?.bedItems || {},
+      allResolved: Array.isArray(payload?.allResolved) ? payload.allResolved : [],
     };
   } catch (err) {
     console.warn(`Failed to fetch room inventory for room ${roomId}:`, err);
