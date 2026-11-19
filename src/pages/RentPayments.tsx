@@ -31,6 +31,7 @@ import {
   RotateCcw,
   Building2,
   User,
+  Image as ImageIcon,
 } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatusBadge, type StatusBadgeProps } from "@/components/common/StatusBadge";
@@ -254,8 +255,33 @@ export const RentPayments = () => {
   });
 
   const verifications = useMemo(() => {
-    return Array.isArray(verificationsQuery.data?.data) ? verificationsQuery.data.data : [];
+    if (Array.isArray(verificationsQuery.data?.data)) return verificationsQuery.data.data;
+    if (Array.isArray(verificationsQuery.data)) return verificationsQuery.data;
+    return [];
   }, [verificationsQuery.data]);
+
+  const pendingVerifications = useMemo(() => {
+    return verifications.filter((v) => !v.status || v.status === "pending" || v.status === "pending_verification");
+  }, [verifications]);
+
+  const filteredVerifications = useMemo(() => {
+    return pendingVerifications.filter((item) => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      const utr = (item.utrNumber || item.utr || "").toLowerCase();
+      const name = (item.tenantName || "").toLowerCase();
+      const phone = (item.tenantPhone || "").toLowerCase();
+      const room = (item.roomBed || item.roomNumber || "").toLowerCase();
+      return name.includes(q) || phone.includes(q) || utr.includes(q) || room.includes(q);
+    });
+  }, [pendingVerifications, searchQuery]);
+
+  // Listen to #verification-queue hash in URL to automatically switch to the verification queue
+  useEffect(() => {
+    if (location.hash === "#verification-queue" || location.hash.includes("verification")) {
+      setStatusFilter("verification_pending");
+    }
+  }, [location.hash]);
 
   const [activeVerification, setActiveVerification] = useState<PaymentVerificationItem | null>(null);
   const [verificationDrawerOpen, setVerificationDrawerOpen] = useState(false);
@@ -422,10 +448,20 @@ export const RentPayments = () => {
       const room = String(item.roomNumber ?? item.room_number ?? "—");
       const name = item.tenantName || item.name || item.tenant_name || (parsed?.label ? parsed.label.split(" · ")[0] : `Tenant #${idx + 1}`);
       const phone = String(item.phone || item.mobile || item.tenantPhone || item.tenant_phone || "");
+      const tId = parsed?.tenantId || item.tenantId || String(item.id || idx);
+
+      const cleanPhone = phone ? phone.replace(/\D/g, "").slice(-10) : "";
+      const hasPendingVerification = verifications.some((v) => {
+        if (v.status !== "pending" && v.status !== "pending_verification") return false;
+        if (v.tenantId && tId && v.tenantId === tId) return true;
+        if (cleanPhone && v.tenantPhone && v.tenantPhone.replace(/\D/g, "").slice(-10) === cleanPhone) return true;
+        if (v.tenantName && name && v.tenantName.trim().toLowerCase() === name.trim().toLowerCase()) return true;
+        return false;
+      });
 
       combined.push({
         id: `paid-${item.id || idx}`,
-        tenantId: parsed?.tenantId || item.tenantId || String(item.id || idx),
+        tenantId: tId,
         roomTenantId: parsed?.roomTenantId || item.roomTenantId || String(item.id || idx),
         tenantName: name,
         phone,
@@ -433,7 +469,7 @@ export const RentPayments = () => {
         monthlyRent: rent,
         amountPaid: amtPaid,
         amountDue: stillDue,
-        status: paidStatus,
+        status: hasPendingVerification ? "verification_pending" : paidStatus,
         dueDate: `05 ${MONTH_NAMES[month - 1].slice(0, 3)} ${year}`,
         overdueDays: 0,
         raw: item,
@@ -455,13 +491,16 @@ export const RentPayments = () => {
       const phone = String(item.phone || item.mobile || item.tenantPhone || item.tenant_phone || "");
 
       const tId = parsed?.tenantId || item.tenantId || String(item.id || idx);
+      const cleanPhone = phone ? phone.replace(/\D/g, "").slice(-10) : "";
 
       // Check if UTR verification is pending for this tenant
-      const hasPendingVerification = verifications.some(
-        (v) =>
-          (v.tenantId === tId || v.tenantName.toLowerCase() === name.toLowerCase()) &&
-          (v.status === "pending" || v.status === "pending_verification")
-      );
+      const hasPendingVerification = verifications.some((v) => {
+        if (v.status !== "pending" && v.status !== "pending_verification") return false;
+        if (v.tenantId && tId && v.tenantId === tId) return true;
+        if (cleanPhone && v.tenantPhone && v.tenantPhone.replace(/\D/g, "").slice(-10) === cleanPhone) return true;
+        if (v.tenantName && name && v.tenantName.trim().toLowerCase() === name.trim().toLowerCase()) return true;
+        return false;
+      });
 
       const dueDayRaw = row.rentDueDate ?? row.dueDay ?? row.rent_due_date ?? 5;
       const dueInfo = rentDueState(year, month, Number(dueDayRaw) || 5, row);
@@ -522,11 +561,14 @@ export const RentPayments = () => {
           if (days < lastDay) amountDue = Math.round((rent * days) / lastDay);
         }
 
-        const hasPendingVerification = verifications.some(
-          (v) =>
-            (v.tenantId === tId || v.tenantName.toLowerCase() === name.toLowerCase()) &&
-            (v.status === "pending" || v.status === "pending_verification")
-        );
+        const cleanPhone = phone ? phone.replace(/\D/g, "").slice(-10) : "";
+        const hasPendingVerification = verifications.some((v) => {
+          if (v.status !== "pending" && v.status !== "pending_verification") return false;
+          if (v.tenantId && tId && v.tenantId === tId) return true;
+          if (cleanPhone && v.tenantPhone && v.tenantPhone.replace(/\D/g, "").slice(-10) === cleanPhone) return true;
+          if (v.tenantName && name && v.tenantName.trim().toLowerCase() === name.trim().toLowerCase()) return true;
+          return false;
+        });
 
         let st: "paid" | "partial" | "pending" | "overdue" | "verification_pending" = "pending";
         if (hasPendingVerification) {
@@ -553,8 +595,38 @@ export const RentPayments = () => {
       });
     }
 
+    // Ensure all pending verifications have an entry in combined register if not already present
+    pendingVerifications.forEach((v, vIdx) => {
+      const vCleanPhone = v.tenantPhone ? v.tenantPhone.replace(/\D/g, "").slice(-10) : "";
+      const alreadyPresent = combined.some((c) => {
+        if (c.tenantId && v.tenantId && c.tenantId === v.tenantId) return true;
+        if (vCleanPhone && c.phone && c.phone.replace(/\D/g, "").slice(-10) === vCleanPhone) return true;
+        if (c.tenantName && v.tenantName && c.tenantName.trim().toLowerCase() === v.tenantName.trim().toLowerCase()) return true;
+        return false;
+      });
+
+      if (!alreadyPresent) {
+        const vRent = Number(v.amountClaimed || v.amount || 0);
+        combined.push({
+          id: `verification-${v.id || vIdx}`,
+          tenantId: v.tenantId || `v-${v.id}`,
+          roomTenantId: v.roomTenantId || v.tenantId || `rt-${v.id}`,
+          tenantName: v.tenantName || "Tenant (Verification Pending)",
+          phone: v.tenantPhone || "",
+          roomNumber: String(v.roomNumber || (v.roomBed ? v.roomBed.split(/[\s·]/)[0] : "—")),
+          monthlyRent: vRent,
+          amountPaid: 0,
+          amountDue: vRent,
+          status: "verification_pending",
+          dueDate: `05 ${MONTH_NAMES[month - 1].slice(0, 3)} ${year}`,
+          overdueDays: 0,
+          raw: v as any,
+        });
+      }
+    });
+
     return combined;
-  }, [dashboard, tenantsQuery.data, month, year, verifications]);
+  }, [dashboard, tenantsQuery.data, month, year, verifications, pendingVerifications]);
 
   // Counts by status
   const counts = useMemo(() => {
@@ -584,9 +656,9 @@ export const RentPayments = () => {
       partial,
       pending,
       overdue,
-      verification,
+      verification: pendingVerifications.length,
     };
-  }, [registerRows]);
+  }, [registerRows, pendingVerifications.length]);
 
   // Filtered register
   const filteredRows = useMemo(() => {
@@ -963,9 +1035,9 @@ export const RentPayments = () => {
               />
               <MetricDisplay
                 label="Verification queue"
-                value={verifications.filter((v) => v.status === "pending" || v.status === "pending_verification").length}
+                value={pendingVerifications.length}
                 subText="Lite manual UTR proofs"
-                tone={verifications.filter((v) => v.status === "pending" || v.status === "pending_verification").length > 0 ? "warning" : "default"}
+                tone={pendingVerifications.length > 0 ? "warning" : "default"}
                 to="#verification-queue"
               />
             </div>
@@ -1002,16 +1074,20 @@ export const RentPayments = () => {
               </div>
 
               {/* Verification Queue Quick Alert */}
-              {verifications.filter((v) => v.status === "pending" || v.status === "pending_verification").length > 0 && (
+              {pendingVerifications.length > 0 && (
                 <div className="flex items-center gap-2 text-xs bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1.5 rounded-sm">
                   <Clock className="h-3.5 w-3.5 text-amber-600 shrink-0" />
                   <span>
-                    <strong>{verifications.filter((v) => v.status === "pending" || v.status === "pending_verification").length} payment proof(s)</strong> waiting for UTR review.
+                    <strong>{pendingVerifications.length} payment proof(s)</strong> waiting for UTR review.
                   </span>
                   <button
                     type="button"
-                    onClick={() => setStatusFilter("verification_pending")}
-                    className="underline font-semibold ml-1 text-amber-900 hover:text-black"
+                    onClick={() => {
+                      setStatusFilter("verification_pending");
+                      const el = document.getElementById("verification-queue");
+                      if (el) el.scrollIntoView({ behavior: "smooth" });
+                    }}
+                    className="underline font-semibold ml-1 text-amber-900 hover:text-black cursor-pointer"
                   >
                     Review now
                   </button>
@@ -1028,6 +1104,7 @@ export const RentPayments = () => {
                       ["pending", `Pending (${counts.pending})`],
                       ["overdue", `Overdue (${counts.overdue})`],
                       ["partial", `Partially Paid (${counts.partial})`],
+                      ["verification_pending", `Verification Queue (${pendingVerifications.length})`],
                       ["all", `Show All Tenants (${counts.all})`],
                     ]
                   : [
@@ -1036,7 +1113,7 @@ export const RentPayments = () => {
                       ["partial", `Partially Paid (${counts.partial})`],
                       ["pending", `Pending (${counts.pending})`],
                       ["overdue", `Overdue (${counts.overdue})`],
-                      ["verification_pending", `Verification Queue (${counts.verification})`],
+                      ["verification_pending", `Verification Queue (${pendingVerifications.length})`],
                     ]
               ).map(([key, label]) => (
                 <button
@@ -1107,7 +1184,377 @@ export const RentPayments = () => {
               </div>
             </div>
 
-            <div className="space-y-2.5 md:hidden">
+            {statusFilter === "verification_pending" ? (
+              <div id="verification-queue" className="space-y-4 pt-1">
+                {/* Verification Queue Header banner */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-amber-50/80 border border-amber-200 rounded-lg">
+                  <div className="flex items-start sm:items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-700 shrink-0">
+                      <ShieldCheck className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-amber-950 flex items-center gap-2">
+                        Payment Proof & Cash Verification Desk
+                        <span className="bg-amber-200 text-amber-900 text-[11px] font-bold px-2 py-0.5 rounded-full">
+                          {pendingVerifications.length} Pending
+                        </span>
+                      </h3>
+                      <p className="text-xs text-amber-800 mt-0.5">
+                        Review tenant-submitted UTR references and cash payments before crediting rent register.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setStatusFilter(isDuesRoute ? "dues_all" : "all")}
+                    className="self-start sm:self-auto border-amber-300 text-amber-900 hover:bg-amber-100 text-xs shrink-0"
+                  >
+                    ← Back to {isDuesRoute ? "Dues List" : "Monthly Register"}
+                  </Button>
+                </div>
+
+                {/* If filteredVerifications is empty */}
+                {filteredVerifications.length === 0 ? (
+                  <EmptyState
+                    title={pendingVerifications.length === 0 ? "All payment proofs are verified" : "No payment proofs match your search"}
+                    description={
+                      pendingVerifications.length === 0
+                        ? "There are currently no tenant-submitted UTR numbers or cash handover claims awaiting approval."
+                        : `No pending verification records match "${searchQuery}".`
+                    }
+                    action={
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          setSearchQuery("");
+                          setStatusFilter(isDuesRoute ? "dues_all" : "all");
+                        }}
+                      >
+                        {pendingVerifications.length === 0 ? `Show all ${isDuesRoute ? "dues" : "tenants"}` : "Clear search"}
+                      </Button>
+                    }
+                  />
+                ) : (
+                  <>
+                    {/* Mobile Card List for Verification Desk */}
+                    <div className="space-y-3 md:hidden">
+                      {filteredVerifications.map((item) => {
+                        const isCash =
+                          item.paymentMethod?.toUpperCase() === "CASH" ||
+                          item.utrNumber === "CASH_HANDOVER" ||
+                          item.utr === "CASH_HANDOVER" ||
+                          Boolean(item.notes && item.notes.toLowerCase().includes("cash"));
+                        const amount = item.amountClaimed || item.amount || 0;
+                        const utrVal = item.utrNumber || item.utr;
+
+                        return (
+                          <div
+                            key={item.id}
+                            className="bg-white border border-[var(--gray-200)] rounded-xl p-4 shadow-sm space-y-3.5"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <h4 className="text-sm font-bold text-[var(--gray-900)]">{item.tenantName}</h4>
+                                <p className="text-xs text-[var(--gray-500)] mt-0.5">
+                                  {item.roomBed || (item.roomNumber ? `Room ${item.roomNumber}` : "Room —")} · {item.tenantPhone || "No phone"}
+                                </p>
+                              </div>
+                              <span
+                                className={cn(
+                                  "rounded-full px-2.5 py-0.5 text-[11px] font-semibold border",
+                                  isCash
+                                    ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                    : "bg-amber-50 text-amber-800 border-amber-200"
+                                )}
+                              >
+                                {isCash ? "💵 Cash Handover" : "📱 Direct UPI"}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 bg-[var(--gray-50)] rounded-lg p-2.5 text-xs">
+                              <div>
+                                <span className="text-[var(--gray-500)] block text-[10px] uppercase font-bold tracking-wider">
+                                  Claimed Amount
+                                </span>
+                                <span className="text-base font-extrabold text-[var(--gray-900)] tabular-nums">
+                                  {formatINR(amount)}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-[var(--gray-500)] block text-[10px] uppercase font-bold tracking-wider">
+                                  Submitted
+                                </span>
+                                <span className="text-xs font-medium text-[var(--gray-700)] tabular-nums">
+                                  {formatDate(item.submittedAt || item.submittedDate)}
+                                </span>
+                              </div>
+                              {!isCash && (
+                                <div className="col-span-2 pt-1 border-t border-[var(--gray-200)] flex items-center justify-between">
+                                  <div>
+                                    <span className="text-[var(--gray-500)] text-[10px] font-bold block">UTR / Ref:</span>
+                                    <span className="font-mono text-xs font-bold text-[var(--brand-700)] select-all">
+                                      {utrVal || "—"}
+                                    </span>
+                                  </div>
+                                  {utrVal && (
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 text-[11px] px-2 text-[var(--gray-600)]"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(utrVal);
+                                        toast({ title: "UTR copied to clipboard" });
+                                      }}
+                                    >
+                                      <Copy className="h-3 w-3 mr-1" /> Copy
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
+                              {item.notes && (
+                                <div className="col-span-2 pt-1 border-t border-[var(--gray-200)]">
+                                  <span className="text-[var(--gray-500)] text-[10px] font-bold block">Tenant Note:</span>
+                                  <span className="text-[11px] text-[var(--gray-800)] italic">{item.notes}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Screenshot Thumbnail if available */}
+                            {item.screenshotUrl && (
+                              <div
+                                onClick={() => {
+                                  setActiveVerification(item);
+                                  setVerificationDrawerOpen(true);
+                                }}
+                                className="flex items-center gap-3 p-2 border border-[var(--gray-200)] rounded-lg bg-[var(--gray-50)] cursor-pointer hover:bg-[var(--gray-100)] transition"
+                              >
+                                <img
+                                  src={item.screenshotUrl}
+                                  alt="Screenshot"
+                                  className="h-12 w-12 object-cover rounded-md border shrink-0 bg-white"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <span className="text-xs font-semibold text-[var(--gray-800)] flex items-center gap-1">
+                                    <ImageIcon className="h-3.5 w-3.5 text-primary" /> View Payment Screenshot
+                                  </span>
+                                  <span className="text-[11px] text-[var(--gray-500)] block truncate">
+                                    Tap to inspect receipt & UTR proof
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Action Buttons */}
+                            <div className="flex items-center gap-2 pt-1">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 text-xs text-[#B42318] hover:bg-[#FEF1F0] hover:text-[#B42318] border-red-200 h-9"
+                                onClick={() => {
+                                  setActiveVerification(item);
+                                  setRejectModalOpen(true);
+                                }}
+                                disabled={isApproving || isRejecting}
+                              >
+                                <X className="h-3.5 w-3.5 mr-1" /> Reject
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                className="px-2.5 h-9 text-xs"
+                                onClick={() => {
+                                  setActiveVerification(item);
+                                  setVerificationDrawerOpen(true);
+                                }}
+                              >
+                                <Eye className="h-3.5 w-3.5 mr-1" /> Details
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                className="flex-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-9"
+                                onClick={() => handleApproveVerification(item)}
+                                disabled={isApproving || isRejecting}
+                              >
+                                {isApproving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5 mr-1" />}
+                                Approve
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Desktop Table View for Verification Desk */}
+                    <div className="hidden md:block bg-white border border-[var(--gray-200)] rounded-xl overflow-hidden shadow-sm">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-[var(--gray-50)] border-b border-[var(--gray-200)] text-[var(--gray-600)] uppercase font-semibold text-[11px] tracking-wider">
+                            <tr>
+                              <th className="py-3 px-4">Tenant</th>
+                              <th className="py-3 px-4">Room / Bed</th>
+                              <th className="py-3 px-4">Mode</th>
+                              <th className="py-3 px-4">UTR / Reference</th>
+                              <th className="py-3 px-4 text-right">Claimed Amount</th>
+                              <th className="py-3 px-4">Submitted Date</th>
+                              <th className="py-3 px-4 text-center">Receipt Proof</th>
+                              <th className="py-3 px-4 text-right">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-[var(--gray-100)] text-[var(--gray-800)]">
+                            {filteredVerifications.map((item) => {
+                              const isCash =
+                                item.paymentMethod?.toUpperCase() === "CASH" ||
+                                item.utrNumber === "CASH_HANDOVER" ||
+                                item.utr === "CASH_HANDOVER" ||
+                                Boolean(item.notes && item.notes.toLowerCase().includes("cash"));
+                              const amount = item.amountClaimed || item.amount || 0;
+                              const utrVal = item.utrNumber || item.utr;
+
+                              return (
+                                <tr key={item.id} className="hover:bg-[var(--gray-50)]/70 transition-colors">
+                                  <td className="py-3.5 px-4">
+                                    <div className="flex items-center gap-2.5">
+                                      <div className="h-8 w-8 rounded-full bg-[var(--brand-50)] text-[var(--brand-700)] flex items-center justify-center font-bold text-xs shrink-0">
+                                        {item.tenantName ? item.tenantName.charAt(0).toUpperCase() : "T"}
+                                      </div>
+                                      <div className="min-w-0">
+                                        <div className="font-semibold text-[var(--gray-900)] text-xs truncate">
+                                          {item.tenantName}
+                                        </div>
+                                        <div className="text-[11px] text-[var(--gray-500)] tabular-nums">
+                                          {item.tenantPhone || "No phone"}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="py-3.5 px-4 font-medium text-[var(--gray-700)]">
+                                    {item.roomBed || (item.roomNumber ? `Room ${item.roomNumber}` : "—")}
+                                  </td>
+                                  <td className="py-3.5 px-4">
+                                    <span
+                                      className={cn(
+                                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border",
+                                        isCash
+                                          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                          : "bg-teal-50 text-teal-800 border-teal-200"
+                                      )}
+                                    >
+                                      {isCash ? "💵 Cash" : "📱 Direct UPI"}
+                                    </span>
+                                  </td>
+                                  <td className="py-3.5 px-4">
+                                    {isCash ? (
+                                      <span className="text-[11px] text-[var(--gray-500)] italic">
+                                        {item.notes || "Cash handover to owner/manager"}
+                                      </span>
+                                    ) : (
+                                      <div className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-[var(--brand-700)] bg-[var(--brand-50)] px-2 py-1 rounded border border-[var(--brand-100)]">
+                                        <span>{utrVal || "—"}</span>
+                                        {utrVal && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              navigator.clipboard.writeText(utrVal);
+                                              toast({ title: "UTR copied to clipboard" });
+                                            }}
+                                            className="text-[var(--gray-500)] hover:text-black transition"
+                                            title="Copy UTR"
+                                          >
+                                            <Copy className="h-3 w-3" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td className="py-3.5 px-4 text-right font-extrabold text-sm text-[var(--gray-900)] tabular-nums">
+                                    {formatINR(amount)}
+                                  </td>
+                                  <td className="py-3.5 px-4 text-[11px] text-[var(--gray-600)] tabular-nums">
+                                    {formatDate(item.submittedAt || item.submittedDate)}
+                                  </td>
+                                  <td className="py-3.5 px-4 text-center">
+                                    {item.screenshotUrl ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setActiveVerification(item);
+                                          setVerificationDrawerOpen(true);
+                                        }}
+                                        className="inline-flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline"
+                                      >
+                                        <img
+                                          src={item.screenshotUrl}
+                                          alt="Proof thumbnail"
+                                          className="h-8 w-8 object-cover rounded border border-[var(--gray-300)]"
+                                        />
+                                        <span>View</span>
+                                      </button>
+                                    ) : (
+                                      <span className="text-[11px] text-[var(--gray-400)] italic">
+                                        {isCash ? "Handover report" : "UTR only"}
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="py-3.5 px-4 text-right">
+                                    <div className="flex items-center justify-end gap-1.5">
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 text-xs text-[var(--gray-600)] hover:text-[var(--gray-900)]"
+                                        onClick={() => {
+                                          setActiveVerification(item);
+                                          setVerificationDrawerOpen(true);
+                                        }}
+                                        title="View full proof details"
+                                      >
+                                        <Eye className="h-3.5 w-3.5 mr-1" /> View
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 text-xs text-[#B42318] hover:bg-[#FEF1F0] hover:text-[#B42318] border-red-200"
+                                        onClick={() => {
+                                          setActiveVerification(item);
+                                          setRejectModalOpen(true);
+                                        }}
+                                        disabled={isApproving || isRejecting}
+                                      >
+                                        <X className="h-3.5 w-3.5 mr-1" /> Reject
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-xs"
+                                        onClick={() => handleApproveVerification(item)}
+                                        disabled={isApproving || isRejecting}
+                                      >
+                                        {isApproving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5 mr-1" />}
+                                        Approve
+                                      </Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2.5 md:hidden">
               {filteredRows.map((row) => (
                 <MobileCard key={row.id}>
                   <div className="flex items-start justify-between gap-2">
@@ -1375,8 +1822,10 @@ export const RentPayments = () => {
               }
             />
             </div>
-          </div>
+          </>
         )}
+      </div>
+    )}
 
         {/* TAB 2: Payment History Ledger (GET /api/property-owners/properties/{propertyId}/rent-collections/history) */}
         {activeTab === "history" && (
