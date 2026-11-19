@@ -3118,14 +3118,49 @@ export interface MoveTenantPayload {
   newSecurityDeposit?: number;
   transferSecurityDeposit?: boolean;
   remarks?: string;
+  notes?: string;
+  securityDeposit?: number;
 }
 
 export async function moveTenant(propertyId: string, payload: MoveTenantPayload) {
-  return httpRequest<unknown>(`${PROPERTY_OWNER_BASE}/properties/${propertyId}/tenants/move`, {
-    method: "POST",
-    body: payload,
-    auth: true,
-  });
+  const targetId = payload.roomTenantId || (payload as any).tenantId;
+  const body = {
+    targetPropertyId: payload.targetPropertyId,
+    targetRoomId: payload.targetRoomId,
+    targetBedNumber: payload.targetBedNumber,
+    transferDate: payload.transferDate,
+    newMonthlyRent: payload.newMonthlyRent,
+    securityDeposit: payload.newSecurityDeposit ?? payload.securityDeposit,
+    notes: payload.remarks || payload.notes,
+  };
+
+  // Try room-tenants/:id/move first. If 404, fallback to tenants/:id/move.
+  try {
+    return await httpRequest<unknown>(
+      `${PROPERTY_OWNER_BASE}/properties/${propertyId}/room-tenants/${targetId}/move`,
+      {
+        method: "POST",
+        body,
+        auth: true,
+      }
+    );
+  } catch (err: any) {
+    const isNotFound =
+      err?.status === 404 ||
+      err?.statusCode === 404 ||
+      (typeof err?.message === "string" && err.message.includes("404"));
+    if (isNotFound && targetId) {
+      return await httpRequest<unknown>(
+        `${PROPERTY_OWNER_BASE}/properties/${propertyId}/tenants/${targetId}/move`,
+        {
+          method: "POST",
+          body,
+          auth: true,
+        }
+      );
+    }
+    throw err;
+  }
 }
 
 // ==========================================================

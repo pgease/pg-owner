@@ -182,9 +182,13 @@ const Tenants = () => {
       toast({ title: "Please select tenant and target room", variant: "destructive" });
       return;
     }
+    const effectiveRtId =
+      selectedTenantForMove.roomTenantId ||
+      (selectedTenantForMove as any)?.roomTenant?.id ||
+      selectedTenantForMove.id;
     try {
       await moveMutation.mutateAsync({
-        roomTenantId: selectedTenantForMove.id,
+        roomTenantId: effectiveRtId,
         targetPropertyId: effectiveTargetPropertyId,
         targetRoomId,
         targetBedNumber: Number(targetBedNumber) || 1,

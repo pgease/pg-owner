@@ -654,9 +654,10 @@ function TenantDetailContent() {
       toast({ title: "Please select target room", variant: "destructive" });
       return;
     }
+    const effectiveRtId = (tenant as any)?.roomTenantId || (tenant as any)?.roomTenant?.id || roomTenantId || tenant?.id;
     try {
       await moveMutation.mutateAsync({
-        roomTenantId: tenant.id,
+        roomTenantId: effectiveRtId,
         targetPropertyId: effectiveTargetPropertyId,
         targetRoomId,
         targetBedNumber: Number(targetBedNumber) || 1,
