@@ -276,12 +276,6 @@ export const RentPayments = () => {
     });
   }, [pendingVerifications, searchQuery]);
 
-  // Listen to #verification-queue hash in URL to automatically switch to the verification queue
-  useEffect(() => {
-    if (location.hash === "#verification-queue" || location.hash.includes("verification")) {
-      setStatusFilter("verification_pending");
-    }
-  }, [location.hash]);
 
   const [activeVerification, setActiveVerification] = useState<PaymentVerificationItem | null>(null);
   const [verificationDrawerOpen, setVerificationDrawerOpen] = useState(false);
@@ -346,17 +340,19 @@ export const RentPayments = () => {
   const isDuesRoute = location.pathname.endsWith("/dues");
   const isHistoryRoute = location.pathname.endsWith("/history");
 
-  // Synchronize status filter and active tab when arriving via sub-routes
+  // Synchronize status filter and active tab when arriving via sub-routes or hash
   useEffect(() => {
     if (location.pathname.endsWith("/history")) {
       setActiveTab("history");
     } else {
       setActiveTab("register");
-      if (location.pathname.endsWith("/dues")) {
-        setStatusFilter("dues_all");
+      if (location.hash === "#verification-queue" || location.hash.includes("verification")) {
+        setStatusFilter("verification_pending");
+      } else if (location.pathname.endsWith("/dues")) {
+        setStatusFilter((prev) => (prev === "verification_pending" ? prev : "dues_all"));
       }
     }
-  }, [location.pathname]);
+  }, [location.pathname, location.hash]);
 
   const handleTabChange = (tab: "register" | "history") => {
     setActiveTab(tab);
@@ -943,17 +939,20 @@ export const RentPayments = () => {
           }
         />
 
-        {/* View Switcher Tabs: Monthly Register vs Dues & Pending vs Historical Ledger */}
-        <div className="flex items-center gap-1 border-b border-[var(--gray-200)]">
+        {/* View Switcher Tabs: Monthly Register vs Dues & Pending vs Verification Desk vs Historical Ledger */}
+        <div className="flex items-center gap-1 border-b border-[var(--gray-200)] overflow-x-auto">
           <button
             type="button"
             onClick={() => {
               navigate("/rent-payments");
               setActiveTab("register");
+              if (statusFilter === "verification_pending") {
+                setStatusFilter("all");
+              }
             }}
             className={cn(
-              "flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 -mb-[1px] transition-all",
-              activeTab === "register" && !isDuesRoute
+              "flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 -mb-[1px] transition-all whitespace-nowrap",
+              activeTab === "register" && !isDuesRoute && statusFilter !== "verification_pending"
                 ? "border-[var(--brand-600)] text-[var(--brand-700)] font-semibold"
                 : "border-transparent text-[var(--gray-500)] hover:text-[var(--gray-800)] hover:border-[var(--gray-300)]"
             )}
@@ -967,10 +966,11 @@ export const RentPayments = () => {
             onClick={() => {
               navigate("/rent-payments/dues");
               setActiveTab("register");
+              setStatusFilter("dues_all");
             }}
             className={cn(
-              "flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 -mb-[1px] transition-all",
-              isDuesRoute
+              "flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 -mb-[1px] transition-all whitespace-nowrap",
+              isDuesRoute && statusFilter !== "verification_pending"
                 ? "border-[var(--brand-600)] text-[var(--brand-700)] font-semibold"
                 : "border-transparent text-[var(--gray-500)] hover:text-[var(--gray-800)] hover:border-[var(--gray-300)]"
             )}
@@ -987,11 +987,34 @@ export const RentPayments = () => {
           <button
             type="button"
             onClick={() => {
+              setActiveTab("register");
+              setStatusFilter("verification_pending");
+              navigate(`${location.pathname}#verification-queue`);
+            }}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 -mb-[1px] transition-all whitespace-nowrap",
+              activeTab === "register" && statusFilter === "verification_pending"
+                ? "border-amber-600 text-amber-900 font-semibold bg-amber-50/60"
+                : "border-transparent text-[var(--gray-500)] hover:text-[var(--gray-800)] hover:border-[var(--gray-300)]"
+            )}
+          >
+            <ShieldCheck className="h-4 w-4 text-amber-600" />
+            <span>Verification Desk</span>
+            {pendingVerifications.length > 0 && (
+              <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-900 font-bold">
+                {pendingVerifications.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
               navigate("/rent-payments/history");
               setActiveTab("history");
             }}
             className={cn(
-              "flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 -mb-[1px] transition-all",
+              "flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 -mb-[1px] transition-all whitespace-nowrap",
               activeTab === "history"
                 ? "border-[var(--brand-600)] text-[var(--brand-700)] font-semibold"
                 : "border-transparent text-[var(--gray-500)] hover:text-[var(--gray-800)] hover:border-[var(--gray-300)]"
@@ -1038,7 +1061,11 @@ export const RentPayments = () => {
                 value={pendingVerifications.length}
                 subText="Lite manual UTR proofs"
                 tone={pendingVerifications.length > 0 ? "warning" : "default"}
-                to="#verification-queue"
+                onClick={() => {
+                  setStatusFilter("verification_pending");
+                  const el = document.getElementById("verification-queue");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                }}
               />
             </div>
 

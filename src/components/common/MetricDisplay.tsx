@@ -12,6 +12,7 @@ export interface MetricDisplayProps {
   formula?: string;
   badge?: React.ReactNode;
   to?: string;
+  onClick?: () => void;
   tone?: "default" | "success" | "warning" | "danger" | "neutral" | "error" | "info";
   loading?: boolean;
   className?: string;
@@ -35,16 +36,18 @@ export const MetricDisplay: React.FC<MetricDisplayProps> = ({
   formula,
   badge,
   to,
+  onClick,
   tone = "default",
   loading = false,
   className,
 }) => {
   const displaySubText = subText ?? hint;
+  const isInteractive = Boolean(to || onClick);
   const content = (
     <div
       className={cn(
         "register-card flex flex-col justify-between p-4 transition-colors relative group",
-        to && "hover:border-[#008080] hover:bg-[#F6F7F8] cursor-pointer",
+        isInteractive && "hover:border-[#008080] hover:bg-[#F6F7F8] cursor-pointer",
         className,
       )}
     >
@@ -102,9 +105,21 @@ export const MetricDisplay: React.FC<MetricDisplayProps> = ({
 
   if (to) {
     return (
-      <Link to={to} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008080] rounded-[6px]">
+      <Link to={to} onClick={onClick} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008080] rounded-[6px]">
         {content}
       </Link>
+    );
+  }
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="block w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008080] rounded-[6px]"
+      >
+        {content}
+      </button>
     );
   }
 
