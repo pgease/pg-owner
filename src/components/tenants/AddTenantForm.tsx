@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,7 +35,7 @@ import { useBlocks, useFloors, useRoomsList, usePropertyTenants, queryKeys } fro
 import {
   Check, Search, ChevronRight, ChevronLeft, Plus, Minus, DoorOpen, Bed as BedIcon,
   Lock, Layers, Building, Phone, AlertCircle, Camera, Upload, Trash2, Zap,
-  ShieldCheck, Loader2, User, Mail
+  ShieldCheck, Loader2, User, Mail, CreditCard, QrCode
 } from "lucide-react";
 import { cleanPhoneInput } from "@/lib/utils";
 import { tenantStayStatus } from "@/lib/tenantDisplay";
@@ -192,11 +192,16 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
   useEffect(() => {
     let isMounted = true;
     getSettlementBankAccounts()
-      .then((res) => {
+      .then((res: any) => {
         if (!isMounted) return;
-        if (res?.success && Array.isArray(res.accounts) && res.accounts.length > 0) {
-          setOwnerBankAccounts(res.accounts);
-          const prim = res.primaryAccount || res.accounts.find((a) => a.isPrimary) || res.accounts[0];
+        const accounts = Array.isArray(res?.accounts)
+          ? res.accounts
+          : Array.isArray(res?.data?.accounts)
+          ? res.data.accounts
+          : [];
+        if (accounts.length > 0) {
+          setOwnerBankAccounts(accounts);
+          const prim = res?.primaryAccount || res?.data?.primaryAccount || accounts.find((a: any) => a.isPrimary) || accounts[0];
           if (prim) {
             setSelectedBankAccountId(prim.id);
             setBankName(prim.bankName || "");
@@ -2340,57 +2345,113 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                 </div>
               </div>
 
-              {/* BANK & UPI SETTLEMENT DETAILS (Task A.4) */}
-              <div className="border-t pt-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-bold text-foreground">Bank / UPI Settlement Details</h4>
-                    <p className="text-xs text-muted-foreground">Select or specify where this tenant should pay rent</p>
+              {/* BANK & UPI SETTLEMENT DETAILS */}
+              <div className="rounded-xl border border-[var(--gray-200)] bg-[var(--gray-50)]/70 p-4 space-y-3.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--gray-200)] pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-9 w-9 rounded-lg bg-[var(--brand-50)] text-[var(--brand-600)] flex items-center justify-center shrink-0 border border-[var(--brand-100)]">
+                      <CreditCard className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground">Rent Settlement Destination</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Select which Bank Account / UPI QR Code this tenant receives for rent payments
+                      </p>
+                    </div>
                   </div>
+                  <Link
+                    to="/account/bank-accounts"
+                    target="_blank"
+                    className="text-xs font-semibold text-[var(--brand-600)] hover:underline flex items-center gap-1 self-start sm:self-auto"
+                  >
+                    Manage Saved Accounts ↗
+                  </Link>
                 </div>
 
-                {ownerBankAccounts.length > 0 && (
-                  <div className="space-y-1">
-                    <Label className="text-xs font-semibold">Assign Settlement Account for this Tenant</Label>
-                    <Select
-                      value={selectedBankAccountId}
-                      onValueChange={handleBankSelectionChange}
-                    >
-                      <SelectTrigger className="h-10 text-xs rounded-xl">
-                        <SelectValue placeholder="Select Bank / UPI Account" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ownerBankAccounts.map((acc) => (
-                          <SelectItem key={acc.id} value={acc.id}>
-                            {acc.bankName || "Bank Account"} (••••{acc.accountNumber?.slice(-4)})
-                            {acc.isPrimary ? " [Owner Primary]" : ""}
-                            {acc.upiId ? ` — UPI: ${acc.upiId}` : ""}
-                          </SelectItem>
-                        ))}
-                        <SelectItem value="custom">Custom Account Details (Manual Entry)</SelectItem>
-                      </SelectContent>
-                    </Select>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Assign Settlement Account for this Tenant</Label>
+                  <Select
+                    value={selectedBankAccountId || "custom"}
+                    onValueChange={handleBankSelectionChange}
+                  >
+                    <SelectTrigger className="h-10 text-xs rounded-xl bg-white border-[var(--gray-300)]">
+                      <SelectValue placeholder="Select Bank / UPI Account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ownerBankAccounts.map((acc) => (
+                        <SelectItem key={acc.id} value={acc.id}>
+                          {acc.bankName || "Bank Account"} (••••{acc.accountNumber?.slice(-4)})
+                          {acc.isPrimary ? " [Owner Primary]" : ""}
+                          {acc.upiId ? ` — UPI: ${acc.upiId}` : ""}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="custom">Custom Account Details (Manual Entry)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[11px] text-muted-foreground">
+                    Tip: Assign separate accounts like &ldquo;HDFC (Block A)&rdquo; or &ldquo;SBI (Block B)&rdquo; so rent goes into the right bank account.
+                  </p>
+                </div>
+
+                {/* Selected account preview badge */}
+                {selectedBankAccountId && selectedBankAccountId !== "custom" && (
+                  <div className="flex items-center gap-2.5 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-900">
+                    <Check className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <div>
+                      <span className="font-bold">Active Account Assigned: </span>
+                      <span>
+                        {bankName || "Bank Account"} (••••{accountNumber?.slice(-4)})
+                      </span>
+                      {upiId && (
+                        <span className="font-mono ml-2 font-semibold text-emerald-800">
+                          UPI: {upiId}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label>Bank Name</Label>
-                    <Input placeholder="e.g. HDFC Bank, SBI, ICICI" value={bankName} onChange={(e) => setBankName(e.target.value)} />
+                {/* Custom / manual entry fields */}
+                {(selectedBankAccountId === "custom" || ownerBankAccounts.length === 0) && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Bank Name</Label>
+                      <Input
+                        placeholder="e.g. HDFC Bank, SBI, ICICI"
+                        value={bankName}
+                        onChange={(e) => setBankName(e.target.value)}
+                        className="h-9 text-xs bg-white"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Account Number</Label>
+                      <Input
+                        placeholder="Enter account number"
+                        value={accountNumber}
+                        onChange={(e) => setAccountNumber(e.target.value)}
+                        className="h-9 text-xs bg-white"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">IFSC Code</Label>
+                      <Input
+                        placeholder="e.g. HDFC0001234"
+                        value={ifscCode}
+                        onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
+                        className="h-9 text-xs bg-white"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">UPI ID (VPA)</Label>
+                      <Input
+                        placeholder="e.g. username@okhdfcbank"
+                        value={upiId}
+                        onChange={(e) => setUpiId(e.target.value)}
+                        className="h-9 text-xs bg-white"
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <Label>Account Number</Label>
-                    <Input placeholder="Enter account number" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>IFSC Code</Label>
-                    <Input placeholder="Enter IFSC code" value={ifscCode} onChange={(e) => setIfscCode(e.target.value.toUpperCase())} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>UPI ID</Label>
-                    <Input placeholder="e.g. username@okhdfcbank" value={upiId} onChange={(e) => setUpiId(e.target.value)} />
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </CardContent>
@@ -2615,6 +2676,115 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                         </div>
                       );
                     })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* RENT SETTLEMENT DESTINATION (Also available in Step 3 for quick setup) */}
+            <div className="rounded-xl border border-[var(--gray-200)] bg-[var(--gray-50)]/70 p-4 space-y-3.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--gray-200)] pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-9 w-9 rounded-lg bg-[var(--brand-50)] text-[var(--brand-600)] flex items-center justify-center shrink-0 border border-[var(--brand-100)]">
+                    <CreditCard className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-foreground">Rent Settlement Destination</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Select which Bank Account / UPI QR Code this tenant receives for rent payments
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  to="/account/bank-accounts"
+                  target="_blank"
+                  className="text-xs font-semibold text-[var(--brand-600)] hover:underline flex items-center gap-1 self-start sm:self-auto"
+                >
+                  Manage Saved Accounts ↗
+                </Link>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Assign Settlement Account for this Tenant</Label>
+                <Select
+                  value={selectedBankAccountId || "custom"}
+                  onValueChange={handleBankSelectionChange}
+                >
+                  <SelectTrigger className="h-10 text-xs rounded-xl bg-white border-[var(--gray-300)]">
+                    <SelectValue placeholder="Select Bank / UPI Account" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ownerBankAccounts.map((acc) => (
+                      <SelectItem key={acc.id} value={acc.id}>
+                        {acc.bankName || "Bank Account"} (••••{acc.accountNumber?.slice(-4)})
+                        {acc.isPrimary ? " [Owner Primary]" : ""}
+                        {acc.upiId ? ` — UPI: ${acc.upiId}` : ""}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="custom">Custom Account Details (Manual Entry)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground">
+                  Tip: Assign separate accounts like &ldquo;HDFC (Block A)&rdquo; or &ldquo;SBI (Block B)&rdquo; so rent goes into the right bank account.
+                </p>
+              </div>
+
+              {/* Selected account preview badge */}
+              {selectedBankAccountId && selectedBankAccountId !== "custom" && (
+                <div className="flex items-center gap-2.5 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-900">
+                  <Check className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <div>
+                    <span className="font-bold">Active Account Assigned: </span>
+                    <span>
+                      {bankName || "Bank Account"} (••••{accountNumber?.slice(-4)})
+                    </span>
+                    {upiId && (
+                      <span className="font-mono ml-2 font-semibold text-emerald-800">
+                        UPI: {upiId}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Custom / manual entry fields */}
+              {(selectedBankAccountId === "custom" || ownerBankAccounts.length === 0) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Bank Name</Label>
+                    <Input
+                      placeholder="e.g. HDFC Bank, SBI, ICICI"
+                      value={bankName}
+                      onChange={(e) => setBankName(e.target.value)}
+                      className="h-9 text-xs bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Account Number</Label>
+                    <Input
+                      placeholder="Enter account number"
+                      value={accountNumber}
+                      onChange={(e) => setAccountNumber(e.target.value)}
+                      className="h-9 text-xs bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">IFSC Code</Label>
+                    <Input
+                      placeholder="e.g. HDFC0001234"
+                      value={ifscCode}
+                      onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
+                      className="h-9 text-xs bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">UPI ID (VPA)</Label>
+                    <Input
+                      placeholder="e.g. username@okhdfcbank"
+                      value={upiId}
+                      onChange={(e) => setUpiId(e.target.value)}
+                      className="h-9 text-xs bg-white"
+                    />
                   </div>
                 </div>
               )}

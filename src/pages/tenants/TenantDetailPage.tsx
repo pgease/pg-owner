@@ -32,6 +32,11 @@ import {
   Share2,
   Camera,
   Package,
+  CreditCard,
+  QrCode,
+  Check,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 import { authStorage } from "@/api/http";
 import { TenantActivityLogsDrawer } from "@/components/tenants/TenantActivityLogsDrawer";
@@ -822,10 +827,15 @@ function TenantDetailContent() {
   useEffect(() => {
     let isMounted = true;
     getSettlementBankAccounts()
-      .then((res) => {
+      .then((res: any) => {
         if (!isMounted) return;
-        if (res?.success && Array.isArray(res.accounts)) {
-          setOwnerBankAccounts(res.accounts);
+        const accounts = Array.isArray(res?.accounts)
+          ? res.accounts
+          : Array.isArray(res?.data?.accounts)
+          ? res.data.accounts
+          : [];
+        if (accounts.length > 0) {
+          setOwnerBankAccounts(accounts);
         }
       })
       .catch((e) => console.warn("Could not load owner bank accounts:", e));
@@ -3430,12 +3440,15 @@ function TenantDetailContent() {
                   </div>
                 </details>
 
-                {/* SECTION 5: BANK DETAILS */}
-                <details className="group border rounded-xl bg-card overflow-hidden shadow-xs">
+                {/* SECTION 5: BANK & UPI SETTLEMENT (WHERE TENANT PAYS RENT) */}
+                <details open className="group border rounded-xl bg-card overflow-hidden shadow-xs">
                   <summary className="flex justify-between items-center p-4 font-semibold text-sm cursor-pointer hover:bg-muted/30 select-none border-b bg-muted/15">
                     <div className="flex items-center gap-2">
-                      <Lock className="h-4 w-4 text-primary" />
-                      <span>Bank Details</span>
+                      <CreditCard className="h-4 w-4 text-[var(--brand-600)]" />
+                      <span>Bank & UPI Settlement (Where Tenant Pays Rent)</span>
+                      <span className="text-[10px] bg-[var(--brand-50)] text-[var(--brand-700)] border border-[var(--brand-100)] px-2 py-0.5 rounded-full font-bold">
+                        Rent Destination
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       {!editing && (
@@ -3443,66 +3456,177 @@ function TenantDetailContent() {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="h-7 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-1"
+                          className="h-7 px-2.5 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-1.5 font-semibold"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             setEditing(true);
                           }}
                         >
-                          <Pencil className="h-3 w-3" /> Edit
+                          <Pencil className="h-3 w-3" /> Change Account
                         </Button>
                       )}
                       <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180 text-muted-foreground" />
                     </div>
                   </summary>
 
-                  <div className="p-4 bg-card">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                      {editing && Array.isArray(ownerBankAccounts) && ownerBankAccounts.length > 0 && (
-                        <div className="sm:col-span-2 space-y-1 pb-2">
-                          <Label className="text-xs font-semibold">Assign Settlement Account for this Tenant</Label>
-                          <Select
-                            value={form.bankAccountId || "custom"}
-                            onValueChange={(accId) => {
-                              if (accId === "custom") {
-                                setForm((prev) => ({ ...prev, bankAccountId: "" }));
-                                return;
-                              }
-                              const matched = (Array.isArray(ownerBankAccounts) ? ownerBankAccounts : []).find((a) => a.id === accId);
-                              if (matched) {
-                                setForm((prev) => ({
-                                  ...prev,
-                                  bankAccountId: accId,
-                                  bankName: matched.bankName || "",
-                                  accountHolderName: matched.accountHolderName || prev.name || "",
-                                  accountNumber: matched.accountNumber || "",
-                                  ifscCode: matched.ifscCode || "",
-                                  upiId: matched.upiId || "",
-                                }));
-                              }
-                            }}
-                          >
-                            <SelectTrigger className="h-9 text-xs rounded-xl">
-                              <SelectValue placeholder="Select Bank / UPI Account" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {(Array.isArray(ownerBankAccounts) ? ownerBankAccounts : []).map((acc) => (
-                                <SelectItem key={acc.id} value={acc.id}>
-                                  {acc.bankName || "Bank Account"} (••••{acc.accountNumber?.slice(-4)})
-                                  {acc.isPrimary ? " [Owner Primary]" : ""}
-                                  {acc.upiId ? ` — UPI: ${acc.upiId}` : ""}
-                                </SelectItem>
-                              ))}
-                              <SelectItem value="custom">Custom Account Details (Manual Entry)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <p className="text-[10px] text-muted-foreground">
-                            Tenant's rent payments and UPI links will be settled into this chosen account.
-                          </p>
-                        </div>
-                      )}
+                  <div className="p-4 bg-card space-y-4">
+                    {/* View Mode: Active Settlement Summary Banner */}
+                    {!editing && (
+                      <div className="rounded-xl border border-[var(--gray-200)] bg-[var(--gray-50)]/70 p-3.5 space-y-2">
+                        {(() => {
+                          const assigned = ownerBankAccounts.find((a) => a.id === form.bankAccountId);
+                          if (assigned) {
+                            return (
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                                      <Check className="h-3 w-3 text-emerald-600" /> Assigned Settlement Account
+                                    </span>
+                                    {assigned.isPrimary && (
+                                      <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.2 rounded">
+                                        Owner Primary
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-sm font-bold text-gray-900">
+                                    {assigned.bankName || "Bank Account"} (••••{assigned.accountNumber?.slice(-4)})
+                                  </p>
+                                  {assigned.accountHolderName && (
+                                    <p className="text-xs text-gray-500">Beneficiary: {assigned.accountHolderName}</p>
+                                  )}
+                                </div>
+                                {assigned.upiId && (
+                                  <div className="flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-2xs self-start sm:self-auto">
+                                    <QrCode className="h-4 w-4 text-[var(--brand-600)] shrink-0" />
+                                    <div>
+                                      <span className="text-[10px] uppercase font-bold text-gray-400 block">UPI ID for Rent</span>
+                                      <span className="text-xs font-mono font-bold text-gray-800 select-all">{assigned.upiId}</span>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0 ml-1 text-gray-500 hover:text-gray-900"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(assigned.upiId!);
+                                      }}
+                                    >
+                                      <Copy className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+                          if (form.upiId || form.bankName) {
+                            return (
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div>
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-teal-800 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-full">
+                                    <Check className="h-3 w-3 text-teal-600" /> Custom Account Override
+                                  </span>
+                                  <p className="text-sm font-bold text-gray-900 mt-1">
+                                    {form.bankName || "Bank Account"} {form.accountNumber ? `(••••${form.accountNumber.slice(-4)})` : ""}
+                                  </p>
+                                </div>
+                                {form.upiId && (
+                                  <div className="flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-2xs">
+                                    <QrCode className="h-4 w-4 text-[var(--brand-600)] shrink-0" />
+                                    <div>
+                                      <span className="text-[10px] uppercase font-bold text-gray-400 block">UPI ID for Rent</span>
+                                      <span className="text-xs font-mono font-bold text-gray-800 select-all">{form.upiId}</span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+                          return (
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-gray-600">
+                              <div className="flex items-start gap-2.5">
+                                <Building2 className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                                <div>
+                                  <span className="font-bold text-gray-900 block">Using Property / Owner Default Account</span>
+                                  <p className="text-gray-500 mt-0.5">
+                                    No custom account assigned. Rent and UPI payments are automatically directed to your PG property's default bank account.
+                                  </p>
+                                </div>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-xs text-[var(--brand-700)] border-[var(--brand-200)] hover:bg-[var(--brand-50)] shrink-0 self-start sm:self-auto font-semibold"
+                                onClick={() => setEditing(true)}
+                              >
+                                Assign Specific Account
+                              </Button>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
 
+                    {/* Edit Mode: Account Dropdown Selector */}
+                    {editing && (
+                      <div className="space-y-3 p-3.5 rounded-xl border border-[var(--brand-200)] bg-[var(--brand-50)]/40">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs font-bold text-[var(--brand-950)]">
+                            Assign Settlement Account for this Tenant
+                          </Label>
+                          <Link
+                            to="/account/bank-accounts"
+                            target="_blank"
+                            className="text-[11px] font-semibold text-[var(--brand-700)] hover:underline flex items-center gap-1"
+                          >
+                            Manage Saved Accounts <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        </div>
+                        <Select
+                          value={form.bankAccountId || "custom"}
+                          onValueChange={(accId) => {
+                            if (accId === "custom") {
+                              setForm((prev) => ({ ...prev, bankAccountId: "" }));
+                              return;
+                            }
+                            const matched = (Array.isArray(ownerBankAccounts) ? ownerBankAccounts : []).find((a) => a.id === accId);
+                            if (matched) {
+                              setForm((prev) => ({
+                                ...prev,
+                                bankAccountId: accId,
+                                bankName: matched.bankName || "",
+                                accountHolderName: matched.accountHolderName || prev.name || "",
+                                accountNumber: matched.accountNumber || "",
+                                ifscCode: matched.ifscCode || "",
+                                upiId: matched.upiId || "",
+                              }));
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="h-10 text-xs rounded-xl bg-white">
+                            <SelectValue placeholder="Select Bank / UPI Account" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(Array.isArray(ownerBankAccounts) ? ownerBankAccounts : []).map((acc) => (
+                              <SelectItem key={acc.id} value={acc.id}>
+                                {acc.bankName || "Bank Account"} (••••{acc.accountNumber?.slice(-4)})
+                                {acc.isPrimary ? " [Owner Primary]" : ""}
+                                {acc.upiId ? ` — UPI: ${acc.upiId}` : ""}
+                              </SelectItem>
+                            ))}
+                            <SelectItem value="custom">Custom Account Details (Manual Entry)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[11px] text-muted-foreground">
+                          Choose an account like &ldquo;HDFC Bank (Block A)&rdquo; or &ldquo;SBI (Block B)&rdquo; so this tenant's rent and QR codes route to that specific account.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Detailed Account Fields (Editable or Read-only) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm pt-1">
                       {editing ? (
                         <EditField label="Bank Name" className="sm:col-span-2">
                           <Input
