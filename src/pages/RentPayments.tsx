@@ -1151,7 +1151,11 @@ export const RentPayments = () => {
                           }
                         }}
                       >
-                        Review UTR
+                        {(() => {
+                          const v = verifications.find((item) => item.tenantId === row.tenantId || item.tenantName.toLowerCase() === row.tenantName.toLowerCase());
+                          const isCash = v?.paymentMethod?.toUpperCase() === "CASH" || v?.utr === "CASH_HANDOVER" || v?.utrNumber === "CASH_HANDOVER";
+                          return isCash ? "Review Cash" : "Review UTR";
+                        })()}
                       </button>
                     ) : row.status !== "paid" ? (
                       <button
@@ -1291,7 +1295,12 @@ export const RentPayments = () => {
                               }
                             }}
                           >
-                            <ShieldCheck className="h-3 w-3 mr-1" /> Review UTR
+                            <ShieldCheck className="h-3 w-3 mr-1" />
+                            {(() => {
+                              const v = verifications.find((item) => item.tenantId === row.tenantId || item.tenantName.toLowerCase() === row.tenantName.toLowerCase());
+                              const isCash = v?.paymentMethod?.toUpperCase() === "CASH" || v?.utr === "CASH_HANDOVER" || v?.utrNumber === "CASH_HANDOVER";
+                              return isCash ? "Review Cash" : "Review UTR";
+                            })()}
                           </Button>
                         ) : !isPaid ? (
                           <Button
@@ -2047,117 +2056,164 @@ export const RentPayments = () => {
         {/* Payment Verification Proof Drawer (Lite Plan UTR Approval Desk) */}
         <Sheet open={verificationDrawerOpen} onOpenChange={setVerificationDrawerOpen}>
           <SheetContent side={isMobile ? "bottom" : "right"} className="w-full sm:max-w-[480px] p-0 flex flex-col bg-white border-l border-[var(--gray-200)] shadow-overlay max-h-[90dvh] rounded-t-[24px] md:rounded-none md:max-h-none">
-            <SheetHeader className="p-4 sm:p-5 border-b border-[var(--gray-200)] bg-[var(--gray-50)] text-left shrink-0">
-              <SheetTitle className="text-base font-semibold text-[var(--gray-900)] flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5 text-amber-600" /> Payment Proof Verification
-              </SheetTitle>
-              <p className="text-xs text-[var(--gray-500)] mt-0.5">
-                Verify tenant-submitted UTR and bank reference before crediting the rent register.
-              </p>
-            </SheetHeader>
+            {(() => {
+              const isCash =
+                activeVerification?.paymentMethod?.toUpperCase() === "CASH" ||
+                activeVerification?.utrNumber === "CASH_HANDOVER" ||
+                activeVerification?.utr === "CASH_HANDOVER" ||
+                Boolean(activeVerification?.notes && activeVerification.notes.toLowerCase().includes("cash"));
 
-            {activeVerification && (
-              <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs">
-                {/* Claim details */}
-                <div className="register-card p-3.5 space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[var(--gray-500)]">Tenant Name</span>
-                    <span className="font-semibold text-[var(--gray-900)]">{activeVerification.tenantName}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[var(--gray-500)]">Room / Bed</span>
-                    <span className="font-semibold text-[var(--gray-900)]">
-                      {activeVerification.roomBed || (activeVerification.roomNumber ? `Room ${activeVerification.roomNumber}` : "—")}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[var(--gray-500)]">Amount Claimed</span>
-                    <span className="font-bold text-sm text-[var(--gray-900)] tabular-nums">
-                      {formatINR(activeVerification.amountClaimed || activeVerification.amount)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center pt-1 border-t border-[var(--gray-200)]">
-                    <span className="text-[var(--gray-500)]">UTR / Ref Number</span>
-                    <span className="font-mono font-bold text-[var(--brand-700)] bg-[var(--brand-50)] px-2 py-0.5 rounded-sm">
-                      {activeVerification.utrNumber || activeVerification.utr}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[var(--gray-500)]">Submitted At</span>
-                    <span className="text-[var(--gray-600)] tabular-nums">
-                      {formatDate(activeVerification.submittedAt || activeVerification.submittedDate)}
-                    </span>
-                  </div>
-                </div>
+              return (
+                <>
+                  <SheetHeader className="p-4 sm:p-5 border-b border-[var(--gray-200)] bg-[var(--gray-50)] text-left shrink-0">
+                    <SheetTitle className="text-base font-semibold text-[var(--gray-900)] flex items-center gap-2">
+                      <ShieldCheck className="h-5 w-5 text-amber-600" /> {isCash ? "Cash Payment Verification" : "Payment Proof Verification"}
+                    </SheetTitle>
+                    <p className="text-xs text-[var(--gray-500)] mt-0.5">
+                      {isCash
+                        ? "Verify cash handover report before crediting tenant rent register."
+                        : "Verify tenant-submitted UTR and bank reference before crediting the rent register."}
+                    </p>
+                  </SheetHeader>
 
-                {/* Screenshot Preview */}
-                <div className="space-y-1.5">
-                  <span className="text-xs font-semibold text-[var(--gray-700)] block">
-                    Payment Screenshot / Receipt
-                  </span>
-                  {activeVerification.screenshotUrl ? (
-                    <div className="border border-[var(--gray-200)] rounded-xl bg-white p-2 text-center space-y-2">
-                      <a
-                        href={activeVerification.screenshotUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="block group relative overflow-hidden rounded-lg bg-[var(--gray-50)]"
-                      >
-                        <img
-                          src={activeVerification.screenshotUrl}
-                          alt={`Proof for UTR ${activeVerification.utrNumber || activeVerification.utr}`}
-                          className="max-h-72 w-auto mx-auto object-contain rounded-lg border border-[var(--gray-200)]"
-                        />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all text-white text-xs font-semibold gap-1.5">
-                          <ExternalLink className="h-4 w-4" /> Open full image
+                  {activeVerification && (
+                    <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs">
+                      {/* Claim details */}
+                      <div className="register-card p-3.5 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[var(--gray-500)]">Tenant Name</span>
+                          <span className="font-semibold text-[var(--gray-900)]">{activeVerification.tenantName}</span>
                         </div>
-                      </a>
-                      <div className="flex items-center justify-between px-1 text-[11px] text-[var(--gray-500)]">
-                        <span>Click preview to open full image</span>
-                        <a
-                          href={activeVerification.screenshotUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-primary font-semibold flex items-center gap-1 hover:underline"
-                        >
-                          <ExternalLink className="h-3 w-3" /> View original
-                        </a>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[var(--gray-500)]">Room / Bed</span>
+                          <span className="font-semibold text-[var(--gray-900)]">
+                            {activeVerification.roomBed || (activeVerification.roomNumber ? `Room ${activeVerification.roomNumber}` : "—")}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[var(--gray-500)]">Payment Mode</span>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold ${
+                            isCash
+                              ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                              : "bg-teal-50 text-teal-800 border border-teal-200"
+                          }`}>
+                            {isCash ? "💵 Cash Handover" : "📱 Direct UPI / Bank"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[var(--gray-500)]">Amount Claimed</span>
+                          <span className="font-bold text-sm text-[var(--gray-900)] tabular-nums">
+                            {formatINR(activeVerification.amountClaimed || activeVerification.amount)}
+                          </span>
+                        </div>
+                        {!isCash && (
+                          <div className="flex justify-between items-center pt-1 border-t border-[var(--gray-200)]">
+                            <span className="text-[var(--gray-500)]">UTR / Ref Number</span>
+                            <span className="font-mono font-bold text-[var(--brand-700)] bg-[var(--brand-50)] px-2 py-0.5 rounded-sm">
+                              {activeVerification.utrNumber || activeVerification.utr}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex justify-between items-center">
+                          <span className="text-[var(--gray-500)]">Submitted At</span>
+                          <span className="text-[var(--gray-600)] tabular-nums">
+                            {formatDate(activeVerification.submittedAt || activeVerification.submittedDate)}
+                          </span>
+                        </div>
+
+                        {activeVerification.notes && (
+                          <div className="pt-2 border-t border-[var(--gray-200)] space-y-1">
+                            <span className="text-[var(--gray-500)] text-[10px] font-bold uppercase tracking-wider block">
+                              Tenant Note:
+                            </span>
+                            <p className="text-[11px] text-[var(--gray-800)] bg-[var(--gray-50)] p-2.5 rounded-lg border border-[var(--gray-200)] font-medium leading-relaxed">
+                              {activeVerification.notes}
+                            </p>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ) : (
-                    <div className="border border-[var(--gray-200)] rounded-md bg-[var(--gray-50)] p-6 text-center text-[var(--gray-500)] space-y-2">
-                      <div className="h-10 w-10 mx-auto rounded-full bg-white border border-[var(--gray-200)] flex items-center justify-center text-[var(--gray-400)]">
-                        <Receipt className="h-5 w-5" />
+
+                      {/* Screenshot Preview */}
+                      <div className="space-y-1.5">
+                        <span className="text-xs font-semibold text-[var(--gray-700)] block">
+                          Payment Screenshot / Receipt
+                        </span>
+                        {activeVerification.screenshotUrl ? (
+                          <div className="border border-[var(--gray-200)] rounded-xl bg-white p-2 text-center space-y-2">
+                            <a
+                              href={activeVerification.screenshotUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="block group relative overflow-hidden rounded-lg bg-[var(--gray-50)]"
+                            >
+                              <img
+                                src={activeVerification.screenshotUrl}
+                                alt={`Proof for ${isCash ? "Cash Payment" : `UTR ${activeVerification.utrNumber || activeVerification.utr}`}`}
+                                className="max-h-72 w-auto mx-auto object-contain rounded-lg border border-[var(--gray-200)]"
+                              />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all text-white text-xs font-semibold gap-1.5">
+                                <ExternalLink className="h-4 w-4" /> Open full image
+                              </div>
+                            </a>
+                            <div className="flex items-center justify-between px-1 text-[11px] text-[var(--gray-500)]">
+                              <span>Click preview to open full image</span>
+                              <a
+                                href={activeVerification.screenshotUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-primary font-semibold flex items-center gap-1 hover:underline"
+                              >
+                                <ExternalLink className="h-3 w-3" /> View original
+                              </a>
+                            </div>
+                          </div>
+                        ) : isCash ? (
+                          <div className="border border-emerald-200 rounded-xl bg-emerald-50/50 p-5 text-center space-y-2">
+                            <div className="h-10 w-10 mx-auto rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 font-bold text-sm">
+                              💵
+                            </div>
+                            <p className="font-bold text-[var(--gray-900)]">Direct Cash Handover</p>
+                            <p className="text-[11px] text-[var(--gray-600)] leading-relaxed">
+                              Tenant recorded paying directly in cash without attaching a paper receipt. Verify the cash received in your ledger/cash drawer before approving.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="border border-[var(--gray-200)] rounded-md bg-[var(--gray-50)] p-6 text-center text-[var(--gray-500)] space-y-2">
+                            <div className="h-10 w-10 mx-auto rounded-full bg-white border border-[var(--gray-200)] flex items-center justify-center text-[var(--gray-400)]">
+                              <Receipt className="h-5 w-5" />
+                            </div>
+                            <p className="font-medium text-[var(--gray-800)]">No screenshot attached</p>
+                            <p className="text-[11px]">UTR: {activeVerification.utrNumber || activeVerification.utr}</p>
+                            <p className="text-[11px] text-[var(--gray-400)]">Tenant submitted direct UTR reference. Verify in bank statement.</p>
+                          </div>
+                        )}
                       </div>
-                      <p className="font-medium text-[var(--gray-800)]">No screenshot attached</p>
-                      <p className="text-[11px]">UTR: {activeVerification.utrNumber || activeVerification.utr}</p>
-                      <p className="text-[11px] text-[var(--gray-400)]">Tenant submitted direct UTR reference. Verify in bank statement.</p>
                     </div>
                   )}
-                </div>
-              </div>
-            )}
 
-            <div className="p-4 border-t border-[var(--gray-200)] bg-[var(--gray-50)] flex items-center justify-end gap-2 shrink-0">
-              <Button
-                variant="secondary"
-                size="sm"
-                className="text-[#B42318] hover:bg-[#FEF1F0]"
-                onClick={() => setRejectModalOpen(true)}
-                disabled={isApproving || isRejecting}
-              >
-                Reject Proof
-              </Button>
-              <Button
-                size="sm"
-                className="gap-1.5"
-                onClick={() => activeVerification && handleApproveVerification(activeVerification)}
-                disabled={isApproving || isRejecting}
-              >
-                {isApproving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                {isApproving ? "Approving..." : "Approve & Credit Rent"}
-              </Button>
-            </div>
+                  <div className="p-4 border-t border-[var(--gray-200)] bg-[var(--gray-50)] flex items-center justify-end gap-2 shrink-0">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="text-[#B42318] hover:bg-[#FEF1F0]"
+                      onClick={() => setRejectModalOpen(true)}
+                      disabled={isApproving || isRejecting}
+                    >
+                      Reject Proof
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => activeVerification && handleApproveVerification(activeVerification)}
+                      disabled={isApproving || isRejecting}
+                    >
+                      {isApproving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                      {isApproving ? "Approving..." : isCash ? "Confirm Cash & Credit Rent" : "Approve & Credit Rent"}
+                    </Button>
+                  </div>
+                </>
+              );
+            })()}
           </SheetContent>
         </Sheet>
 

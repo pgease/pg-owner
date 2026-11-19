@@ -4107,6 +4107,7 @@ export interface PaymentVerificationItem {
   rejectionReason?: string;
   rentCollectionId?: string;
   notes?: string;
+  paymentMethod?: string;
 }
 
 export async function getPaymentVerifications(params?: {
