@@ -106,6 +106,22 @@ export const EasebuzzGatewayCard = () => {
       setSettings(data);
 
       // Pre-fill form if existing bank details or PG name
+      if (data.submerchant) {
+        const sub = data.submerchant as any;
+        if (sub.businessName && !businessName) setBusinessName(sub.businessName);
+        if (sub.entityType) setEntityType(sub.entityType);
+        if (sub.panNumber && !panNumber) setPanNumber(sub.panNumber);
+        if (sub.accountHolderName && !accountHolderName) setAccountHolderName(sub.accountHolderName);
+        if (sub.bankName && !bankName) setBankName(sub.bankName);
+        if (sub.branch && !branch) setBranch(sub.branch);
+        if (sub.accountNumber && !accountNumber) {
+          setAccountNumber(sub.accountNumber);
+          setConfirmAccountNumber(sub.accountNumber);
+        }
+        if (sub.ifsc && !ifsc) setIfsc(sub.ifsc);
+        if (sub.aadhaarNumber && !aadhaarNumber) setAadhaarNumber(sub.aadhaarNumber);
+      }
+
       if (data.submerchant?.status === "KYC_PENDING") {
         setCurrentStep(2);
       } else if (data.submerchant?.status === "ACTIVE") {
@@ -645,10 +661,10 @@ export const EasebuzzGatewayCard = () => {
 
               <div className="space-y-1">
                 <h3 className="text-base font-bold text-foreground">
-                  Aadhaar e-KYC Verification
+                  Aadhaar e-KYC Verification (Easebuzz Gateway)
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  Enter the 6-digit OTP sent to your registered mobile number ending in{" "}
+                  Enter the 6-digit OTP sent by Easebuzz to your registered mobile number ending in{" "}
                   <strong className="text-foreground">•••• {otpMobileLast4}</strong>.
                 </p>
               </div>
@@ -753,18 +769,31 @@ export const EasebuzzGatewayCard = () => {
                 </div>
               </div>
 
-              {/* Action Buttons: Test Tenant Payment Link & Reset Flow */}
+              {/* Action Buttons: Sync Status with Easebuzz & Tenant Payment Link */}
               <div className="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-border/50">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleGetTestLink}
-                  disabled={actionLoading}
-                  className="text-xs h-9 font-bold text-primary border-primary/40 hover:bg-primary/5 gap-2"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  Get Tenant Payment Link to Test
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={fetchSettings}
+                    disabled={loading || actionLoading}
+                    className="text-xs h-9 font-semibold text-foreground border-border/80 hover:bg-muted/50 gap-2"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+                    Sync Status with Easebuzz
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleGetTestLink}
+                    disabled={actionLoading}
+                    className="text-xs h-9 font-bold text-primary border-primary/40 hover:bg-primary/5 gap-2"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Get Tenant Payment Link to Test
+                  </Button>
+                </div>
 
                 <div className="flex items-center gap-2">
                   <Button
