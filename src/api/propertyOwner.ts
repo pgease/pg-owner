@@ -2494,6 +2494,84 @@ export async function startEasebuzzKyc(): Promise<{ success: boolean; kycUrl?: s
   });
 }
 
+export interface InitiateSubmerchantOnboardingParams {
+  businessName: string;
+  entityType: string;
+  panNumber?: string;
+  aadhaarNumber?: string;
+  accountHolderName: string;
+  bankName: string;
+  accountNumber: string;
+  ifsc: string;
+  branch?: string;
+}
+
+export async function initiateEasebuzzOnboarding(params: InitiateSubmerchantOnboardingParams): Promise<{
+  success: boolean;
+  status: string;
+  submerchantId: string;
+  mobileLast4: string;
+  message: string;
+  testHint?: string;
+}> {
+  return httpRequest("/owner/easebuzz/submerchant/initiate-onboarding", {
+    method: "POST",
+    body: params,
+    auth: true,
+  });
+}
+
+export async function verifyEasebuzzKycOtp(data: { otp: string }): Promise<{
+  success: boolean;
+  status: string;
+  submerchantId: string;
+  message: string;
+  onlinePaymentsEnabled: boolean;
+}> {
+  return httpRequest("/owner/easebuzz/submerchant/verify-kyc-otp", {
+    method: "POST",
+    body: data,
+    auth: true,
+  });
+}
+
+export async function resendEasebuzzKycOtp(): Promise<{
+  success: boolean;
+  message: string;
+  testHint?: string;
+}> {
+  return httpRequest("/owner/easebuzz/submerchant/resend-kyc-otp", {
+    method: "POST",
+    auth: true,
+  });
+}
+
+export async function resetEasebuzzSubmerchant(): Promise<{
+  success: boolean;
+  message: string;
+}> {
+  return httpRequest("/owner/easebuzz/submerchant/reset", {
+    method: "POST",
+    auth: true,
+  });
+}
+
+export async function getEasebuzzTestPaymentLink(): Promise<{
+  success: boolean;
+  tenantName: string;
+  roomNumber: string;
+  propertyName: string;
+  amount: string;
+  paymentUrl: string;
+  txnid: string;
+  submerchantId: string;
+}> {
+  return httpRequest("/owner/easebuzz/submerchant/test-payment-link", {
+    method: "GET",
+    auth: true,
+  });
+}
+
 export async function refreshEasebuzzKycLink(): Promise<{ success: boolean; kycUrl?: string }> {
   return httpRequest("/owner/easebuzz/submerchant/kyc-link", {
     method: "POST",
