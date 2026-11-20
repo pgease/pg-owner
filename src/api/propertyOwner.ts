@@ -2510,7 +2510,9 @@ export async function initiateEasebuzzOnboarding(params: InitiateSubmerchantOnbo
   success: boolean;
   status: string;
   submerchantId: string;
-  mobileLast4: string;
+  mobileLast4?: string;
+  kycUrl?: string;
+  kycDashboardUrl?: string;
   message: string;
   testHint?: string;
 }> {
@@ -2572,8 +2574,29 @@ export async function getEasebuzzTestPaymentLink(): Promise<{
   });
 }
 
-export async function refreshEasebuzzKycLink(): Promise<{ success: boolean; kycUrl?: string }> {
+export async function refreshEasebuzzKycLink(): Promise<{
+  success: boolean;
+  status: string;
+  submerchantId: string;
+  kycUrl?: string;
+  kycDashboardUrl?: string;
+  message?: string;
+}> {
   return httpRequest("/owner/easebuzz/submerchant/kyc-link", {
+    method: "POST",
+    auth: true,
+  });
+}
+
+export async function syncEasebuzzStatus(): Promise<{
+  success: boolean;
+  status: string;
+  submerchantId: string;
+  kycUrl?: string;
+  kycDashboardUrl?: string;
+  message?: string;
+}> {
+  return httpRequest("/owner/easebuzz/submerchant/sync-status", {
     method: "POST",
     auth: true,
   });

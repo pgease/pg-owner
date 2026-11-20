@@ -44,8 +44,8 @@ import {
   getPaymentSettings,
   lookupIfsc,
   initiateEasebuzzOnboarding,
-  verifyEasebuzzKycOtp,
-  resendEasebuzzKycOtp,
+  refreshEasebuzzKycLink,
+  syncEasebuzzStatus,
   resetEasebuzzSubmerchant,
   getEasebuzzTestPaymentLink,
   toggleEasebuzzOnline,
@@ -65,7 +65,7 @@ export const EasebuzzGatewayCard = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
 
-  // In-Page Multi-Step State: 1 = Details Entry, 2 = Aadhaar OTP, 3 = Active
+  // In-Page Multi-Step State: 1 = Details Entry, 2 = KYC Pending on Easebuzz
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
 
   // Form State: Business & Identity Details
@@ -83,10 +83,9 @@ export const EasebuzzGatewayCard = () => {
   const [ifsc, setIfsc] = useState("");
   const [isLookingUpIfsc, setIsLookingUpIfsc] = useState(false);
 
-  // Step 2 OTP State
-  const [kycOtp, setKycOtp] = useState("");
-  const [otpMobileLast4, setOtpMobileLast4] = useState("3356");
-  const [testHint, setTestHint] = useState("");
+  // Official Easebuzz KYC Link State
+  const [kycDashboardUrl, setKycDashboardUrl] = useState("");
+  const [copiedKycUrl, setCopiedKycUrl] = useState(false);
 
   // Test Link Dialog State
   const [testLinkData, setTestLinkData] = useState<{
@@ -120,6 +119,7 @@ export const EasebuzzGatewayCard = () => {
         }
         if (sub.ifsc && !ifsc) setIfsc(sub.ifsc);
         if (sub.aadhaarNumber && !aadhaarNumber) setAadhaarNumber(sub.aadhaarNumber);
+        if (sub.kycDashboardUrl) setKycDashboardUrl(sub.kycDashboardUrl);
       }
 
       if (data.submerchant?.status === "KYC_PENDING") {
@@ -165,7 +165,7 @@ export const EasebuzzGatewayCard = () => {
     }
   };
 
-  // Step 1: Submit Profile & Bank Details -> Trigger Aadhaar OTP
+  // Step 1: Submit Profile & Bank Details -> Create Sub-Merchant & Generate KYC Link
   const handleInitiateOnboarding = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -176,11 +176,6 @@ export const EasebuzzGatewayCard = () => {
 
     if (panNumber.trim() && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panNumber.trim().toUpperCase())) {
       toast({ title: "Invalid PAN Format", description: "PAN must be a 10-character alphanumeric code (e.g. ABCDE1234F).", variant: "destructive" });
-      return;
-    }
-
-    if (aadhaarNumber.trim() && aadhaarNumber.replace(/\D/g, "").length !== 12) {
-      toast({ title: "Invalid Aadhaar Number", description: "Aadhaar must be exactly 12 digits.", variant: "destructive" });
       return;
     }
 
@@ -213,20 +208,22 @@ export const EasebuzzGatewayCard = () => {
         branch: branch.trim() || undefined,
       });
 
-      if (res.mobileLast4) {
-        setOtpMobileLast4(res.mobileLast4);
-      }
-      if (res.testHint) {
-        setTestHint(res.testHint);
+      const kycUrl = res.kycUrl || res.kycDashboardUrl || "";
+      if (kycUrl) {
+        setKycDashboardUrl(kycUrl);
       }
 
       toast({
-        title: "Details Registered Successfully",
-        description: res.message || "Aadhaar KYC OTP has been sent to your mobile number.",
+        title: "Sub-Merchant Created on Easebuzz",
+        description: res.message || "Please complete KYC verification on the Easebuzz portal.",
       });
 
       setCurrentStep(2);
       await fetchSettings();
+
+      if (kycUrl) {
+        window.open(kycUrl, "_blank");
+      }
     } catch (err: any) {
       toast({
         title: "Registration Failed",
@@ -238,27 +235,27 @@ export const EasebuzzGatewayCard = () => {
     }
   };
 
-  // Step 2: Verify OTP directly in page
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!kycOtp.trim()) {
-      toast({ title: "OTP Required", description: "Please enter the 6-digit OTP received via SMS.", variant: "destructive" });
-      return;
-    }
-
+  // Step 2 Action: Refresh KYC Link via API 2
+  const handleRefreshKycLink = async () => {
     setActionLoading(true);
     try {
-      const res = await verifyEasebuzzKycOtp({ otp: kycOtp.trim() });
+      const res = await refreshEasebuzzKycLink();
+      const freshUrl = res.kycUrl || res.kycDashboardUrl || "";
+      if (freshUrl) {
+        setKycDashboardUrl(freshUrl);
+      }
       toast({
-        title: "KYC Verified & Approved!",
-        description: res.message || "Your Easebuzz Sub-Merchant account is now active.",
+        title: "KYC Link Refreshed",
+        description: res.message || "Fresh Easebuzz KYC portal access key generated.",
       });
-      setKycOtp("");
       await fetchSettings();
+      if (freshUrl) {
+        window.open(freshUrl, "_blank");
+      }
     } catch (err: any) {
       toast({
-        title: "Verification Failed",
-        description: err?.message || "Invalid or expired OTP. Please enter 123456 for instant test approval.",
+        title: "Could Not Refresh KYC Link",
+        description: err?.message || "Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -266,20 +263,27 @@ export const EasebuzzGatewayCard = () => {
     }
   };
 
-  // Resend OTP
-  const handleResendOtp = async () => {
+  // Sync Status with Easebuzz live probe
+  const handleSyncStatus = async () => {
     setActionLoading(true);
     try {
-      const res = await resendEasebuzzKycOtp();
-      if (res.testHint) setTestHint(res.testHint);
-      toast({
-        title: "OTP Resent",
-        description: res.message || "A fresh OTP has been sent via SMS.",
-      });
+      const res = await syncEasebuzzStatus();
+      if (res.status === "ACTIVE") {
+        toast({
+          title: "KYC Approved & Active!",
+          description: "Your Easebuzz Sub-Merchant account is now verified and active.",
+        });
+      } else {
+        toast({
+          title: "Status Checked",
+          description: "Easebuzz verification is still pending. Please complete KYC on the Easebuzz portal.",
+        });
+      }
+      await fetchSettings();
     } catch (err: any) {
       toast({
-        title: "Could Not Resend OTP",
-        description: err?.message || "Please wait a moment before requesting another code.",
+        title: "Sync Failed",
+        description: err?.message || "Could not check verification status.",
         variant: "destructive",
       });
     } finally {
@@ -623,7 +627,7 @@ export const EasebuzzGatewayCard = () => {
                   ) : (
                     <ArrowRight className="h-4 w-4" />
                   )}
-                  {actionLoading ? "Registering Profile..." : "Proceed to Aadhaar KYC Verification"}
+                  {actionLoading ? "Registering on Easebuzz..." : "Register Sub-Merchant & Open KYC Portal"}
                 </Button>
               </div>
             </form>
@@ -631,99 +635,168 @@ export const EasebuzzGatewayCard = () => {
         )}
 
         {/* ========================================================================= */}
-        {/* STATE 2: KYC PENDING (STEP 2: AADHAAR OTP VERIFICATION)                    */}
+        {/* STATE 2: KYC PENDING (OFFICIAL EASEBUZZ KYC PORTAL ACCESS)                 */}
         {/* ========================================================================= */}
-        {!isSubActive && currentStep === 2 && (
+        {!isSubActive && (sub?.status === "KYC_PENDING" || currentStep === 2) && (
           <div className="space-y-6">
             {/* Step Progress Tracker */}
             <div className="flex items-center justify-between bg-muted/40 p-3 rounded-xl border border-border/60 text-xs font-medium">
               <div className="flex items-center gap-2 text-emerald-600 font-bold">
                 <Check className="h-4 w-4 text-emerald-600" />
-                <span>Details Registered</span>
+                <span>1. Profile & Bank Registered</span>
               </div>
               <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
               <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold">
                 <span className="h-5 w-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-[10px]">2</span>
-                <span>Aadhaar e-KYC (OTP)</span>
+                <span>2. Complete KYC on Easebuzz</span>
               </div>
               <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
               <div className="flex items-center gap-2 text-muted-foreground">
                 <span className="h-5 w-5 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-[10px]">3</span>
-                <span>Approved & Live</span>
+                <span>3. Live & Approved</span>
               </div>
             </div>
 
-            {/* OTP Verification Box */}
-            <div className="border border-amber-200 dark:border-amber-900/60 bg-amber-50/50 dark:bg-amber-950/20 rounded-2xl p-6 text-center max-w-lg mx-auto space-y-4">
-              <div className="mx-auto w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center text-amber-700 dark:text-amber-400">
-                <Smartphone className="h-6 w-6" />
+            {/* Sub-Merchant Identity Bar */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              {sub?.submerchantId && (
+                <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-border/70 shadow-2xs">
+                  <span className="text-muted-foreground font-medium">Sub-Merchant ID</span>
+                  <div className="flex items-center gap-1.5 font-mono font-bold text-foreground">
+                    <span>{sub.submerchantId}</span>
+                    <button
+                      onClick={() => copySubmerchantId(sub.submerchantId!)}
+                      className="text-muted-foreground hover:text-primary"
+                      title="Copy Sub-Merchant ID"
+                    >
+                      {copiedId ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-border/70 shadow-2xs">
+                <span className="text-muted-foreground font-medium">Settlement Account</span>
+                <span className="font-mono font-bold text-foreground">
+                  •••• {sub?.bankLast4 || accountNumber.slice(-4) || "8859"} {sub?.bankName ? `(${sub.bankName})` : bankName ? `(${bankName})` : "(Bank of Baroda)"}
+                </span>
+              </div>
+            </div>
+
+            {/* Official Easebuzz KYC Action Box */}
+            <div className="border border-amber-200 dark:border-amber-900/60 bg-gradient-to-b from-amber-50/70 to-amber-50/20 dark:from-amber-950/30 dark:to-transparent rounded-2xl p-6 text-center max-w-xl mx-auto space-y-4 shadow-xs">
+              <div className="mx-auto w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center text-amber-700 dark:text-amber-400 shadow-inner">
+                <ShieldCheck className="h-7 w-7" />
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <h3 className="text-base font-bold text-foreground">
-                  Aadhaar e-KYC Verification (Easebuzz Gateway)
+                  Complete Sub-Merchant KYC on Easebuzz
                 </h3>
-                <p className="text-xs text-muted-foreground">
-                  Enter the 6-digit OTP sent by Easebuzz to your registered mobile number ending in{" "}
-                  <strong className="text-foreground">•••• {otpMobileLast4}</strong>.
+                <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+                  Your sub-merchant profile has been created with Easebuzz. Click below to open the official Easebuzz KYC portal where OTP verification, Aadhaar, PAN, and settlement bank validation are conducted.
                 </p>
               </div>
 
-              <form onSubmit={handleVerifyOtp} className="space-y-4 pt-2">
-                <div className="flex justify-center">
-                  <Input
-                    value={kycOtp}
-                    onChange={(e) => setKycOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    placeholder="• • • • • •"
-                    maxLength={6}
-                    required
-                    className="h-12 w-48 text-center text-xl font-mono tracking-widest font-bold border-2 focus-visible:ring-primary"
-                    autoFocus
-                  />
-                </div>
+              {/* Main Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    const url = kycDashboardUrl || sub?.kycDashboardUrl;
+                    if (url) {
+                      window.open(url, "_blank");
+                    } else {
+                      handleRefreshKycLink();
+                    }
+                  }}
+                  disabled={actionLoading}
+                  className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white font-bold text-xs h-10 px-6 gap-2 shadow-sm"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Open Easebuzz KYC Portal
+                </Button>
 
-                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                  <span>Didn't receive the OTP?</span>
-                  <button
-                    type="button"
-                    onClick={handleResendOtp}
-                    disabled={actionLoading}
-                    className="text-primary font-bold hover:underline"
-                  >
-                    Resend OTP
-                  </button>
-                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleRefreshKycLink}
+                  disabled={actionLoading}
+                  className="w-full sm:w-auto text-xs h-10 font-semibold gap-2 border-border/80"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${actionLoading ? "animate-spin" : ""}`} />
+                  Refresh KYC Link
+                </Button>
 
-                {/* Developer / Demo Test Hint */}
-                <div className="bg-white/80 dark:bg-slate-900/80 p-2.5 rounded-lg border border-border/60 text-xs text-slate-600 dark:text-slate-300">
-                  ⚡ <strong>Testing mode:</strong> Enter <strong>1234</strong> or <strong>123456</strong> for instant approval.
-                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleSyncStatus}
+                  disabled={actionLoading}
+                  className="w-full sm:w-auto text-xs h-10 font-bold text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 gap-2"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  Sync Status with Easebuzz
+                </Button>
+              </div>
 
-                <div className="flex items-center justify-center gap-3 pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setCurrentStep(1)}
-                    disabled={actionLoading}
-                    className="text-xs h-9"
-                  >
-                    Back to Edit Details
-                  </Button>
-
-                  <Button
-                    type="submit"
-                    disabled={actionLoading || !kycOtp.trim()}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-9 px-6 gap-2"
-                  >
-                    {actionLoading ? (
-                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <ShieldCheck className="h-4 w-4" />
-                    )}
-                    {actionLoading ? "Verifying..." : "Verify OTP & Complete KYC"}
-                  </Button>
+              {/* Direct Link Preview & Copy */}
+              {(kycDashboardUrl || sub?.kycDashboardUrl) && (
+                <div className="pt-3 border-t border-amber-200/60 dark:border-amber-900/40 text-left space-y-1.5">
+                  <Label className="text-[11px] font-semibold text-muted-foreground flex items-center justify-between">
+                    <span>Direct Easebuzz KYC Portal URL:</span>
+                    <span className="text-[10px] text-muted-foreground">Opens secure hosted verification</span>
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      readOnly
+                      value={kycDashboardUrl || sub?.kycDashboardUrl || ""}
+                      className="h-8 text-[11px] font-mono bg-white select-all text-muted-foreground"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const url = kycDashboardUrl || sub?.kycDashboardUrl || "";
+                        navigator.clipboard.writeText(url);
+                        setCopiedKycUrl(true);
+                        setTimeout(() => setCopiedKycUrl(false), 2000);
+                        toast({ title: "Link Copied", description: "Paste this link in any browser tab to complete KYC." });
+                      }}
+                      className="h-8 px-3 shrink-0 text-xs"
+                    >
+                      {copiedKycUrl ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                    </Button>
+                  </div>
                 </div>
-              </form>
+              )}
+
+              {/* Reset or Edit options */}
+              <div className="flex items-center justify-between pt-2 border-t border-border/50 text-xs text-muted-foreground">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCurrentStep(1)}
+                  disabled={actionLoading}
+                  className="text-xs h-8 text-muted-foreground hover:text-foreground"
+                >
+                  Edit Bank Details
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleReset}
+                  disabled={actionLoading}
+                  className="text-xs h-8 text-muted-foreground hover:text-destructive gap-1.5"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Reset & Re-test from Scratch
+                </Button>
+              </div>
             </div>
           </div>
         )}
@@ -775,11 +848,11 @@ export const EasebuzzGatewayCard = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={fetchSettings}
+                    onClick={handleSyncStatus}
                     disabled={loading || actionLoading}
                     className="text-xs h-9 font-semibold text-foreground border-border/80 hover:bg-muted/50 gap-2"
                   >
-                    <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+                    <RefreshCw className={`h-3.5 w-3.5 ${actionLoading ? "animate-spin" : ""}`} />
                     Sync Status with Easebuzz
                   </Button>
 
