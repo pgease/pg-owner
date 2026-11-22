@@ -110,12 +110,15 @@ export async function requestTenantOtp(
   });
 }
 
-export async function verifyOtp(mobileNumber: string, otp: string, name?: string) {
+export async function verifyOtp(mobileNumber: string, otp: string, name?: string, location?: string) {
   const body: Record<string, unknown> = { mobileNumber, otp };
   if (name?.trim()) {
     body.name = name.trim();
     body.pgOwnerName = name.trim();
     body.ownerName = name.trim();
+  }
+  if (location?.trim()) {
+    body.location = location.trim();
   }
   const data = await httpRequest<VerifyOtpResponse>(`${PROPERTY_OWNER_BASE}/otp/verify`, {
     method: "POST",
