@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Bell } from "lucide-react";
+import mascotRent from "@/assets/mascot/mascot-rent.png";
 import { getMobilePageTitle, getParentRoute, isMobileTabRoot } from "@/lib/mobileRoutes";
 import { useOwnerNotifications } from "@/hooks/useOwnerNotifications";
 import { useEntitlements } from "@/hooks/useEntitlements";
@@ -73,7 +74,7 @@ export function MobileTopBar() {
         ) : (
           <span className="w-11 shrink-0" />
         )}
-        <div className="absolute inset-x-14 flex items-center justify-center gap-1.5 pointer-events-none">
+        <div className="absolute inset-x-24 flex items-center justify-center gap-1.5 pointer-events-none">
           <h1 className="truncate text-[16px] font-semibold text-[#18212B]">{title}</h1>
           {planChip && (
             <span
@@ -88,8 +89,16 @@ export function MobileTopBar() {
         </div>
         <button
           type="button"
+          onClick={() => window.dispatchEvent(new Event("open-ease-buddy"))}
+          className="ml-auto flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-[#E2E6EA] bg-white"
+          aria-label="Open Ease Buddy AI"
+        >
+          <img src={mascotRent} alt="" className="h-7 w-7 rounded-full object-cover object-top" />
+        </button>
+        <button
+          type="button"
           onClick={() => navigate("/notifications")}
-          className="ml-auto relative flex h-11 w-11 items-center justify-center text-[#18212B] shrink-0 pointer-events-auto"
+          className="relative flex h-11 w-11 items-center justify-center text-[#18212B] shrink-0 pointer-events-auto"
           aria-label="Notifications"
         >
           <Bell className="h-5 w-5" />

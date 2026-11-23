@@ -313,11 +313,18 @@ export function SharePaymentLinkDialog({
                     includeMargin={true}
                     className="rounded-lg mx-auto"
                   />
-                  <p className="text-[11px] font-bold text-teal-800 dark:text-teal-300">
-                    {data.settlement?.upiQrString
-                      ? "Scan with GPay / PhonePe / Paytm to Pay"
-                      : "Scan to Open Rent Payment Portal"}
-                  </p>
+                  {data.settlement?.upiQrString ? (
+                    <a
+                      href={data.settlement.upiQrString}
+                      className="inline-flex min-h-11 items-center text-[11px] font-bold text-teal-800 underline dark:text-teal-300"
+                    >
+                      Scan with GPay / PhonePe / Paytm to Pay
+                    </a>
+                  ) : (
+                    <p className="text-[11px] font-bold text-teal-800 dark:text-teal-300">
+                      Scan to Open Rent Payment Portal
+                    </p>
+                  )}
                   {data.settlement && (
                     <div className="text-[10px] text-muted-foreground flex flex-col items-center gap-0.5">
                       <span>Direct Payout to: <strong className="text-foreground">{data.settlement.bankName || "Settlement Bank"}</strong></span>

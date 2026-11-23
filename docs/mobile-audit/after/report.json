@@ -1,0 +1,5696 @@
+[
+  {
+    "viewport": "360x800",
+    "route": "/login",
+    "slug": "login",
+    "finalUrl": "http://127.0.0.1:5173/login",
+    "file": "360x800-login.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "absolute -top-12 -right-12 h-44 w-44 rounded-full bg-white/10 blur-xl pointer-ev",
+          "right": 408,
+          "left": 232,
+          "w": 176
+        },
+        {
+          "tag": "div",
+          "cls": "absolute top-24 -left-14 h-40 w-40 rounded-full bg-white/5 blur-lg pointer-event",
+          "right": 104,
+          "left": -56,
+          "w": 160
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "PG Ease"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/signup",
+    "slug": "signup",
+    "finalUrl": "http://127.0.0.1:5173/signup",
+    "file": "360x800-signup.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "absolute -top-12 -right-12 h-44 w-44 rounded-full bg-white/10 blur-xl pointer-ev",
+          "right": 408,
+          "left": 232,
+          "w": 176
+        },
+        {
+          "tag": "div",
+          "cls": "absolute top-24 -left-14 h-40 w-40 rounded-full bg-white/5 blur-lg pointer-event",
+          "right": 104,
+          "left": -56,
+          "w": 160
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "PG Ease"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/dashboard",
+    "slug": "dashboard",
+    "finalUrl": "http://127.0.0.1:5173/dashboard",
+    "file": "360x800-dashboard.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Shivam Residency"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/my-pgs",
+    "slug": "my-pgs",
+    "finalUrl": "http://127.0.0.1:5173/my-pgs",
+    "file": "360x800-my-pgs.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "My PG"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/my-pgs/structure",
+    "slug": "rooms",
+    "finalUrl": "http://127.0.0.1:5173/my-pgs/structure",
+    "file": "360x800-rooms.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Rooms & Beds"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/my-pgs/amenities",
+    "slug": "amenities",
+    "finalUrl": "http://127.0.0.1:5173/my-pgs/amenities",
+    "file": "360x800-amenities.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Amenities"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/my-pgs/restrictions",
+    "slug": "restrictions",
+    "finalUrl": "http://127.0.0.1:5173/my-pgs/restrictions",
+    "file": "360x800-restrictions.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "House Rules"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/my-pgs/wifi",
+    "slug": "wifi",
+    "finalUrl": "http://127.0.0.1:5173/my-pgs/wifi",
+    "file": "360x800-wifi.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "WiFi"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/my-pgs/notices",
+    "slug": "notices",
+    "finalUrl": "http://127.0.0.1:5173/my-pgs/notices",
+    "file": "360x800-notices.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Notices"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/my-pgs/bank",
+    "slug": "bank",
+    "finalUrl": "http://127.0.0.1:5173/my-pgs/bank",
+    "file": "360x800-bank.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Bank"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/post-pg",
+    "slug": "public-listing",
+    "finalUrl": "http://127.0.0.1:5173/post-pg",
+    "file": "360x800-public-listing.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Public Listing"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/tenants",
+    "slug": "tenants",
+    "finalUrl": "http://127.0.0.1:5173/tenants",
+    "file": "360x800-tenants.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 1,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Tenants"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/tenants/add",
+    "slug": "add-tenant",
+    "finalUrl": "http://127.0.0.1:5173/tenants/add",
+    "file": "360x800-add-tenant.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Add tenant"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/leads",
+    "slug": "leads",
+    "finalUrl": "http://127.0.0.1:5173/leads",
+    "file": "360x800-leads.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Leads"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/tenants/kyc",
+    "slug": "kyc",
+    "finalUrl": "http://127.0.0.1:5173/tenants/kyc",
+    "file": "360x800-kyc.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "KYC"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/tenants/notice-period",
+    "slug": "notice-period",
+    "finalUrl": "http://127.0.0.1:5173/tenants/notice-period",
+    "file": "360x800-notice-period.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Notice period"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/tenants/guests",
+    "slug": "guests",
+    "finalUrl": "http://127.0.0.1:5173/tenants/guests",
+    "file": "360x800-guests.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Guests"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/rent-payments",
+    "slug": "rent",
+    "finalUrl": "http://127.0.0.1:5173/rent-payments",
+    "file": "360x800-rent.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 1,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Rent"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/rent-payments/history",
+    "slug": "rent-history",
+    "finalUrl": "http://127.0.0.1:5173/rent-payments/history",
+    "file": "360x800-rent-history.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 1,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Payment history"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/rent-payments/dues",
+    "slug": "rent-dues",
+    "finalUrl": "http://127.0.0.1:5173/rent-payments/dues",
+    "file": "360x800-rent-dues.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 1,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Dues"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/expenses",
+    "slug": "expenses",
+    "finalUrl": "http://127.0.0.1:5173/expenses",
+    "file": "360x800-expenses.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Expenses"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/complaints",
+    "slug": "complaints",
+    "finalUrl": "http://127.0.0.1:5173/complaints",
+    "file": "360x800-complaints.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Complaints"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/food",
+    "slug": "food",
+    "finalUrl": "http://127.0.0.1:5173/food",
+    "file": "360x800-food.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Food"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/nightout",
+    "slug": "nightout",
+    "finalUrl": "http://127.0.0.1:5173/nightout",
+    "file": "360x800-nightout.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Night out"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/group-chat",
+    "slug": "chat",
+    "finalUrl": "http://127.0.0.1:5173/group-chat",
+    "file": "360x800-chat.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 1,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "PG Ease"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/team",
+    "slug": "team",
+    "finalUrl": "http://127.0.0.1:5173/team",
+    "file": "360x800-team.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Staff"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/team/permissions-matrix",
+    "slug": "permissions",
+    "finalUrl": "http://127.0.0.1:5173/team/permissions-matrix",
+    "file": "360x800-permissions.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 1,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Permissions"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/reports",
+    "slug": "reports",
+    "finalUrl": "http://127.0.0.1:5173/reports",
+    "file": "360x800-reports.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Reports"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/settings",
+    "slug": "settings",
+    "finalUrl": "http://127.0.0.1:5173/settings",
+    "file": "360x800-settings.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Settings"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/plans",
+    "slug": "plans",
+    "finalUrl": "http://127.0.0.1:5173/plans",
+    "file": "360x800-plans.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Plans"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/referrals",
+    "slug": "referrals",
+    "finalUrl": "http://127.0.0.1:5173/referrals",
+    "file": "360x800-referrals.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Referrals"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/activity-logs",
+    "slug": "activity",
+    "finalUrl": "http://127.0.0.1:5173/activity-logs",
+    "file": "360x800-activity.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Activity logs"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/notifications",
+    "slug": "notifications",
+    "finalUrl": "http://127.0.0.1:5173/notifications",
+    "file": "360x800-notifications.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Notifications"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/support",
+    "slug": "support",
+    "finalUrl": "http://127.0.0.1:5173/support",
+    "file": "360x800-support.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Support"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/inventory",
+    "slug": "inventory",
+    "finalUrl": "http://127.0.0.1:5173/inventory",
+    "file": "360x800-inventory.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Inventory"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/settings/payment-kyc",
+    "slug": "payment-kyc",
+    "finalUrl": "http://127.0.0.1:5173/settings/payment-kyc",
+    "file": "360x800-payment-kyc.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Settings"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/privacy-policy",
+    "slug": "privacy",
+    "finalUrl": "http://127.0.0.1:5173/privacy-policy",
+    "file": "360x800-privacy.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "PG Ease"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/terms-and-conditions",
+    "slug": "terms",
+    "finalUrl": "http://127.0.0.1:5173/terms-and-conditions",
+    "file": "360x800-terms.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "PG Ease"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "/contact-us",
+    "slug": "contact",
+    "finalUrl": "http://127.0.0.1:5173/contact-us",
+    "file": "360x800-contact.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "innerWidth": 360,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "PG Ease"
+    }
+  },
+  {
+    "viewport": "360x800",
+    "route": "menu",
+    "slug": "menu",
+    "menuText": "Menu\n\nACTIVE PG\n\nShivam Residency\n\nOVERVIEW\n\nDashboard\n\nMANAGEMENT\n\nProperty\nPG Details\nRooms & Beds\nFacilities\nRestrictions\nWiFi\nBETA\nNotice Board\nBank Account\nPublic Listing\nLIVE\nTenants\nAll Tenants\nLeads & Visits\nBETA\nKYC & Agreements\nNotice Period\n\nFINANCE & OPS\n\nRent & Payments\nRent Collection\nPayment History\nDues & Pending\nExpenses\nOperations\nComplaints\nFood & Meals\nNight Out Logs\nGuest Requests\nGroup Chat\nSOON\nStaff\nTeam Members\nPermissions\n\nSYSTEM\n\nReports\nPRO\nAccount\nSettings\nInventory\nPlans & Billing\nRefer & Earn\nHelp & Documentation\nActivity Logs\nNotifications\nContact Support\nHelp & Video Tutorials\nVideos ›\nLogout"
+  },
+  {
+    "viewport": "412x915",
+    "route": "/login",
+    "slug": "login",
+    "finalUrl": "http://127.0.0.1:5173/login",
+    "file": "412x915-login.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "absolute -top-12 -right-12 h-44 w-44 rounded-full bg-white/10 blur-xl pointer-ev",
+          "right": 460,
+          "left": 284,
+          "w": 176
+        },
+        {
+          "tag": "div",
+          "cls": "absolute top-24 -left-14 h-40 w-40 rounded-full bg-white/5 blur-lg pointer-event",
+          "right": 104,
+          "left": -56,
+          "w": 160
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "PG Ease"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/signup",
+    "slug": "signup",
+    "finalUrl": "http://127.0.0.1:5173/signup",
+    "file": "412x915-signup.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "absolute -top-12 -right-12 h-44 w-44 rounded-full bg-white/10 blur-xl pointer-ev",
+          "right": 460,
+          "left": 284,
+          "w": 176
+        },
+        {
+          "tag": "div",
+          "cls": "absolute top-24 -left-14 h-40 w-40 rounded-full bg-white/5 blur-lg pointer-event",
+          "right": 104,
+          "left": -56,
+          "w": 160
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "PG Ease"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/dashboard",
+    "slug": "dashboard",
+    "finalUrl": "http://127.0.0.1:5173/dashboard",
+    "file": "412x915-dashboard.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Shivam Residency"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/my-pgs",
+    "slug": "my-pgs",
+    "finalUrl": "http://127.0.0.1:5173/my-pgs",
+    "file": "412x915-my-pgs.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "My PG"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/my-pgs/structure",
+    "slug": "rooms",
+    "finalUrl": "http://127.0.0.1:5173/my-pgs/structure",
+    "file": "412x915-rooms.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Rooms & Beds"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/my-pgs/amenities",
+    "slug": "amenities",
+    "finalUrl": "http://127.0.0.1:5173/my-pgs/amenities",
+    "file": "412x915-amenities.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Amenities"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/my-pgs/restrictions",
+    "slug": "restrictions",
+    "finalUrl": "http://127.0.0.1:5173/my-pgs/restrictions",
+    "file": "412x915-restrictions.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "House Rules"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/my-pgs/wifi",
+    "slug": "wifi",
+    "finalUrl": "http://127.0.0.1:5173/my-pgs/wifi",
+    "file": "412x915-wifi.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "WiFi"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/my-pgs/notices",
+    "slug": "notices",
+    "finalUrl": "http://127.0.0.1:5173/my-pgs/notices",
+    "file": "412x915-notices.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Notices"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/my-pgs/bank",
+    "slug": "bank",
+    "finalUrl": "http://127.0.0.1:5173/my-pgs/bank",
+    "file": "412x915-bank.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Bank"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/post-pg",
+    "slug": "public-listing",
+    "finalUrl": "http://127.0.0.1:5173/post-pg",
+    "file": "412x915-public-listing.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Public Listing"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/tenants",
+    "slug": "tenants",
+    "finalUrl": "http://127.0.0.1:5173/tenants",
+    "file": "412x915-tenants.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 1,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Tenants"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/tenants/add",
+    "slug": "add-tenant",
+    "finalUrl": "http://127.0.0.1:5173/tenants/add",
+    "file": "412x915-add-tenant.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Add tenant"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/leads",
+    "slug": "leads",
+    "finalUrl": "http://127.0.0.1:5173/leads",
+    "file": "412x915-leads.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Leads"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/tenants/kyc",
+    "slug": "kyc",
+    "finalUrl": "http://127.0.0.1:5173/tenants/kyc",
+    "file": "412x915-kyc.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "KYC"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/tenants/notice-period",
+    "slug": "notice-period",
+    "finalUrl": "http://127.0.0.1:5173/tenants/notice-period",
+    "file": "412x915-notice-period.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Notice period"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/tenants/guests",
+    "slug": "guests",
+    "finalUrl": "http://127.0.0.1:5173/tenants/guests",
+    "file": "412x915-guests.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Guests"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/rent-payments",
+    "slug": "rent",
+    "finalUrl": "http://127.0.0.1:5173/rent-payments",
+    "file": "412x915-rent.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 1,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Rent"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/rent-payments/history",
+    "slug": "rent-history",
+    "finalUrl": "http://127.0.0.1:5173/rent-payments/history",
+    "file": "412x915-rent-history.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 1,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Payment history"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/rent-payments/dues",
+    "slug": "rent-dues",
+    "finalUrl": "http://127.0.0.1:5173/rent-payments/dues",
+    "file": "412x915-rent-dues.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 1,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Dues"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/expenses",
+    "slug": "expenses",
+    "finalUrl": "http://127.0.0.1:5173/expenses",
+    "file": "412x915-expenses.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Expenses"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/complaints",
+    "slug": "complaints",
+    "finalUrl": "http://127.0.0.1:5173/complaints",
+    "file": "412x915-complaints.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Complaints"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/food",
+    "slug": "food",
+    "finalUrl": "http://127.0.0.1:5173/food",
+    "file": "412x915-food.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Food"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/nightout",
+    "slug": "nightout",
+    "finalUrl": "http://127.0.0.1:5173/nightout",
+    "file": "412x915-nightout.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Night out"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/group-chat",
+    "slug": "chat",
+    "finalUrl": "http://127.0.0.1:5173/group-chat",
+    "file": "412x915-chat.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 1,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "PG Ease"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/team",
+    "slug": "team",
+    "finalUrl": "http://127.0.0.1:5173/team",
+    "file": "412x915-team.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Staff"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/team/permissions-matrix",
+    "slug": "permissions",
+    "finalUrl": "http://127.0.0.1:5173/team/permissions-matrix",
+    "file": "412x915-permissions.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 1,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Permissions"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/reports",
+    "slug": "reports",
+    "finalUrl": "http://127.0.0.1:5173/reports",
+    "file": "412x915-reports.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Reports"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/settings",
+    "slug": "settings",
+    "finalUrl": "http://127.0.0.1:5173/settings",
+    "file": "412x915-settings.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Settings"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/plans",
+    "slug": "plans",
+    "finalUrl": "http://127.0.0.1:5173/plans",
+    "file": "412x915-plans.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Plans"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/referrals",
+    "slug": "referrals",
+    "finalUrl": "http://127.0.0.1:5173/referrals",
+    "file": "412x915-referrals.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Referrals"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/activity-logs",
+    "slug": "activity",
+    "finalUrl": "http://127.0.0.1:5173/activity-logs",
+    "file": "412x915-activity.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Activity logs"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/notifications",
+    "slug": "notifications",
+    "finalUrl": "http://127.0.0.1:5173/notifications",
+    "file": "412x915-notifications.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Notifications"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/support",
+    "slug": "support",
+    "finalUrl": "http://127.0.0.1:5173/support",
+    "file": "412x915-support.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Support"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/inventory",
+    "slug": "inventory",
+    "finalUrl": "http://127.0.0.1:5173/inventory",
+    "file": "412x915-inventory.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Inventory"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/settings/payment-kyc",
+    "slug": "payment-kyc",
+    "finalUrl": "http://127.0.0.1:5173/settings/payment-kyc",
+    "file": "412x915-payment-kyc.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "Settings"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/privacy-policy",
+    "slug": "privacy",
+    "finalUrl": "http://127.0.0.1:5173/privacy-policy",
+    "file": "412x915-privacy.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "PG Ease"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/terms-and-conditions",
+    "slug": "terms",
+    "finalUrl": "http://127.0.0.1:5173/terms-and-conditions",
+    "file": "412x915-terms.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "PG Ease"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "/contact-us",
+    "slug": "contact",
+    "finalUrl": "http://127.0.0.1:5173/contact-us",
+    "file": "412x915-contact.jpg",
+    "errors": [],
+    "metrics": {
+      "scrollWidth": 412,
+      "clientWidth": 412,
+      "innerWidth": 412,
+      "overflowers": [
+        {
+          "tag": "div",
+          "cls": "flex h-[64px] items-center select-none justify-between px-3",
+          "right": -1,
+          "left": -280,
+          "w": 279
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0 flex items-center justify-between",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "button",
+          "cls": "group flex flex-1 min-w-0 items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-w",
+          "right": -13,
+          "left": -268,
+          "w": 255
+        },
+        {
+          "tag": "div",
+          "cls": "h-9 w-9 rounded-full bg-white flex items-center justify-center p-1 shadow-sm rin",
+          "right": -224,
+          "left": -260,
+          "w": 36
+        },
+        {
+          "tag": "img",
+          "cls": "h-full w-full object-contain",
+          "right": -228,
+          "left": -256,
+          "w": 28
+        },
+        {
+          "tag": "div",
+          "cls": "flex-1 min-w-0",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center gap-1.5",
+          "right": -21,
+          "left": -214,
+          "w": 193
+        },
+        {
+          "tag": "span",
+          "cls": "text-[16.5px] font-extrabold text-white tracking-tight truncate leading-tight",
+          "right": -77,
+          "left": -214,
+          "w": 137
+        }
+      ],
+      "dialogs": 0,
+      "tables": 0,
+      "title": "PG Ease | Owner's Smart PG Management",
+      "h1": "PG Ease"
+    }
+  },
+  {
+    "viewport": "412x915",
+    "route": "menu",
+    "slug": "menu",
+    "menuText": "Menu\n\nACTIVE PG\n\nShivam Residency\n\nOVERVIEW\n\nDashboard\n\nMANAGEMENT\n\nProperty\nPG Details\nRooms & Beds\nFacilities\nRestrictions\nWiFi\nBETA\nNotice Board\nBank Account\nPublic Listing\nLIVE\nTenants\nAll Tenants\nLeads & Visits\nBETA\nKYC & Agreements\nNotice Period\n\nFINANCE & OPS\n\nRent & Payments\nRent Collection\nPayment History\nDues & Pending\nExpenses\nOperations\nComplaints\nFood & Meals\nNight Out Logs\nGuest Requests\nGroup Chat\nSOON\nStaff\nTeam Members\nPermissions\n\nSYSTEM\n\nReports\nPRO\nAccount\nSettings\nInventory\nPlans & Billing\nRefer & Earn\nHelp & Documentation\nActivity Logs\nNotifications\nContact Support\nHelp & Video Tutorials\nVideos ›\nLogout"
+  }
+]

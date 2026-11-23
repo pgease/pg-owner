@@ -22,6 +22,7 @@ import { useOwnerNotifications } from "@/hooks/useOwnerNotifications";
 import { formatInr } from "@/lib/rentDashboard";
 import { cn } from "@/lib/utils";
 import { OwnerSupportCommunityCards } from "@/components/dashboard/OwnerSupportCommunityCards";
+import mascotRent from "@/assets/mascot/mascot-rent.png";
 
 const MONTHS = [
   "January",
@@ -169,8 +170,16 @@ export function MobileDashboard() {
         ) : null}
       </header>
 
-      <div className="bg-[var(--figma-dash-banner,#184040)] px-4 py-2.5 text-center text-[12px] font-medium leading-4 text-white">
-        Manage tenants, rent, and issues in one app.
+      <div className="flex items-center justify-between gap-3 bg-[var(--figma-dash-banner,#184040)] px-4 py-2 text-[12px] font-medium leading-4 text-white">
+        <p className="min-w-0 flex-1 text-center">Manage tenants, rent, and issues in one app.</p>
+        <button
+          type="button"
+          className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white"
+          aria-label="Open Ease Buddy AI"
+          onClick={() => window.dispatchEvent(new Event("open-ease-buddy"))}
+        >
+          <img src={mascotRent} alt="" className="h-8 w-8 rounded-full object-cover object-top" />
+        </button>
       </div>
 
       <section className="bg-[var(--figma-dash-hero,#F2FEFE)] px-4 pb-5 pt-4">
