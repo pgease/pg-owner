@@ -22,6 +22,7 @@ import {
   queryKeys,
 } from "@/hooks/usePropertyOwnerQueries";
 import { FeatureGuard } from "@/components/common/FeatureGuard";
+import { TenantAvatar } from "@/components/tenants/TenantAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -399,7 +400,7 @@ export default function NoticePeriodPage() {
         {/* Top Header */}
         <PageHeader
           title="Notice Period"
-          description={`Track move-out notices, checkout timelines, and plan upcoming bed turnover for ${currentProperty?.name || "your PG"}.`}
+          description={`Who has given notice at ${currentProperty?.name || "this PG"}, and when the bed frees.`}
           action={
             <Button
               onClick={() => setInitiateModalOpen(true)}
@@ -562,18 +563,13 @@ export default function NoticePeriodPage() {
                           <TableRow key={t.id} className="hover:bg-[var(--gray-50)] transition-colors">
                             {/* Tenant Column */}
                             <TableCell className="py-2.5 px-3 whitespace-nowrap">
-                              <div>
-                                <div
-                                  className="text-sm font-medium text-[var(--gray-900)] hover:text-[var(--brand-600)] cursor-pointer flex items-center gap-1"
-                                  onClick={() => navigate(`/tenants/${t.id}`)}
-                                >
-                                  {t.name}
-                                  <ExternalLink className="h-3 w-3 text-[var(--gray-400)]" />
-                                </div>
-                                <div className="text-xs text-[var(--gray-500)]">
-                                  {t.phone || t.mobileNumber}
-                                </div>
-                              </div>
+                              <button type="button" className="flex items-center gap-2.5 text-left" onClick={() => navigate(`/tenants/${t.id}`)}>
+                                <TenantAvatar tenant={t as any} className="h-9 w-9 shrink-0" />
+                                <span>
+                                  <span className="block text-sm font-medium text-[var(--gray-900)]">{t.name}</span>
+                                  <span className="block text-xs text-[var(--gray-500)]">{t.phone || t.mobileNumber}</span>
+                                </span>
+                              </button>
                             </TableCell>
 
                             {/* Room & Bed */}
@@ -654,10 +650,10 @@ export default function NoticePeriodPage() {
                             {/* Rent & Deposit */}
                             <TableCell className="py-2.5 px-3 text-xs whitespace-nowrap tabular-nums">
                               <div className="font-medium text-[var(--gray-900)]">
-                                {formatINR(Number(t.monthlyRent || 0))}/mo
+                                {Number(t.monthlyRent) > 0 ? `${formatINR(Number(t.monthlyRent))}/mo` : "—"}
                               </div>
                               <div className="text-[11px] text-[var(--gray-500)]">
-                                Deposit: {formatINR(Number(t.securityDeposit || 0))}
+                                Deposit: {Number(t.securityDeposit) > 0 ? formatINR(Number(t.securityDeposit)) : "—"}
                               </div>
                             </TableCell>
 

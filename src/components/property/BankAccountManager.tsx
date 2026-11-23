@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useId } from "react";
 import {
   Building,
   CheckCircle2,
-  ShieldCheck,
   QrCode,
   Download,
   Printer,
@@ -438,24 +437,12 @@ export const BankAccountManager = () => {
   return (
     <div className="space-y-6 max-w-5xl animate-fade-in">
       {/* 1. PROFESSIONAL SETTLEMENT BANNER */}
-      <div className="rounded-2xl border border-emerald-300/80 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
-        <div className="flex items-center gap-3.5">
-          <div className="h-12 w-12 rounded-2xl bg-emerald-500/15 flex items-center justify-center text-emerald-600 shrink-0 font-black">
-            <ShieldCheck className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-800 dark:text-slate-100 text-sm sm:text-base">
-                Direct Rent Settlements & Standee QR
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                0% Gateway Fee
-              </span>
-            </div>
-            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-xl leading-relaxed">
-              Add verified bank accounts for direct tenant deposits and configure your reception UPI standee QR.
-            </p>
-          </div>
+      <div className="rounded-xl border bg-white p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-slate-900">Accounts tenants can pay into</p>
+          <p className="text-xs text-slate-500 mt-1 max-w-xl">
+            Add each bank account here. On a tenant’s profile you choose which one that tenant should use.
+          </p>
         </div>
         <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
           <Button

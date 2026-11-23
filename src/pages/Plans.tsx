@@ -363,10 +363,10 @@ export default function Plans() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5 pb-16">
+    <div className="max-w-3xl mx-auto space-y-5 pb-16">
       <div>
-        <h1 className="hidden md:block text-2xl font-bold text-[#18212B]">Plans & Subscription</h1>
-        <p className="mt-1 text-sm text-[#556270]">Select a plan for your PG. WhatsApp notifications are 100% free forever on all plans.</p>
+        <h1 className="hidden md:block text-2xl font-semibold text-[#18212B]">Plans & billing</h1>
+        <p className="mt-1 text-sm text-[#556270]">Choose how many beds you pay for. WhatsApp reminders stay included.</p>
         <div className="mt-3">
           {subAccess.isTrial ? (
             <span className="inline-flex items-center gap-1 rounded bg-[#FFF7E6] px-2.5 py-1 text-xs font-semibold text-[#A15C07]">
@@ -611,7 +611,7 @@ export default function Plans() {
 
         {/* Gateway Selector */}
         <div className="mt-4 p-3 bg-[#F6F7F8] rounded-lg border border-[#E2E6EA]">
-          <p className="text-xs font-bold text-[#18212B] mb-2">Select Payment Gateway:</p>
+          <p className="text-xs font-semibold text-[#18212B] mb-2">Pay with</p>
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
@@ -656,7 +656,7 @@ export default function Plans() {
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <span>
-              Pay {formatINR(planTotal)} for {activePlan?.displayName || activePlan?.name || "PG Ease Pro"} via {selectedGateway === "easebuzz" ? "Easebuzz ⚡" : "Razorpay 💳"}
+              Pay {formatINR(planTotal)} with {selectedGateway === "easebuzz" ? "Easebuzz" : "Razorpay"}
             </span>
           )}
         </button>
@@ -665,9 +665,9 @@ export default function Plans() {
       {/* Step 2: Tenant Collection Method */}
       <section className="space-y-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-[#008080]">Step 2</p>
-          <h2 className="mt-1 text-lg font-bold text-[#18212B]">How should tenants pay rent?</h2>
-          <p className="mt-1 text-sm text-[#556270]">Automated online UPI gateway with Easebuzz direct bank settlement or direct manual UPI collection.</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#008080]">Rent collection</p>
+          <h2 className="mt-1 text-lg font-semibold text-[#18212B]">Online payments from tenants</h2>
+          <p className="mt-1 text-sm text-[#556270]">This is separate from your PG Ease plan. Complete the steps so rent can settle to your bank.</p>
         </div>
 
         <EasebuzzGatewayCard />

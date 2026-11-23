@@ -677,25 +677,24 @@ export const EasebuzzGatewayCard = () => {
               <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-border/70 shadow-2xs">
                 <span className="text-muted-foreground font-medium">Settlement Account</span>
                 <span className="font-mono font-bold text-foreground">
-                  •••• {sub?.bankLast4 || accountNumber.slice(-4) || "8859"} {sub?.bankName ? `(${sub.bankName})` : bankName ? `(${bankName})` : "(Bank of Baroda)"}
+                  {sub?.bankLast4 || accountNumber.slice(-4) ? `•••• ${sub?.bankLast4 || accountNumber.slice(-4)}` : "Not added"}{sub?.bankName || bankName ? ` (${sub?.bankName || bankName})` : ""}
                 </span>
               </div>
             </div>
 
             {/* Official Easebuzz KYC Action Box */}
-            <div className="border border-amber-200 dark:border-amber-900/60 bg-gradient-to-b from-amber-50/70 to-amber-50/20 dark:from-amber-950/30 dark:to-transparent rounded-2xl p-6 text-center max-w-xl mx-auto space-y-4 shadow-xs">
-              <div className="mx-auto w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center text-amber-700 dark:text-amber-400 shadow-inner">
-                <ShieldCheck className="h-7 w-7" />
-              </div>
-
-              <div className="space-y-1.5">
-                <h3 className="text-base font-bold text-foreground">
-                  Complete Sub-Merchant KYC on Easebuzz
-                </h3>
-                <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
-                  Your sub-merchant profile has been created with Easebuzz. Click below to open the official Easebuzz KYC portal where OTP verification, Aadhaar, PAN, and settlement bank validation are conducted.
+            <div className="rounded-xl border bg-white p-5 space-y-4">
+              <div>
+                <h3 className="text-base font-semibold text-foreground">Finish KYC on Easebuzz</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Your bank details are saved. Easebuzz still has to verify you before tenants can pay online.
                 </p>
               </div>
+              <ol className="space-y-2 text-sm text-foreground">
+                <li className="flex gap-2"><span className="font-semibold text-[#008080]">1.</span> Open the Easebuzz page. It asks for Aadhaar OTP.</li>
+                <li className="flex gap-2"><span className="font-semibold text-[#008080]">2.</span> Enter PAN and confirm the settlement account.</li>
+                <li className="flex gap-2"><span className="font-semibold text-[#008080]">3.</span> Come back here and press Check status. Online collection turns on after Easebuzz approves it.</li>
+              </ol>
 
               {/* Main Action Buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
@@ -713,7 +712,7 @@ export const EasebuzzGatewayCard = () => {
                   className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white font-bold text-xs h-10 px-6 gap-2 shadow-sm"
                 >
                   <ExternalLink className="h-4 w-4" />
-                  Open Easebuzz KYC Portal
+                  Open Easebuzz KYC
                 </Button>
 
                 <Button
@@ -735,7 +734,7 @@ export const EasebuzzGatewayCard = () => {
                   className="w-full sm:w-auto text-xs h-10 font-bold text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 gap-2"
                 >
                   <CheckCircle2 className="h-4 w-4" />
-                  Sync Status with Easebuzz
+                  Check status
                 </Button>
               </div>
 
@@ -793,7 +792,7 @@ export const EasebuzzGatewayCard = () => {
                   className="text-xs h-8 text-muted-foreground hover:text-destructive gap-1.5"
                 >
                   <RotateCcw className="h-3 w-3" />
-                  Reset & Re-test from Scratch
+                  Start again
                 </Button>
               </div>
             </div>
@@ -836,7 +835,7 @@ export const EasebuzzGatewayCard = () => {
                 <div className="flex items-center justify-between bg-white p-2.5 rounded-lg border border-border/60">
                   <span className="text-muted-foreground">Settlement A/C</span>
                   <span className="font-mono font-bold text-foreground">
-                    •••• {sub?.bankLast4 || "8859"} {sub?.bankName ? `(${sub.bankName})` : "(Bank of Baroda)"}
+                    {sub?.bankLast4 ? `•••• ${sub.bankLast4}` : "Not added"}{sub?.bankName ? ` (${sub.bankName})` : ""}
                   </span>
                 </div>
               </div>

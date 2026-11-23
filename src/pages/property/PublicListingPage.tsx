@@ -748,7 +748,7 @@ export default function PublicListingPage() {
   return (
     <div className="space-y-6 pb-20 max-w-6xl mx-auto animate-fade-in">
       {/* UNIFIED SINGLE HEADER & ACTION BAR */}
-      <div className="bg-card p-5 sm:p-6 rounded-2xl border border-border/80 shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="bg-white p-4 sm:p-5 rounded-xl border flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <span
             className={`p-3 rounded-2xl shadow-xs transition-colors shrink-0 ${
@@ -783,7 +783,7 @@ export default function PublicListingPage() {
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Configure your PG's search presence: photos, with/without food pricing, Google Maps, rules & contact info.
+              Photos, rent, food, map pin, and the phone number people see when they search.
             </p>
           </div>
         </div>
@@ -859,7 +859,7 @@ export default function PublicListingPage() {
             type="button"
             disabled={saveMutation.isPending || !selectedPgId}
             onClick={() => saveMutation.mutate()}
-            className="rounded-xl text-xs font-bold gap-2 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 text-white shadow-xs px-4"
+            className="rounded-lg text-xs font-semibold gap-2 bg-[#008080] hover:bg-[#006666] text-white px-4"
           >
             {saveMutation.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />

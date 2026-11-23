@@ -16,7 +16,6 @@ import { StatusBadge } from "@/components/common/StatusBadge";
 import type { PropertyTenant } from "@/api/propertyOwner";
 import {
   tenantDisplayName,
-  tenantInitials,
   tenantPhone,
   tenantRentAmount,
   tenantRentDueLabel,
@@ -27,8 +26,10 @@ import {
   tenantFloor,
   tenantBedNo,
   tenantCode,
+  tenantSecurityDepositValue,
 } from "@/lib/tenantDisplay";
-import { formatDate } from "@/lib/formatters";
+import { formatDate, formatINR } from "@/lib/formatters";
+import { TenantAvatar } from "@/components/tenants/TenantAvatar";
 
 interface TenantDetailDrawerProps {
   tenant: PropertyTenant | null;
@@ -71,97 +72,50 @@ export const TenantDetailDrawer: React.FC<TenantDetailDrawerProps> = ({
         side="right"
         className="w-full sm:max-w-[480px] p-0 flex flex-col bg-white border-l border-[var(--gray-200)] shadow-overlay"
       >
-        <SheetHeader className="p-4 sm:p-5 border-b border-[var(--gray-200)] bg-[var(--gray-50)] text-left shrink-0">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="h-11 w-11 rounded-full bg-[var(--brand-50)] border border-[var(--brand-100)] text-[var(--brand-700)] font-semibold flex items-center justify-center text-sm shrink-0">
-                {tenantInitials(tenant)}
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <SheetTitle className="text-base font-semibold text-[var(--gray-900)] truncate">
-                    {tenantDisplayName(tenant)}
-                  </SheetTitle>
-                  {code && (
-                    <span className="font-mono text-[11px] text-[var(--gray-500)] bg-[var(--gray-200)] px-1.5 py-0.5 rounded-sm">
-                      {code}
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-[var(--gray-500)] mt-0.5">{phone}</p>
+        <SheetHeader className="p-4 sm:p-5 border-b border-[var(--gray-200)] bg-white text-left shrink-0">
+          <div className="flex items-center gap-3">
+            <TenantAvatar tenant={tenant} className="h-12 w-12 shrink-0 text-sm" />
+            <div className="min-w-0">
+              <SheetTitle className="text-base font-semibold text-[var(--gray-900)] truncate">
+                {tenantDisplayName(tenant)}
+              </SheetTitle>
+              <p className="text-xs text-[var(--gray-500)] mt-0.5">
+                {phone}
+                {code ? ` · ${code}` : ""}
+              </p>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                <StatusBadge
+                  status={stay === "UNDER_NOTICE" ? "on_notice" : stay === "MOVED_OUT" ? "moved_out" : "occupied"}
+                  size="sm"
+                />
+                <StatusBadge
+                  status={isVerified ? "kyc_completed" : "kyc_pending"}
+                  size="sm"
+                />
               </div>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2 mt-3 flex-wrap">
-            <StatusBadge
-              status={stay === "UNDER_NOTICE" ? "on_notice" : stay === "MOVED_OUT" ? "moved_out" : "occupied"}
-              size="sm"
-            />
-            <StatusBadge
-              status={isVerified ? "kyc_completed" : "kyc_pending"}
-              size="sm"
-            />
           </div>
         </SheetHeader>
 
-        {/* Drawer Body */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
-          {/* Room Allocation */}
-          <div className="register-card p-3.5 space-y-2">
-            <span className="text-xs font-semibold text-[var(--gray-600)] uppercase tracking-wider block">
-              Room & Bed Allocation
-            </span>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <span className="text-[var(--gray-500)] block">Room / Bed</span>
-                <span className="font-semibold text-[var(--gray-900)]">
-                  {room !== "—" ? `Room ${room}` : "Unassigned"} {bed !== "—" ? `· Bed ${bed}` : ""}
-                </span>
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+          <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-[var(--gray-200)]">
+            {[
+              ["Room", room !== "—" ? room : "Unassigned"],
+              ["Bed", bed !== "—" ? bed : "—"],
+              ["Rent", tenantRentAmount(tenant)],
+              ["Deposit", tenantSecurityDepositValue(tenant) ? formatINR(tenantSecurityDepositValue(tenant)!) : "—"],
+              ["Next due", tenantRentDueLabel(tenant)],
+              ["Joined", formatDate(joiningDate)],
+            ].map(([label, value]) => (
+              <div key={label} className="border-b border-r border-[var(--gray-200)] px-3 py-2.5 odd:border-r">
+                <p className="text-[11px] text-[var(--gray-500)]">{label}</p>
+                <p className="text-sm font-semibold text-[var(--gray-900)] tabular-nums">{value}</p>
               </div>
-              <div>
-                <span className="text-[var(--gray-500)] block">Block / Floor</span>
-                <span className="font-semibold text-[var(--gray-900)]">
-                  {block !== "—" ? block : "Main"} · {floor !== "—" ? floor : "Floor"}
-                </span>
-              </div>
-            </div>
+            ))}
           </div>
-
-          {/* Rent & Dues */}
-          <div className="register-card p-3.5 space-y-2">
-            <span className="text-xs font-semibold text-[var(--gray-600)] uppercase tracking-wider block">
-              Financial & Billing
-            </span>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <span className="text-[var(--gray-500)] block">Monthly Rent</span>
-                <span className="font-semibold text-[var(--gray-900)] tabular-nums text-sm">
-                  {tenantRentAmount(tenant)}
-                </span>
-              </div>
-              <div>
-                <span className="text-[var(--gray-500)] block">Due Status</span>
-                <span className="font-semibold text-[var(--gray-900)]">
-                  {tenantRentDueLabel(tenant)}
-                </span>
-              </div>
-              <div className="pt-1">
-                <span className="text-[var(--gray-500)] block">Joined On</span>
-                <span className="text-[var(--gray-700)] tabular-nums">
-                  {formatDate(joiningDate)}
-                </span>
-              </div>
-              <div className="pt-1">
-                <span className="text-[var(--gray-500)] block">Security Deposit</span>
-                <span className="text-[var(--gray-700)] tabular-nums">
-                  {(tenant as any).roomTenant?.securityDeposit
-                    ? `₹${Number((tenant as any).roomTenant.securityDeposit).toLocaleString("en-IN")}`
-                    : "—"}
-                </span>
-              </div>
-            </div>
-          </div>
+          <p className="text-xs text-[var(--gray-500)]">
+            {[block !== "—" ? block : null, floor !== "—" ? floor : null].filter(Boolean).join(" · ") || "Room assignment is on the full profile."}
+          </p>
 
           {/* Quick Contact & Action Buttons */}
           <div className="space-y-2">

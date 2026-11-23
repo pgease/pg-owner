@@ -13,6 +13,14 @@ export default defineConfig(({ mode }) => ({
         target: "https://am4eey3lmk.execute-api.ap-south-1.amazonaws.com",
         changeOrigin: true,
         secure: false,
+        configure: (proxy) => {
+          proxy.on("proxyReq", (proxyReq) => {
+            // Live API rejects localhost origins. Drop them so dev traffic
+            // is treated as a server-side call and OTP can be sent.
+            proxyReq.removeHeader("origin");
+            proxyReq.removeHeader("referer");
+          });
+        },
       },
     },
     hmr: {

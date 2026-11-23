@@ -14,11 +14,8 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  Coins,
-  Wallet,
   History,
   Sparkles,
-  Gift,
   ArrowUpRight,
   ArrowDownRight,
   BadgeAlert,
@@ -507,68 +504,22 @@ export default function Kyc() {
           }
         />
 
-                    {/* Top Quota Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white rounded-[16px] md:rounded-lg border border-[var(--gray-200)] p-4 shadow-xs">
-                <div className="flex items-center justify-between text-xs text-[var(--gray-500)] mb-1">
-                  <span className="font-medium">Total Available Balance</span>
-                  <Coins className="h-4 w-4 text-[var(--brand-600)]" />
-                </div>
-                <div className="text-2xl font-bold text-[var(--gray-900)] tabular-nums">
-                  {isBalanceLoading ? "—" : totalCreditsAvailable}
-                </div>
-                <p className="text-xs text-[var(--gray-500)] mt-1">
-                  Active for instant DigiLocker Aadhaar KYC
-                </p>
+            <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-[var(--gray-200)] bg-white md:grid-cols-4">
+              <div className="border-b border-r border-[var(--gray-200)] px-4 py-3 md:border-b-0">
+                <p className="text-xs text-[var(--gray-500)]">Credits left</p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-[var(--gray-900)]">{isBalanceLoading ? "—" : totalCreditsAvailable}</p>
               </div>
-
-              <div className="bg-white rounded-[16px] md:rounded-lg border border-[var(--gray-200)] p-4 shadow-xs">
-                <div className="flex items-center justify-between text-xs text-[var(--gray-500)] mb-1">
-                  <span className="font-medium">Free Onboarding Quota</span>
-                  <Gift className="h-4 w-4 text-amber-500" />
-                </div>
-                <div className="text-2xl font-bold text-amber-600 tabular-nums">
-                  {freeCreditsRemaining} <span className="text-xs font-normal text-[var(--gray-500)]">left of {freeCreditsGiven}</span>
-                </div>
-                <div className="mt-2 w-full bg-[var(--gray-100)] h-1.5 rounded-full overflow-hidden">
-                  <div
-                    className="bg-amber-500 h-full rounded-full transition-all"
-                    style={{
-                      width: `${freeCreditsGiven > 0 ? Math.min(100, (freeCreditsUsed / freeCreditsGiven) * 100) : 0}%`,
-                    }}
-                  />
-                </div>
-                <p className="text-[11px] text-[var(--gray-500)] mt-1.5 tabular-nums">
-                  {freeCreditsUsed} used · {freeCreditsRemaining} remaining
-                </p>
+              <div className="border-b border-[var(--gray-200)] px-4 py-3 md:border-b-0 md:border-r">
+                <p className="text-xs text-[var(--gray-500)]">Free quota left</p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-[var(--gray-900)]">{freeCreditsRemaining}<span className="text-sm font-medium text-[var(--gray-500)]"> / {freeCreditsGiven}</span></p>
               </div>
-
-              <div className="bg-white rounded-[16px] md:rounded-lg border border-[var(--gray-200)] p-4 shadow-xs">
-                <div className="flex items-center justify-between text-xs text-[var(--gray-500)] mb-1">
-                  <span className="font-medium">Purchased balance</span>
-                  <Wallet className="h-4 w-4 text-teal-600" />
-                </div>
-                <div className="text-2xl font-bold text-teal-700 tabular-nums">
-                  {purchasedCredits} <span className="text-xs font-normal text-[var(--gray-500)]">credits</span>
-                </div>
-                <p className="text-xs text-[var(--gray-500)] mt-1">
-                  {grantedCredits > 0
-                    ? `Granted separately: ${grantedCredits}. Purchased credits do not expire.`
-                    : "Non-expiring · Used after free quota"}
-                </p>
+              <div className="border-r border-[var(--gray-200)] px-4 py-3">
+                <p className="text-xs text-[var(--gray-500)]">Purchased</p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-[var(--gray-900)]">{purchasedCredits}</p>
               </div>
-
-              <div className="bg-white rounded-[16px] md:rounded-lg border border-[var(--gray-200)] p-4 shadow-xs">
-                <div className="flex items-center justify-between text-xs text-[var(--gray-500)] mb-1">
-                  <span className="font-medium">Total Consumed</span>
-                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                </div>
-                <div className="text-2xl font-bold text-[var(--gray-900)] tabular-nums">
-                  {totalCreditsUsed} <span className="text-xs font-normal text-[var(--gray-500)]">verifications</span>
-                </div>
-                <p className="text-xs text-[var(--gray-500)] mt-1">
-                  Tenants verified across properties
-                </p>
+              <div className="px-4 py-3">
+                <p className="text-xs text-[var(--gray-500)]">Verifications used</p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-[var(--gray-900)]">{totalCreditsUsed}</p>
               </div>
             </div>
 
