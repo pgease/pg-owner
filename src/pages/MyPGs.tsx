@@ -13,6 +13,7 @@ import {
   Wifi,
   ChevronRight,
   Globe,
+  Megaphone,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -114,6 +115,20 @@ const MyPGs = () => {
       color: "text-amber-600 bg-amber-50 dark:bg-amber-950/40",
     },
     {
+      title: "WiFi",
+      desc: "Share network names and passwords with residents",
+      url: "/my-pgs/wifi",
+      icon: Wifi,
+      color: "text-indigo-600 bg-indigo-50 dark:bg-indigo-950/40",
+    },
+    {
+      title: "Notice Board",
+      desc: "Post announcements residents see in the app",
+      url: "/my-pgs/notices",
+      icon: Megaphone,
+      color: "text-orange-600 bg-orange-50 dark:bg-orange-950/40",
+    },
+    {
       title: "Bank Account & UPI",
       desc: "Setup direct bank payouts and instant QR code collections",
       url: "/my-pgs/bank",
@@ -153,7 +168,7 @@ const MyPGs = () => {
             <Button
               type="button"
               onClick={() => navigate("/post-pg")}
-              className="rounded-xl font-bold bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700 text-white gap-2 shadow-xs shrink-0 self-start sm:self-auto w-full md:w-auto min-h-11"
+              className="rounded-xl font-bold bg-[#008080] hover:bg-[#006B6B] text-white gap-2 shadow-xs shrink-0 self-start sm:self-auto w-full md:w-auto min-h-11"
             >
               <Globe className="h-4 w-4" />
               Post PG / Search Listing
@@ -223,7 +238,7 @@ const MyPGs = () => {
                       type="button"
                       onClick={savePropertyDetails}
                       disabled={updatePropertyMutation.isPending}
-                      className="rounded-xl text-xs font-bold gap-1.5 bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
+                      className="rounded-xl text-xs font-bold gap-1.5 bg-[#008080] hover:bg-[#006B6B] text-white shadow-xs min-h-11"
                     >
                       {updatePropertyMutation.isPending ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />

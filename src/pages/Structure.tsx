@@ -705,7 +705,7 @@ export default function Structure() {
                     key={r.id}
                     className="register-card p-3.5 flex flex-col justify-between space-y-3"
                   >
-                    <div className="flex items-center justify-between gap-1 min-w-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
                       <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
                         <span className="font-semibold text-sm text-[var(--gray-900)] whitespace-nowrap">
                           Room {r.roomNumber}
@@ -746,7 +746,7 @@ export default function Structure() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-6 w-6 p-0 text-[var(--gray-500)] hover:text-primary cursor-pointer"
+                          className="h-11 w-11 p-0 text-[var(--gray-500)] hover:text-primary cursor-pointer md:h-6 md:w-6"
                           onClick={() => handleOpenEditRoom(r)}
                           title="Edit room master details"
                         >

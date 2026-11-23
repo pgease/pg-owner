@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import mascotRent from "@/assets/mascot/mascot-rent.png";
+import { useOverlayHistory } from "@/lib/useOverlayHistory";
 
 interface Message {
   id: string;
@@ -85,6 +86,8 @@ export const EaseBuddyAI: React.FC<{
     return () => window.removeEventListener("open-ease-buddy", handleOpenEvent);
   }, []);
 
+  useOverlayHistory(isOpen, () => setIsOpen(false));
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -145,7 +148,7 @@ export const EaseBuddyAI: React.FC<{
     <>
       {/* Floating Action Button - Positioned safely above bottom nav & clear of table actions */}
       {!isOpen && (
-        <div className="fixed bottom-[calc(76px+var(--safe-bottom))] md:bottom-8 right-4 sm:right-6 z-30">
+        <div className="fixed bottom-8 right-4 z-30 hidden sm:right-6 md:block">
           <button
             type="button"
             onClick={() => setIsOpen(true)}
@@ -165,7 +168,7 @@ export const EaseBuddyAI: React.FC<{
 
       {/* Ease Buddy Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-[calc(76px+var(--safe-bottom))] md:bottom-8 right-4 sm:right-6 z-50 w-[92vw] sm:w-[380px] h-[520px] max-h-[70vh] rounded-2xl border border-[var(--gray-200)] bg-white shadow-2xl flex flex-col overflow-hidden text-[var(--gray-900)]">
+        <div className="fixed inset-0 z-50 flex h-auto max-h-none w-full flex-col overflow-hidden rounded-none border border-[var(--gray-200)] bg-white pt-[var(--safe-top)] pb-[var(--safe-bottom)] text-[var(--gray-900)] shadow-2xl md:inset-auto md:bottom-8 md:right-6 md:h-[520px] md:max-h-[70vh] md:w-[380px] md:rounded-2xl md:pb-0 md:pt-0">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-[var(--gray-50)] border-b border-[var(--gray-200)] shrink-0">
             <div className="flex items-center gap-2.5">

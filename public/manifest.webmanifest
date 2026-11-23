@@ -1,0 +1,25 @@
+{
+  "name": "PG Ease Owner",
+  "short_name": "PG Ease",
+  "description": "PG Ease owner app for tenants, rent, rooms and daily PG operations.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#005555",
+  "theme_color": "#008080",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

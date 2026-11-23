@@ -104,8 +104,8 @@ const AppLayout = ({ children }: AppLayoutProps) => {
               ? "bg-white p-0 md:bg-[#F8FAFC] md:p-6"
               : "bg-[#F8FAFC] p-3 sm:p-4 md:p-6",
             shouldHideMobileTabBar(location.pathname)
-              ? "pb-6 md:pb-28"
-              : "pb-[calc(72px+var(--safe-bottom))] md:pb-28",
+              ? "pb-[calc(24px+var(--safe-bottom))] md:pb-28"
+              : "pb-[calc(96px+var(--safe-bottom))] md:pb-28",
           )}
         >
           <div className="mx-auto w-full">{children}</div>

@@ -917,13 +917,13 @@ export default function PublicListingPage() {
                   </Button>
                 </div>
 
-                <div className="shrink-0">
+                <div className="relative shrink-0">
                   <input
                     ref={fileInputRef}
                     type="file"
                     accept="image/*"
                     onChange={handleFileUpload}
-                    className="hidden"
+                    className="absolute h-px w-px overflow-hidden opacity-0"
                   />
                   <Button
                     type="button"

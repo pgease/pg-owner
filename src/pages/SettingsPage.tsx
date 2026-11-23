@@ -530,12 +530,12 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="relative flex items-center gap-2">
             <input
               ref={fileRef}
               type="file"
               accept="image/png,image/jpeg,image/webp,image/jpg"
-              className="hidden"
+              className="absolute h-px w-px overflow-hidden opacity-0"
               onChange={onPickPhoto}
             />
             <Button

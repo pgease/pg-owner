@@ -1193,16 +1193,18 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                 ) : (
                   <label
                     htmlFor="tenant-photo-input"
-                    className="absolute bottom-0 right-0 h-6 w-6 rounded-full bg-teal-600 text-white flex items-center justify-center shadow cursor-pointer hover:bg-teal-700 transition-colors"
+                    className="absolute -bottom-2 -right-2 flex h-11 w-11 cursor-pointer items-center justify-center"
                     title="Upload photo / Take picture"
                   >
-                    <Camera className="h-3.5 w-3.5" />
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-teal-600 text-white shadow hover:bg-teal-700">
+                      <Camera className="h-3.5 w-3.5" />
+                    </span>
                     <input
                       id="tenant-photo-input"
                       type="file"
                       accept="image/*"
                       capture="user"
-                      className="hidden"
+                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                       onChange={handlePhotoUpload}
                     />
                   </label>

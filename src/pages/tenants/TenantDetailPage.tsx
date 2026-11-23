@@ -2077,7 +2077,8 @@ function TenantDetailContent() {
                 type="file"
                 ref={photoInputRef}
                 accept="image/*"
-                className="hidden"
+                capture="environment"
+                className="absolute h-px w-px overflow-hidden opacity-0"
                 onChange={handleOwnerPhotoUpload}
               />
               <div className="h-16 w-16 rounded-full overflow-hidden bg-[#E8FFFF] border-2 border-teal-200/60 flex items-center justify-center font-bold text-base text-[#008080] shadow-sm">

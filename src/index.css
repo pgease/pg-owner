@@ -166,6 +166,32 @@
     min-height: 44px;
   }
 
+  /* Dense icon buttons keep their layout. The ::after hit area reaches 44px. */
+  button[class*="h-6"],
+  button[class*="h-7"],
+  button[class*="h-8"],
+  button[class*="h-9"],
+  button[class*="w-6"],
+  button[class*="w-7"],
+  button[class*="w-8"],
+  [role="button"][class*="h-6"],
+  [role="button"][class*="h-7"],
+  [role="button"][class*="h-8"] {
+    min-height: unset;
+    position: relative;
+  }
+
+  button[class*="h-6"]::after,
+  button[class*="h-7"]::after,
+  button[class*="h-8"]::after,
+  button[class*="w-6"]::after,
+  button[class*="w-7"]::after,
+  button[class*="w-8"]::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+  }
+
   input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
   select,
   textarea {
@@ -192,11 +218,51 @@
     overflow-x: hidden;
   }
 
-  .pgease-app-main table {
-    display: block;
+  .pgease-app-main:not(.p-0) {
+    padding-left: max(12px, var(--safe-left));
+    padding-right: max(12px, var(--safe-right));
+  }
+
+  .pgease-app-main .overflow-x-auto,
+  .pgease-app-main .overflow-auto {
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Wide registers scroll inside their card instead of widening the page. */
+  .pgease-app-main :is(div):has(> table) {
     max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+
+  .pgease-app-main table {
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .pgease-app-main img,
+  .pgease-app-main video,
+  .pgease-app-main canvas {
+    max-width: 100%;
+  }
+
+  .pgease-sheet[role="dialog"],
+  .pgease-sheet[role="alertdialog"] {
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    bottom: 0 !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: min(92dvh, 100%) !important;
+    overflow-y: auto !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-top-left-radius: 20px !important;
+    border-top-right-radius: 20px !important;
+    padding-bottom: calc(16px + var(--safe-bottom)) !important;
   }
 }
 

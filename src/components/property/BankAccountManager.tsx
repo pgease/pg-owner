@@ -671,9 +671,12 @@ export const BankAccountManager = () => {
                       <p className="font-extrabold text-sm text-slate-900 tracking-tight">
                         {selectedPg?.name || "Your PG Property"}
                       </p>
-                      <p className="text-[10px] font-semibold text-teal-600 uppercase tracking-wider">
+                      <a
+                        href={upiQrString}
+                        className="inline-flex min-h-11 items-center text-[10px] font-semibold uppercase tracking-wider text-teal-600 underline-offset-2 hover:underline"
+                      >
                         Scan & Pay Rent
-                      </p>
+                      </a>
                     </div>
 
                     <QRCodeSVG

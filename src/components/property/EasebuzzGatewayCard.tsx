@@ -95,6 +95,7 @@ export const EasebuzzGatewayCard = () => {
     amount: string;
     paymentUrl: string;
     txnid: string;
+    submerchantId?: string;
   } | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
 
@@ -304,7 +305,6 @@ export const EasebuzzGatewayCard = () => {
         description: res.message || "You can now test onboarding from scratch.",
       });
       setCurrentStep(1);
-      setKycOtp("");
       await fetchSettings();
     } catch (err: any) {
       toast({
@@ -383,8 +383,7 @@ export const EasebuzzGatewayCard = () => {
   const sub = settings?.submerchant;
   const isPro = Boolean(
     settings?.isProPlan ||
-    subAccess.currentPlan === "PRO" ||
-    subAccess.currentPlan === "ENTERPRISE"
+    subAccess.currentPlan === "PRO"
   );
   const isSubActive = sub?.status === "ACTIVE";
 
