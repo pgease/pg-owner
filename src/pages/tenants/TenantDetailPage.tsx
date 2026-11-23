@@ -88,6 +88,10 @@ import {
   tenantPhone,
   tenantRentAmount,
   tenantRentDueLabel,
+  tenantMonthlyRentValue,
+  tenantSecurityDepositValue,
+  tenantJoiningFeeValue,
+  formatMoneyOrDash,
   tenantRoomNo,
   tenantVerificationLabel,
   tenantStayStatus,
@@ -686,6 +690,7 @@ function TenantDetailContent() {
 
   // Edit state (Inline edit directly on the page, no modal)
   const [editing, setEditing] = useState(false);
+  const [showAllRenting, setShowAllRenting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activityDrawerOpen, setActivityDrawerOpen] = useState(false);
   const [noticeOpen, setNoticeOpen] = useState(false);
@@ -736,8 +741,8 @@ function TenantDetailContent() {
     if (tenant) {
       setAgreementForm((prev) => ({
         ...prev,
-        monthlyRent: Number(tenant.monthlyRent || (tenant as any).rent || 0),
-        securityDeposit: Number(tenant.securityDeposit || (tenant as any).deposit || 0),
+        monthlyRent: tenantMonthlyRentValue(tenant) || 0,
+        securityDeposit: tenantSecurityDepositValue(tenant) || 0,
         noticePeriodDays: Number(tenant.noticePeriodDays || 30),
         agreementStartDate: tenant.joiningDate ? safeDateInputString(tenant.joiningDate) : prev.agreementStartDate,
       }));
@@ -957,8 +962,8 @@ function TenantDetailContent() {
       setForm({
         // Renting Details
         name: tenant.name ?? "",
-        monthlyRent: String(tenant.monthlyRent ?? rt.rentAmount ?? (tenant as any).rentAmount ?? ""),
-        securityDeposit: String(tenant.securityDeposit ?? rt.securityDeposit ?? ""),
+        monthlyRent: String(tenantMonthlyRentValue(tenant) ?? ""),
+        securityDeposit: String(tenantSecurityDepositValue(tenant) ?? ""),
         rentDueDate: String(tenant.rentDueDate ?? rt.rentDueDate ?? (tenant as any).rentDueDate ?? "1"),
         rentalFrequency: rt.rentalFrequency ?? (tenant as any).rentalFrequency ?? "Monthly",
         stayType: rt.stayType ?? (tenant as any).stayType ?? "Long Stay",
@@ -1167,6 +1172,9 @@ function TenantDetailContent() {
   const rawFloor = tenantFloor(tenant);
   const rent = tenantRentAmount(tenant);
   const duesLabel = tenantRentDueLabel(tenant);
+  const rentValue = tenantMonthlyRentValue(tenant);
+  const depositValue = tenantSecurityDepositValue(tenant);
+  const joiningFeeValue = tenantJoiningFeeValue(tenant);
 
   const matchingRoomFromList = (targetRooms || []).find(
     (r: any) =>
@@ -1299,6 +1307,13 @@ function TenantDetailContent() {
   const duesSummary = tenantDuesQuery.data?.data?.summary;
   const rawItemized = tenantDuesQuery.data?.data?.itemizedDues || (tenantDuesQuery.data as any)?.itemizedDues;
   const itemizedDues: any[] = Array.isArray(rawItemized) ? rawItemized : [];
+  const effectiveRent =
+    rentValue ??
+    (Number(duesSummary?.monthlyRent) > 0 ? Number(duesSummary?.monthlyRent) : null);
+  const effectiveDeposit =
+    depositValue ??
+    (Number(duesSummary?.securityDepositTotal) > 0 ? Number(duesSummary?.securityDepositTotal) : null);
+  const outstandingTotal = Number(duesSummary?.grandTotalOutstanding || 0);
 
   const passbookRows = (() => {
     if (Array.isArray(itemizedDues) && itemizedDues.length > 0) {
@@ -1331,8 +1346,8 @@ function TenantDetailContent() {
       canDelete: boolean;
     }> = [];
 
-    const rentAmt = Number(tenant?.monthlyRent || (tenant as any)?.roomTenant?.rentAmount || (tenant as any)?.rentAmount || 0);
-    const secAmt = Number(tenant?.securityDeposit || (tenant as any)?.roomTenant?.securityDeposit || 0);
+    const rentAmt = Number(effectiveRent || 0);
+    const secAmt = Number(effectiveDeposit || 0);
 
     const now = new Date();
     const MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -1437,8 +1452,8 @@ function TenantDetailContent() {
       setForm((prev) => ({
         ...prev,
         name: tenant.name ?? "",
-        monthlyRent: String(tenant.monthlyRent ?? rt.rentAmount ?? (tenant as any).rentAmount ?? ""),
-        securityDeposit: String(tenant.securityDeposit ?? rt.securityDeposit ?? ""),
+        monthlyRent: String(tenantMonthlyRentValue(tenant) ?? ""),
+        securityDeposit: String(tenantSecurityDepositValue(tenant) ?? ""),
         rentDueDate: String(tenant.rentDueDate ?? rt.rentDueDate ?? (tenant as any).rentDueDate ?? "1"),
         rentalFrequency: rt.rentalFrequency ?? (tenant as any).rentalFrequency ?? "Monthly",
         stayType: rt.stayType ?? (tenant as any).stayType ?? "Long Stay",
@@ -1701,6 +1716,55 @@ function TenantDetailContent() {
           ? e.message.join(", ")
           : e?.message || "Could not save details";
       toast({ title: "Update failed", description: errMsg, variant: "destructive" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleAssignBank = async (accId: string) => {
+    if (!currentPropertyId || !tenant || !tenantId) return;
+    const matched = accId === "custom" ? null : ownerBankAccounts.find((a) => a.id === accId);
+    setForm((prev) => ({
+      ...prev,
+      bankAccountId: matched ? accId : "",
+      bankName: matched?.bankName || prev.bankName,
+      accountHolderName: matched?.accountHolderName || prev.accountHolderName,
+      accountNumber: matched?.accountNumber || prev.accountNumber,
+      ifscCode: matched?.ifscCode || prev.ifscCode,
+      upiId: matched?.upiId || prev.upiId,
+    }));
+    const rt = (tenant as any)?.roomTenant || (tenant as any)?.currentStay || {};
+    const roomId = tenant.roomId || rt.roomId || (tenant as any).room?.id;
+    if (!roomId) {
+      toast({
+        title: "Room is missing on this stay",
+        description: "The account is selected. Save the profile once the room is on file.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await updatePropertyTenant(currentPropertyId, roomTenantId || tenantId, {
+        name: form.name.trim() || tenant.name || "",
+        phone: form.mobileNumber.trim() || tenant.phone || "",
+        roomId,
+        bedNumber: Number(rt.bedNumber || tenant.bedNumber || 1),
+        monthlyRent: Number(form.monthlyRent || tenant.monthlyRent || rt.rentAmount || 0),
+        rentDueDate: Number(form.rentDueDate || tenant.rentDueDate || rt.rentDueDate || 1),
+        joiningDate: form.joiningDate || tenant.joiningDate || rt.startDate,
+        bankAccountId: matched ? accId : undefined,
+        bankName: matched?.bankName || undefined,
+        bankAccountHolderName: matched?.accountHolderName || undefined,
+        bankAccountNumber: matched?.accountNumber || undefined,
+        bankIfscCode: matched?.ifscCode || undefined,
+        bankUpiId: matched?.upiId || undefined,
+      });
+      toast({ title: "Collection account saved for this tenant" });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tenantDetail(currentPropertyId, tenantId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tenants(currentPropertyId) });
+    } catch (e: any) {
+      toast({ title: "Could not save the account", description: e?.message, variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
@@ -1982,7 +2046,7 @@ function TenantDetailContent() {
                         onClick={() => setDeleteTenantDialogOpen(true)}
                         className="cursor-pointer gap-2 font-semibold text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/40"
                       >
-                        <Trash2 className="h-4 w-4 text-rose-600" /> Delete Tenant (Move Out)
+                        <Trash2 className="h-4 w-4 text-rose-600" /> Delete Tenant
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem
@@ -2070,17 +2134,17 @@ function TenantDetailContent() {
           </div>
         )}
 
-        <section className="md:hidden rounded-[16px] bg-white p-4 space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="relative group shrink-0">
-              <input
-                type="file"
-                ref={photoInputRef}
-                accept="image/*"
-                className="hidden"
-                onChange={handleOwnerPhotoUpload}
-              />
-              <div className="h-16 w-16 rounded-full overflow-hidden bg-[#E8FFFF] border-2 border-teal-200/60 flex items-center justify-center font-bold text-base text-[#008080] shadow-sm">
+        <section className="rounded-[16px] md:rounded-md border border-[var(--gray-200)] bg-white p-4 md:p-5 space-y-4">
+          <input
+            type="file"
+            ref={photoInputRef}
+            accept="image/*"
+            className="hidden"
+            onChange={handleOwnerPhotoUpload}
+          />
+          <div className="flex items-start gap-3 md:gap-4">
+            <div className="relative shrink-0">
+              <div className="h-16 w-16 md:h-14 md:w-14 rounded-full md:rounded-md overflow-hidden bg-[#E8FFFF] border border-teal-200/60 flex items-center justify-center font-bold text-base text-[#008080]">
                 {isUploadingPhoto ? (
                   <Loader2 className="h-6 w-6 animate-spin text-[#008080]" />
                 ) : photo && !photoError ? (
@@ -2099,290 +2163,163 @@ function TenantDetailContent() {
                 type="button"
                 onClick={() => photoInputRef.current?.click()}
                 disabled={isUploadingPhoto}
-                className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-[#008080] text-white flex items-center justify-center shadow-md hover:bg-[#006666] transition-all active:scale-95 border-2 border-white tap-target"
+                className="absolute -bottom-1 -right-1 h-6 w-6 md:h-5 md:w-5 rounded-full bg-[#008080] text-white flex items-center justify-center shadow-md hover:bg-[#006666] border-2 border-white"
                 title="Upload tenant photo"
               >
-                <Camera className="h-3 w-3" />
+                <Camera className="h-3 w-3 md:h-2.5 md:w-2.5" />
               </button>
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-[18px] font-semibold text-[#101010] truncate">{name}</h1>
-                <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium", statusInfo.badgeClass)}>
+                <h1 className="text-[18px] md:text-lg font-semibold text-[#101010] truncate">{name}</h1>
+                {tenantCode(tenant) ? (
+                  <span className="hidden md:inline rounded-sm border border-[var(--gray-200)] px-1.5 py-0.5 font-mono text-[11px] text-[var(--gray-600)]">
+                    {tenantCode(tenant)}
+                  </span>
+                ) : null}
+                <span className={cn("inline-flex items-center gap-1.5 rounded-full md:rounded-sm border px-2 py-0.5 text-[11px] font-medium", statusInfo.badgeClass)}>
                   {statusInfo.label}
                 </span>
               </div>
-              <p className="mt-0.5 text-[13px] text-[#636363]">
+              <p className="mt-0.5 text-[13px] md:text-sm text-[#636363]">
                 {effectiveRoomNo !== "—" ? `Room ${effectiveRoomNo}` : "Room not set"}
                 {effectiveBedNo !== "—" ? ` · Bed ${effectiveBedNo}` : ""}
-              </p>
-              <p className="mt-0.5 text-[15px] font-medium text-[#101010]">
-                {form.monthlyRent || tenant.monthlyRent
-                  ? `₹${Number(form.monthlyRent || tenant.monthlyRent).toLocaleString("en-IN")} / month`
-                  : rent}
+                {phone && phone !== "—" ? ` · ${phone}` : ""}
               </p>
             </div>
           </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
+              <p className="text-[11px] text-slate-500">Fixed rent</p>
+              <p className="text-[15px] font-semibold tabular-nums text-slate-900">{formatMoneyOrDash(effectiveRent)}</p>
+              <p className="text-[11px] text-slate-500">{effectiveRent ? "per month" : "Not set in API"}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
+              <p className="text-[11px] text-slate-500">Security deposit</p>
+              <p className="text-[15px] font-semibold tabular-nums text-slate-900">{formatMoneyOrDash(effectiveDeposit)}</p>
+              <p className="text-[11px] text-slate-500">{effectiveDeposit ? "on file" : "Not set in API"}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
+              <p className="text-[11px] text-slate-500">Outstanding</p>
+              <p className={cn("text-[15px] font-semibold tabular-nums", outstandingTotal > 0 ? "text-amber-700" : "text-slate-900")}>
+                {outstandingTotal > 0 ? formatINR(outstandingTotal) : "—"}
+              </p>
+              <p className="text-[11px] text-slate-500">{outstandingTotal > 0 ? "dues pending" : "No open dues"}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
+              <p className="text-[11px] text-slate-500">Next rent due</p>
+              <p className="text-[15px] font-semibold text-slate-900">{duesLabel && duesLabel !== "—" ? duesLabel : "—"}</p>
+              <p className="text-[11px] text-slate-500">Billing cycle</p>
+            </div>
+          </div>
+
           {editing ? (
-            <div className="flex gap-2">
+            <div className="flex gap-2 md:hidden">
               <Button variant="secondary" className="flex-1 h-11 rounded-full" onClick={handleCancelEditing} disabled={isSaving}>Cancel</Button>
               <Button className="flex-[2] h-11 rounded-full bg-[#008080] hover:bg-[#006666]" onClick={handleSaveProfile} disabled={isSaving}>
                 {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
               </Button>
             </div>
           ) : (
-            <>
-              <div className="flex gap-2">
-                {phone && phone !== "—" ? (
-                  <Button asChild variant="outline" className="flex-1 h-11 rounded-full">
-                    <a href={`tel:${phoneDigits(phone)}`}><Phone className="h-4 w-4 mr-1.5" /> Call</a>
+            <div className="flex flex-wrap gap-2 md:hidden">
+              {phone && phone !== "—" ? (
+                <Button asChild variant="outline" className="flex-1 min-w-[110px] h-11 rounded-full">
+                  <a href={`tel:${phoneDigits(phone)}`}><Phone className="h-4 w-4 mr-1.5" /> Call</a>
+                </Button>
+              ) : null}
+              {waLink(phone) ? (
+                <Button asChild variant="outline" className="flex-1 min-w-[110px] h-11 rounded-full">
+                  <a href={waLink(phone)!} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4 mr-1.5" /> WhatsApp</a>
+                </Button>
+              ) : null}
+              <Button variant="outline" className="h-11 rounded-full px-4" onClick={() => setAddDuesDrawerOpen(true)}>
+                <Plus className="h-4 w-4 mr-1.5" /> Add dues
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="h-11 w-11 rounded-full p-0" aria-label="More actions">
+                    <MoreVertical className="h-4 w-4" />
                   </Button>
-                ) : null}
-                {waLink(phone) ? (
-                  <Button asChild variant="outline" className="flex-1 h-11 rounded-full">
-                    <a href={waLink(phone)!} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4 mr-1.5" /> WhatsApp</a>
-                  </Button>
-                ) : null}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="h-11 w-11 rounded-full p-0" aria-label="More actions">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-52">
-                    <DropdownMenuItem onClick={() => setAddDuesDrawerOpen(true)} className="cursor-pointer gap-2">
-                      <Plus className="h-4 w-4" /> Add Dues
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem onClick={() => setEditing(true)} className="cursor-pointer gap-2">
+                    <Pencil className="h-4 w-4" /> Edit profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setMoveModalOpen(true)} className="cursor-pointer gap-2">
+                    <ArrowRightLeft className="h-4 w-4" /> Move tenant
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setNoticeOpen(true)} className="cursor-pointer gap-2">
+                    <Clock className="h-4 w-4" /> Give notice
+                  </DropdownMenuItem>
+                  {stayStatus !== "MOVED_OUT" && (
+                    <DropdownMenuItem onClick={() => setDeleteTenantDialogOpen(true)} className="cursor-pointer gap-2 text-rose-600">
+                      <Trash2 className="h-4 w-4" /> Delete tenant
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setEditing(true)} className="cursor-pointer gap-2">
-                      <Pencil className="h-4 w-4" /> Edit profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setMoveModalOpen(true)} className="cursor-pointer gap-2">
-                      <ArrowRightLeft className="h-4 w-4" /> Move tenant
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setNoticeOpen(true)} className="cursor-pointer gap-2">
-                      <Clock className="h-4 w-4" /> Give notice
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button className="w-full h-12 rounded-full bg-[#008080] hover:bg-[#006666] text-white" onClick={() => setRecordPaymentOpen(true)}>
                 <IndianRupee className="h-4 w-4 mr-1.5" /> Record payment
               </Button>
-            </>
+            </div>
           )}
         </section>
 
-        <section className="hidden md:block rounded-md border border-[var(--gray-200)] bg-white p-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <div className="relative group shrink-0">
-              <div className="h-14 w-14 rounded-md overflow-hidden bg-[var(--brand-50)] border border-[var(--brand-100)] flex items-center justify-center font-bold text-base text-[var(--brand-700)] shadow-sm">
-                {isUploadingPhoto ? (
-                  <Loader2 className="h-5 w-5 animate-spin text-[#008080]" />
-                ) : photo && !photoError ? (
-                  <img
-                    src={photo}
-                    alt={name}
-                    className="h-full w-full object-cover"
-                    crossOrigin="anonymous"
-                    onError={() => setPhotoError(true)}
-                  />
-                ) : (
-                  initials
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => photoInputRef.current?.click()}
-                disabled={isUploadingPhoto}
-                className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-[#008080] text-white flex items-center justify-center shadow-md hover:bg-[#006666] transition-all active:scale-95 border border-white"
-                title="Upload tenant photo"
-              >
-                <Camera className="h-2.5 w-2.5" />
-              </button>
+        <div className="grid grid-cols-1 gap-3">
+          <div className="rounded-[16px] md:rounded-md border border-[var(--gray-200)] bg-white p-4 flex items-start gap-3">
+            <div className={cn(
+              "h-10 w-10 rounded-full flex items-center justify-center shrink-0",
+              isKycDone ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+            )}>
+              {isKycDone ? <ShieldCheck className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-lg font-semibold text-[var(--gray-900)]">{name}</h1>
-                {tenantCode(tenant) ? (
-                  <span className="rounded-sm border border-[var(--gray-200)] px-1.5 py-0.5 font-mono text-[11px] text-[var(--gray-600)]">
-                    {tenantCode(tenant)}
-                  </span>
-                ) : null}
-                <span className={cn("inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5 text-[11px] font-medium", statusInfo.badgeClass)}>
-                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                  {statusInfo.label}
-                </span>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-slate-900">Aadhaar KYC</p>
+                {isKycDone ? (
+                  <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-[10px]">Verified</Badge>
+                ) : isKycRequested ? (
+                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-[10px]">Link sent</Badge>
+                ) : (
+                  <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-[10px]">Action needed</Badge>
+                )}
               </div>
-              <p className="mt-1 text-sm text-[var(--gray-600)]">
-                {effectiveRoomNo !== "—" ? `Room ${effectiveRoomNo}` : "Room not set"}
-                {effectiveBedNo !== "—" ? ` · Bed ${effectiveBedNo}` : ""}
-                {phone ? ` · ${phone}` : ""}
+              <p className="text-xs text-slate-500 mt-0.5">
+                {isKycDone ? "Verified via DigiLocker e-KYC." : "Tenant still needs to complete Aadhaar KYC."}
               </p>
-              <p className="mt-0.5 text-sm font-medium text-[var(--gray-900)]">
-                {form.monthlyRent || tenant.monthlyRent
-                  ? `₹${Number(form.monthlyRent || tenant.monthlyRent).toLocaleString("en-IN")} / month`
-                  : rent}
-                {duesLabel ? ` · ${duesLabel}` : ""}
-              </p>
+              {!isKycDone && (
+                <Button
+                  size="sm"
+                  className="mt-2 h-9 rounded-full bg-[#008080] hover:bg-[#006666] text-white gap-1.5"
+                  onClick={handleRequestKyc}
+                  disabled={requestKycMut.isPending}
+                >
+                  {requestKycMut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                  {isKycRequested ? "Resend WhatsApp KYC" : "Send WhatsApp KYC"}
+                </Button>
+              )}
             </div>
           </div>
-        </section>
+
+        </div>
 
         {/* Tabbed Sections */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 rounded-[16px] md:rounded-md border border-[var(--gray-200)] bg-[var(--gray-50)] p-1 overflow-x-hidden md:overflow-x-auto">
-            <TabsTrigger value="overview" className="min-h-11 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] font-medium">Joining Form</TabsTrigger>
-            <TabsTrigger value="passbook" className="min-h-11 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] font-medium">Passbook</TabsTrigger>
-            <TabsTrigger value="electricity" className="min-h-11 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] font-medium">Electricity</TabsTrigger>
-            <TabsTrigger value="notice" className="min-h-11 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] font-medium">Notice</TabsTrigger>
-            <TabsTrigger value="agreement" className="min-h-11 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] font-medium">Agreement</TabsTrigger>
+          <TabsList className="flex h-auto w-full flex-nowrap justify-start gap-1 rounded-full md:rounded-md border border-[var(--gray-200)] bg-[var(--gray-50)] p-1 overflow-x-auto overflow-y-hidden">
+            <TabsTrigger value="overview" className="shrink-0 min-h-10 rounded-full md:rounded-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] data-[state=active]:shadow-sm font-medium">Joining Form</TabsTrigger>
+            <TabsTrigger value="passbook" className="shrink-0 min-h-10 rounded-full md:rounded-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] data-[state=active]:shadow-sm font-medium">Passbook</TabsTrigger>
+            <TabsTrigger value="electricity" className="shrink-0 min-h-10 rounded-full md:rounded-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] data-[state=active]:shadow-sm font-medium">Electricity</TabsTrigger>
+            <TabsTrigger value="notice" className="shrink-0 min-h-10 rounded-full md:rounded-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] data-[state=active]:shadow-sm font-medium">Notice</TabsTrigger>
+            <TabsTrigger value="agreement" className="shrink-0 min-h-10 rounded-full md:rounded-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] data-[state=active]:shadow-sm font-medium">Agreement</TabsTrigger>
           </TabsList>
 
           {/* TAB 1: OVERVIEW */}
           <TabsContent value="overview" className="mt-6 space-y-6">
-            <div className="md:hidden rounded-[16px] bg-white p-4 space-y-3">
-              <p className="text-[16px] font-semibold text-[#101010]">Rent &amp; Deposit</p>
-              <div className="space-y-2 text-[14px]">
-                <div className="flex justify-between gap-3">
-                  <span className="text-[#636363]">Deposit amount</span>
-                  <span className="font-medium text-[#101010]">{form.securityDeposit ? formatINR(Number(form.securityDeposit)) : "—"}</span>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <span className="text-[#636363]">Rent per month</span>
-                  <span className="font-medium text-[#101010]">{form.monthlyRent ? `${formatINR(Number(form.monthlyRent))}/mo` : rent}</span>
-                </div>
-                {duesLabel ? (
-                  <div className="flex justify-between gap-3">
-                    <span className="text-[#636363]">Next rent due</span>
-                    <span className="font-medium text-[#101010]">{duesLabel}</span>
-                  </div>
-                ) : null}
-              </div>
-              <Button variant="outline" className="h-11 rounded-full border-[#008080] text-[#008080]" onClick={() => handleSendWhatsAppReminder("rent")}>
-                Remind to Pay
-              </Button>
-            </div>
             <div className="grid gap-6 grid-cols-1 lg:grid-cols-12 items-start">
               
-              {/* Left Column (Profile & Renting Summary) - Span 4 */}
+              {/* Left Column — rent cycle + recent payments */}
               <div className="lg:col-span-4 space-y-4">
-                
-                {/* Profile Card */}
-                <Card className="overflow-hidden rounded-md border border-[var(--gray-200)] bg-white shadow-none">
-                  <CardContent className="space-y-3 p-4 text-left">
-
-                    {/* Aadhaar KYC Card with FIXED Non-Cramped UI */}
-                    <div className="w-full p-3.5 rounded-xl border bg-muted/15 text-left space-y-2.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Aadhaar KYC</span>
-                        {isKycDone ? (
-                          <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 text-[10px] font-semibold">
-                            Verified
-                          </Badge>
-                        ) : isKycRequested ? (
-                          <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300 text-[10px] font-semibold">
-                            Link Sent
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300 text-[10px] font-semibold">
-                            Pending
-                          </Badge>
-                        )}
-                      </div>
-
-                      {isKycDone ? (
-                        <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1.5">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Verified via DigiLocker e-KYC
-                        </p>
-                      ) : isKycRequested ? (
-                        <div className="space-y-2 pt-1">
-                          <p className="text-[11px] text-muted-foreground">
-                            Verification link was dispatched via WhatsApp. Click below if you need to resend it.
-                          </p>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="w-full h-8 text-xs font-bold text-blue-700 hover:text-blue-800 bg-white dark:bg-slate-900 border-blue-300 rounded-lg shadow-2xs gap-1.5"
-                            onClick={handleRequestKyc}
-                            disabled={requestKycMut.isPending}
-                          >
-                            {requestKycMut.isPending ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Send className="h-3.5 w-3.5 text-blue-600" />
-                            )}
-                            Resend WhatsApp KYC Link
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="pt-1">
-                          <Button
-                            size="sm"
-                            className="w-full h-8 text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-xs gap-1.5"
-                            onClick={handleRequestKyc}
-                            disabled={requestKycMut.isPending}
-                          >
-                            {requestKycMut.isPending ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <ShieldCheck className="h-3.5 w-3.5" />
-                            )}
-                            Send WhatsApp KYC Link
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* RENTING SUMMARY CARD (EXACT RENTOK MATCH) */}
-                    <div className="w-full p-4 rounded-xl border bg-card text-left space-y-2.5 shadow-2xs">
-                      <div className="flex items-center justify-between border-b pb-2">
-                        <span className="text-xs font-bold text-foreground">Renting Summary</span>
-                        <button
-                          type="button"
-                          onClick={() => setEditing(true)}
-                          className="text-blue-600 hover:text-blue-700"
-                          title="Edit Renting Details"
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </button>
-                      </div>
-                      <div className="space-y-1.5 text-xs">
-                        <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">Date Of Joining</span>
-                          <span className="font-semibold text-foreground">
-                            {formatDateText(form.joiningDate || tenant.joiningDate || tenant.moveInDate)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">Move Out Date</span>
-                          <span className="font-semibold text-foreground">
-                            {formatDateText(form.expectedMoveOutDate || tenant.expectedMoveOutDate)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">{stayDuration.label}</span>
-                          <span className="font-bold text-teal-700 dark:text-teal-400">
-                            {stayDuration.text}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">Rent Amount</span>
-                          <span className="font-bold text-foreground">
-                            {form.monthlyRent || tenant.monthlyRent
-                              ? `₹${Number(form.monthlyRent || tenant.monthlyRent).toLocaleString("en-IN")}`
-                              : "—"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">Add Rent On</span>
-                          <span className="font-semibold text-foreground">
-                            {formatOrdinalDay(form.rentDueDate || tenant.rentDueDate || 1)} of every month
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
 
                 {/* Next Rent Cycle & Dues Card */}
                 <Card className="border-border/60 shadow-sm overflow-hidden">
@@ -2398,7 +2335,7 @@ function TenantDetailContent() {
                       onClick={() => {
                         setPaymentForm((p) => ({
                           ...p,
-                          amountPaid: Number(form.monthlyRent || tenant.monthlyRent || rent || 0),
+                          amountPaid: Number(effectiveRent || 0),
                         }));
                         setRecordPaymentOpen(true);
                       }}
@@ -2408,30 +2345,152 @@ function TenantDetailContent() {
                   </CardHeader>
                   <CardContent className="p-4 space-y-3 text-xs">
                     <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">Deposit Held</span>
-                      <span className="font-bold text-foreground">
-                        {form.securityDeposit || tenant.securityDeposit
-                          ? `₹${Number(form.securityDeposit || tenant.securityDeposit).toLocaleString("en-IN")}`
-                          : "—"}
-                      </span>
+                      <span className="text-muted-foreground">Fixed rent</span>
+                      <span className="font-bold text-foreground tabular-nums">{formatMoneyOrDash(effectiveRent)}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">Next Due Date</span>
+                      <span className="text-muted-foreground">Deposit held</span>
+                      <span className="font-bold text-foreground tabular-nums">{formatMoneyOrDash(effectiveDeposit)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Next due date</span>
                       <span className="font-semibold text-foreground">{duesLabel}</span>
                     </div>
                     {phone && (
-                      <Button className="w-full h-8 text-xs bg-teal-600 hover:bg-teal-700 text-white gap-1.5 rounded-lg shadow-2xs mt-2" asChild>
+                      <Button className="w-full h-9 text-xs bg-teal-600 hover:bg-teal-700 text-white gap-1.5 rounded-lg mt-2" asChild>
                         <a
                           href={`https://wa.me/${phoneDigits(phone)}?text=${encodeURIComponent(
-                            `Hi ${name}, this is a friendly reminder that your rent of ₹${form.monthlyRent || tenant.monthlyRent} for room ${roomNo} is due on ${duesLabel}. Please clear it. Thank you!`
+                            `Hi ${name}, this is a friendly reminder that your rent of ${formatMoneyOrDash(effectiveRent)} for room ${roomNo} is due on ${duesLabel}. Please clear it. Thank you!`
                           )}`}
                           target="_blank"
                           rel="noreferrer"
                         >
-                          <MessageCircle className="h-3.5 w-3.5" /> Send Rent Due Reminder
+                          <MessageCircle className="h-3.5 w-3.5" /> Send rent due reminder
                         </a>
                       </Button>
                     )}
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border/60 shadow-sm overflow-hidden">
+                  <CardHeader className="pb-3 border-b bg-white flex flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-semibold">Dues</CardTitle>
+                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setAddDuesDrawerOpen(true)}>
+                      Add
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {itemizedDues.length === 0 ? (
+                      <p className="px-4 py-6 text-sm text-muted-foreground">No dues added for this stay.</p>
+                    ) : (
+                      <ul className="divide-y">
+                        {itemizedDues.map((due: any, dueIdx: number) => {
+                          const title = due.title || due.dueType || due.type || "Due";
+                          const amount = Number(due.amount ?? due.balance ?? due.pendingAmount ?? 0);
+                          const status = String(due.status || due.paymentStatus || "pending");
+                          return (
+                            <li key={due.id || dueIdx} className="flex items-center justify-between gap-3 px-4 py-3">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-medium text-slate-900">{formatHumanEnum(String(title))}</p>
+                                <p className="text-xs text-slate-500">{formatHumanEnum(status)}</p>
+                              </div>
+                              <p className="shrink-0 text-sm font-semibold tabular-nums">{amount > 0 ? formatINR(amount) : "—"}</p>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border/60 shadow-sm">
+                  <CardHeader className="pb-3 border-b bg-muted/15 flex flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-bold">Recent Payments</CardTitle>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 text-xs text-teal-600 hover:text-teal-700 hover:bg-teal-50"
+                      onClick={() => {
+                        setPaymentForm((p) => ({
+                          ...p,
+                          amountPaid: Number(effectiveRent || 0),
+                        }));
+                        setRecordPaymentOpen(true);
+                      }}
+                    >
+                      + Record
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="p-4">
+                    {(() => {
+                      const recentPaymentsList: any[] = Array.isArray((tenant as any)?.recentPayments)
+                        ? (tenant as any).recentPayments
+                        : Array.isArray((tenant as any)?.payments)
+                        ? (tenant as any).payments
+                        : [];
+                      return recentPaymentsList.length > 0 ? (
+                        <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                          {recentPaymentsList.map((pay: any, pIdx: number) => {
+                            const payAmount = Number(pay.amount || pay.amountPaid || pay.amount_paid || 0);
+                            const payDate = pay.paidAt || pay.paid_at || pay.createdAt || pay.created_at;
+                            const method = pay.paymentMethod || pay.payment_method || "Payment";
+                            let noteText = "";
+                            if (typeof pay.notes === "object" && pay.notes !== null) {
+                              noteText = pay.notes.notes || "";
+                            } else if (typeof pay.notes === "string" && pay.notes.startsWith("{")) {
+                              try {
+                                const parsed = JSON.parse(pay.notes);
+                                noteText = parsed.notes || "";
+                              } catch(e) {}
+                            } else if (typeof pay.notes === "string") {
+                              noteText = pay.notes;
+                            }
+                            return (
+                              <div key={pay.id || pIdx} className="flex items-center gap-3 p-2.5 rounded-lg border bg-emerald-50/20 dark:bg-emerald-950/10">
+                                <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
+                                  <CheckCircle2 className="h-4 w-4" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold text-foreground truncate">
+                                    {noteText || (pay.dueType ? formatHumanEnum(String(pay.dueType)) : `Rent via ${formatHumanEnum(String(method))}`)}
+                                  </p>
+                                  <p className="text-[10px] text-muted-foreground">
+                                    {payDate ? formatDateText(payDate) : "Recently"}
+                                  </p>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                                    +₹{payAmount.toLocaleString("en-IN")}
+                                  </p>
+                                  <Badge variant="outline" className="text-[9px] py-0 border-emerald-300 text-emerald-700 uppercase">
+                                    {pay.status || "Paid"}
+                                  </Badge>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="text-center py-6">
+                          <IndianRupee className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                          <p className="text-xs text-muted-foreground mb-3">No payment records yet</p>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs text-teal-600 border-teal-600 hover:bg-teal-50 gap-1.5"
+                            onClick={() => {
+                              setPaymentForm((p) => ({
+                                ...p,
+                                amountPaid: Number(effectiveRent || 0),
+                              }));
+                              setRecordPaymentOpen(true);
+                            }}
+                          >
+                            + Record Payment
+                          </Button>
+                        </div>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
               </div>
@@ -2506,7 +2565,7 @@ function TenantDetailContent() {
                     </div>
                   </summary>
 
-                  <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 bg-card">
+                  <div className={cn("p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 bg-card", !editing && !showAllRenting && "max-h-72 overflow-hidden")}>
                     {/* PG Hierarchy Fields */}
                     {editing ? (
                       <EditField label="PG Name">
@@ -2575,7 +2634,7 @@ function TenantDetailContent() {
                     ) : (
                       <DetailRow
                         label="Fixed Rent"
-                        value={form.monthlyRent ? `₹${Number(form.monthlyRent).toLocaleString("en-IN")}` : "—"}
+                        value={effectiveRent ? `${formatINR(effectiveRent)} / month` : "—"}
                       />
                     )}
 
@@ -2660,9 +2719,14 @@ function TenantDetailContent() {
                     ) : (
                       <DetailRow
                         label="Security Deposit"
-                        value={form.securityDeposit ? `₹${Number(form.securityDeposit).toLocaleString("en-IN")}` : "—"}
+                        value={effectiveDeposit ? formatINR(effectiveDeposit) : "—"}
                       />
                     )}
+
+                    <DetailRow
+                      label="Joining Fee"
+                      value={joiningFeeValue ? formatINR(joiningFeeValue) : "—"}
+                    />
 
                     {editing ? (
                       <EditField label="Renting Type">
@@ -2938,6 +3002,15 @@ function TenantDetailContent() {
                       value={formatDateText(tenant.createdAt)}
                     />
                   </div>
+                  {!editing && (
+                    <button
+                      type="button"
+                      className="w-full border-t px-4 py-2.5 text-left text-xs font-semibold text-[#008080]"
+                      onClick={() => setShowAllRenting((open) => !open)}
+                    >
+                      {showAllRenting ? "Show less" : "Show all renting details"}
+                    </button>
+                  )}
                 </details>
 
                 {/* SECTION 2: TENANT PERSONAL DETAILS */}
@@ -3208,7 +3281,7 @@ function TenantDetailContent() {
                 </details>
 
                 {/* SECTION 3: GUARDIAN & PARENT DETAILS */}
-                <details className="group border rounded-xl bg-card overflow-hidden shadow-xs">
+                <details className="group border rounded-xl bg-card overflow-hidden shadow-xs" open>
                   <summary className="flex justify-between items-center p-4 font-semibold text-sm cursor-pointer hover:bg-muted/30 select-none border-b bg-muted/15">
                     <div className="flex items-center gap-2">
                       <ClipboardList className="h-4 w-4 text-primary" />
@@ -3569,40 +3642,28 @@ function TenantDetailContent() {
                       </div>
                     )}
 
-                    {/* Edit Mode: Account Dropdown Selector */}
-                    {editing && (
-                      <div className="space-y-3 p-3.5 rounded-xl border border-[var(--brand-200)] bg-[var(--brand-50)]/40">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-xs font-bold text-[var(--brand-950)]">
-                            Assign Settlement Account for this Tenant
+                    <div className="space-y-3 rounded-xl border border-[var(--gray-200)] bg-white p-3.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <Label className="text-xs font-semibold text-[var(--gray-900)]">
+                            Collect this tenant’s rent into
                           </Label>
                           <Link
-                            to="/account/bank-accounts"
+                            to="/my-pgs/bank"
                             target="_blank"
                             className="text-[11px] font-semibold text-[var(--brand-700)] hover:underline flex items-center gap-1"
                           >
                             Manage Saved Accounts <ExternalLink className="h-3 w-3" />
                           </Link>
                         </div>
+                        {ownerBankAccounts.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">
+                            No bank accounts yet. Add one under Property, then choose it here.
+                          </p>
+                        ) : null}
                         <Select
                           value={form.bankAccountId || "custom"}
                           onValueChange={(accId) => {
-                            if (accId === "custom") {
-                              setForm((prev) => ({ ...prev, bankAccountId: "" }));
-                              return;
-                            }
-                            const matched = (Array.isArray(ownerBankAccounts) ? ownerBankAccounts : []).find((a) => a.id === accId);
-                            if (matched) {
-                              setForm((prev) => ({
-                                ...prev,
-                                bankAccountId: accId,
-                                bankName: matched.bankName || "",
-                                accountHolderName: matched.accountHolderName || prev.name || "",
-                                accountNumber: matched.accountNumber || "",
-                                ifscCode: matched.ifscCode || "",
-                                upiId: matched.upiId || "",
-                              }));
-                            }
+                            void handleAssignBank(accId);
                           }}
                         >
                           <SelectTrigger className="h-10 text-xs rounded-xl bg-white">
@@ -3620,10 +3681,9 @@ function TenantDetailContent() {
                           </SelectContent>
                         </Select>
                         <p className="text-[11px] text-muted-foreground">
-                          Choose an account like &ldquo;HDFC Bank (Block A)&rdquo; or &ldquo;SBI (Block B)&rdquo; so this tenant's rent and QR codes route to that specific account.
+                          Picking an account saves it for this tenant. Rent reminders and the UPI details on the profile use that account.
                         </p>
                       </div>
-                    )}
 
                     {/* Detailed Account Fields (Editable or Read-only) */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm pt-1">
@@ -3695,98 +3755,6 @@ function TenantDetailContent() {
                   </div>
                 </details>
 
-                {/* SECTION 6: RECENT PAYMENTS */}
-                <Card className="border-border/60 shadow-sm">
-                  <CardHeader className="pb-3 border-b bg-muted/15 flex flex-row items-center justify-between">
-                    <CardTitle className="text-sm font-bold">Recent Payments</CardTitle>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 px-2 text-xs text-teal-600 hover:text-teal-700 hover:bg-teal-50"
-                      onClick={() => {
-                        setPaymentForm((p) => ({
-                          ...p,
-                          amountPaid: Number(form.monthlyRent || tenant.monthlyRent || rent || 0),
-                        }));
-                        setRecordPaymentOpen(true);
-                      }}
-                    >
-                      + Record
-                    </Button>
-                  </CardHeader>
-                  <CardContent className="p-4">
-                    {(() => {
-                      const recentPaymentsList: any[] = Array.isArray((tenant as any)?.recentPayments)
-                        ? (tenant as any).recentPayments
-                        : Array.isArray((tenant as any)?.payments)
-                        ? (tenant as any).payments
-                        : [];
-                      return recentPaymentsList.length > 0 ? (
-                        <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
-                          {recentPaymentsList.map((pay: any, pIdx: number) => {
-                            const payAmount = Number(pay.amount || pay.amountPaid || pay.amount_paid || 0);
-                            const payDate = pay.paidAt || pay.paid_at || pay.createdAt || pay.created_at;
-                            const method = pay.paymentMethod || pay.payment_method || "Payment";
-                            let noteText = "";
-                            if (typeof pay.notes === "object" && pay.notes !== null) {
-                              noteText = pay.notes.notes || "";
-                            } else if (typeof pay.notes === "string" && pay.notes.startsWith("{")) {
-                              try {
-                                const parsed = JSON.parse(pay.notes);
-                                noteText = parsed.notes || "";
-                              } catch(e) {}
-                            } else if (typeof pay.notes === "string") {
-                              noteText = pay.notes;
-                            }
-                            return (
-                              <div key={pay.id || pIdx} className="flex items-center gap-3 p-2.5 rounded-lg border bg-emerald-50/20 dark:bg-emerald-950/10">
-                                <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
-                                  <CheckCircle2 className="h-4 w-4" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-semibold text-foreground truncate">
-                                    {noteText || (pay.dueType ? formatHumanEnum(String(pay.dueType)) : `Rent via ${formatHumanEnum(String(method))}`)}
-                                  </p>
-                                  <p className="text-[10px] text-muted-foreground">
-                                    {payDate ? formatDateText(payDate) : "Recently"}
-                                  </p>
-                                </div>
-                                <div className="text-right shrink-0">
-                                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                                    +₹{payAmount.toLocaleString("en-IN")}
-                                  </p>
-                                  <Badge variant="outline" className="text-[9px] py-0 border-emerald-300 text-emerald-700 uppercase">
-                                    {pay.status || "Paid"}
-                                  </Badge>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div className="text-center py-6">
-                          <IndianRupee className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-                          <p className="text-xs text-muted-foreground mb-3">No payment records yet</p>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 text-xs text-teal-600 border-teal-600 hover:bg-teal-50 gap-1.5"
-                            onClick={() => {
-                              setPaymentForm((p) => ({
-                                ...p,
-                                amountPaid: Number(tenant.monthlyRent || rent || 0),
-                              }));
-                              setRecordPaymentOpen(true);
-                            }}
-                          >
-                            + Record Payment
-                          </Button>
-                        </div>
-                      );
-                    })()}
-                  </CardContent>
-                </Card>
-
 
               </div>
             </div>
@@ -3810,7 +3778,7 @@ function TenantDetailContent() {
                 onClick={() => {
                   setPaymentForm((p) => ({
                     ...p,
-                    amountPaid: Number(tenant.monthlyRent || rent || 0),
+                    amountPaid: Number(effectiveRent || 0),
                   }));
                   setRecordPaymentOpen(true);
                 }}
@@ -3822,6 +3790,11 @@ function TenantDetailContent() {
 
           {/* TAB 2: PASSBOOK (FINANCIAL LEDGER) */}
           <TabsContent value="passbook" className="mt-6 space-y-6">
+            <div className="rounded-lg border bg-white px-4 py-3 text-sm text-slate-600">
+              Fixed rent <span className="font-semibold text-slate-900">{formatMoneyOrDash(effectiveRent)}</span>
+              <span className="mx-2 text-slate-300">·</span>
+              Security <span className="font-semibold text-slate-900">{formatMoneyOrDash(effectiveDeposit)}</span>
+            </div>
             {/* Top Metric Cards Row matching RentOK Passbook layout */}
             <div className="flex items-center gap-3 overflow-x-auto pb-2">
               {/* PDF Ledger Export Button */}
@@ -4008,6 +3981,11 @@ function TenantDetailContent() {
 
           {/* TAB 2: ELECTRICITY DUES */}
           <TabsContent value="electricity" className="mt-6 space-y-4">
+            <div className="rounded-lg border bg-white px-4 py-3 text-sm text-slate-600">
+              Fixed rent <span className="font-semibold text-slate-900">{formatMoneyOrDash(effectiveRent)}</span>
+              <span className="mx-2 text-slate-300">·</span>
+              Security <span className="font-semibold text-slate-900">{formatMoneyOrDash(effectiveDeposit)}</span>
+            </div>
             <Card className="border-border/60 shadow-sm overflow-hidden flex flex-col">
               <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 border-b bg-muted/10">
                 <div>
@@ -4137,6 +4115,11 @@ function TenantDetailContent() {
 
           {/* TAB 3: NOTICE PERIOD */}
           <TabsContent value="notice" className="mt-6 space-y-4">
+            <div className="rounded-lg border bg-white px-4 py-3 text-sm text-slate-600">
+              Fixed rent <span className="font-semibold text-slate-900">{formatMoneyOrDash(effectiveRent)}</span>
+              <span className="mx-2 text-slate-300">·</span>
+              Security <span className="font-semibold text-slate-900">{formatMoneyOrDash(effectiveDeposit)}</span>
+            </div>
             <Card className="border-border/60 shadow-sm overflow-hidden flex flex-col">
               <CardHeader className="pb-3 border-b bg-muted/15 p-5">
                 <CardTitle className="text-sm font-bold flex items-center gap-2">
@@ -4235,6 +4218,11 @@ function TenantDetailContent() {
 
           {/* TAB 4: RENTAL AGREEMENT */}
           <TabsContent value="agreement" className="mt-6 space-y-4">
+            <div className="rounded-lg border bg-white px-4 py-3 text-sm text-slate-600">
+              Fixed rent <span className="font-semibold text-slate-900">{formatMoneyOrDash(effectiveRent)}</span>
+              <span className="mx-2 text-slate-300">·</span>
+              Security <span className="font-semibold text-slate-900">{formatMoneyOrDash(effectiveDeposit)}</span>
+            </div>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-3">
                 <div>
@@ -5027,7 +5015,10 @@ function TenantDetailContent() {
             propertyId={currentPropertyId}
             roomTenantId={roomTenantId}
             tenantName={tenant?.name}
-            monthlyRent={Number(tenant?.monthlyRent || 0)}
+            monthlyRent={Number(effectiveRent || 0)}
+            securityDeposit={Number(effectiveDeposit || 0)}
+            joiningFee={Number(joiningFeeValue || 0)}
+            existingDues={itemizedDues}
           />
         )}
       </div>

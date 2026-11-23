@@ -12,8 +12,12 @@ export function tenantPhotoUrl(t?: any): string {
   const candidates: unknown[] = [
     t.photoUrl,
     t.profilePhotoUrl,
+    t.profilePicture,
+    t.profilePhoto,
     t.imageUrl,
+    t.image,
     t.selfieUrl,
+    t.selfie,
     t.profileImage,
     t.avatarUrl,
     t.avatar,
@@ -37,12 +41,31 @@ export function tenantPhotoUrl(t?: any): string {
     t.personalDetails?.photoUrl,
     t.personalDetails?.profilePhotoUrl,
     t.personalDetails?.selfieUrl,
+    t.kycInfo?.selfie,
+    t.kycInfo?.profilePhoto,
   ];
+
+  const documentBags = [t.documents, t.kycDocuments, t.files, t.tenant?.documents, t.kycInfo?.documents];
+  for (const bag of documentBags) {
+    if (!Array.isArray(bag)) continue;
+    for (const doc of bag) {
+      const kind = String(doc?.type || doc?.documentType || doc?.name || "").toLowerCase();
+      if (kind.includes("photo") || kind.includes("selfie") || kind.includes("profile") || kind.includes("image")) {
+        candidates.push(doc?.url, doc?.fileUrl, doc?.signedUrl, doc?.path);
+      }
+    }
+  }
 
   let raw = "";
   for (const c of candidates) {
-    if (typeof c === "string" && c.trim() && c.trim() !== "null" && c.trim() !== "undefined") {
-      raw = c.trim();
+    const value =
+      typeof c === "string"
+        ? c
+        : c && typeof c === "object"
+          ? String((c as { url?: string; fileUrl?: string; signedUrl?: string }).url || (c as { fileUrl?: string }).fileUrl || (c as { signedUrl?: string }).signedUrl || "")
+          : "";
+    if (value.trim() && value.trim() !== "null" && value.trim() !== "undefined") {
+      raw = value.trim();
       break;
     }
   }
@@ -126,17 +149,83 @@ export function tenantBedNo(t?: any): string {
   return String(b);
 }
 
+/** First positive money value from API fields. Skips 0 / empty so we never show a fake ₹0. */
+export function pickPositiveMoney(...vals: unknown[]): number | null {
+  for (const v of vals) {
+    if (v === undefined || v === null || v === "") continue;
+    if (typeof v === "object") continue;
+    const n = Number(String(v).replace(/[₹,\s]/g, ""));
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return null;
+}
+
+export function tenantMonthlyRentValue(t?: any): number | null {
+  if (!t) return null;
+  const stay = t.currentStay || {};
+  const rt = t.roomTenant || {};
+  const pay = t.paymentDetails || {};
+  return pickPositiveMoney(
+    t.monthlyRent,
+    t.rentAmount,
+    t.rent,
+    t.fixedRent,
+    t.fixedMonthlyRent,
+    stay.rentAmount,
+    stay.monthlyRent,
+    stay.rent,
+    rt.rentAmount,
+    rt.monthlyRent,
+    rt.rent,
+    pay.monthlyRent,
+    pay.rentAmount,
+    pay.fixedRent,
+    pay.rent
+  );
+}
+
+export function tenantSecurityDepositValue(t?: any): number | null {
+  if (!t) return null;
+  const stay = t.currentStay || {};
+  const rt = t.roomTenant || {};
+  const pay = t.paymentDetails || {};
+  return pickPositiveMoney(
+    t.securityDeposit,
+    t.deposit,
+    t.fixedDeposit,
+    stay.securityDeposit,
+    stay.deposit,
+    rt.securityDeposit,
+    rt.deposit,
+    pay.securityDeposit,
+    pay.deposit
+  );
+}
+
+export function tenantJoiningFeeValue(t?: any): number | null {
+  if (!t) return null;
+  const stay = t.currentStay || {};
+  const rt = t.roomTenant || {};
+  const pay = t.paymentDetails || {};
+  return pickPositiveMoney(
+    t.joiningFee,
+    t.miscellaneousFees,
+    stay.joiningFee,
+    stay.miscellaneousFees,
+    rt.joiningFee,
+    rt.miscellaneousFees,
+    pay.joiningFee
+  );
+}
+
+export function formatMoneyOrDash(n?: number | null): string {
+  if (n == null || !Number.isFinite(n) || n <= 0) return "—";
+  return `₹${n.toLocaleString("en-IN")}`;
+}
+
 export function tenantRentAmount(t?: any): string {
-  if (!t) return "—";
-  const raw =
-    t.monthlyRent ??
-    t.currentStay?.rentAmount ??
-    t.roomTenant?.rentAmount ??
-    t.rentAmount;
-  if (raw === undefined || raw === null || String(raw).trim() === "" || String(raw).trim() === "—") return "—";
-  const n = Number(raw);
-  if (Number.isFinite(n)) return `₹${n.toLocaleString("en-IN")}/mo`;
-  return `₹${String(raw)}/mo`;
+  const n = tenantMonthlyRentValue(t);
+  return n ? `${formatMoneyOrDash(n)}/mo` : "—";
 }
 
 /** Next rent due on same calendar day as `rentDueDate` or `startDate` (monthly, DD MMM YYYY). */
@@ -220,6 +309,23 @@ export function tenantVerificationLabel(t?: PropertyTenant | null): "verified" |
   ) {
     return "verified";
   }
+  return "pending";
+}
+
+/** signed, pending, or unknown when the stay has no agreement record yet. */
+export function tenantAgreementState(t?: any): "signed" | "pending" | "unknown" {
+  if (!t) return "unknown";
+  const raw =
+    t.agreementStatus ??
+    t.rentAgreementStatus ??
+    t.agreement?.status ??
+    t.roomTenant?.agreementStatus ??
+    t.roomTenant?.agreement?.status ??
+    t.currentStay?.agreementStatus;
+  if (t.agreementSigned === true || t.isAgreementSigned === true) return "signed";
+  if (raw == null || String(raw).trim() === "") return "unknown";
+  const status = String(raw).toLowerCase();
+  if (["signed", "completed", "executed", "active"].some((key) => status.includes(key))) return "signed";
   return "pending";
 }
 

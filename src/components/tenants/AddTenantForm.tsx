@@ -2360,7 +2360,7 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                     </div>
                   </div>
                   <Link
-                    to="/account/bank-accounts"
+                    to="/my-pgs/bank"
                     target="_blank"
                     className="text-xs font-semibold text-[var(--brand-600)] hover:underline flex items-center gap-1 self-start sm:self-auto"
                   >
@@ -2696,7 +2696,7 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                   </div>
                 </div>
                 <Link
-                  to="/account/bank-accounts"
+                  to="/my-pgs/bank"
                   target="_blank"
                   className="text-xs font-semibold text-[var(--brand-600)] hover:underline flex items-center gap-1 self-start sm:self-auto"
                 >

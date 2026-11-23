@@ -96,7 +96,7 @@ const NAV_ITEMS: NavItem[] = [
       { title: "Rooms & Beds", url: "/my-pgs/structure", permissionKey: "room_view" },
       { title: "Facilities", url: "/my-pgs/amenities", permissionKey: "room_view" },
       { title: "Restrictions", url: "/my-pgs/restrictions", permissionKey: "room_view" },
-      { title: "WiFi", url: "/my-pgs/wifi", permissionKey: "room_view", featureKey: "wifi_management", badge: "Beta" },
+      { title: "WiFi", url: "/my-pgs/wifi", permissionKey: "room_view", featureKey: "wifi_management" },
       { title: "Notice Board", url: "/my-pgs/notices", permissionKey: "room_view" },
       { title: "Bank Account", url: "/my-pgs/bank", ownerOnly: true },
       { title: "Public Listing", url: "/post-pg", permissionKey: "room_view", badge: "Live" },
@@ -109,7 +109,7 @@ const NAV_ITEMS: NavItem[] = [
     permissionKey: "tenant_view",
     children: [
       { title: "All Tenants", url: "/tenants", permissionKey: "tenant_view" },
-      { title: "Leads & Visits", url: "/leads", permissionKey: "tenant_view", featureKey: "lead_crm", badge: "Beta" },
+      { title: "Leads & Visits", url: "/leads", permissionKey: "tenant_view", badge: "Soon" },
       { title: "KYC & Agreements", url: "/tenants/kyc", permissionKey: "kyc_view", featureKey: "aadhaar_kyc" },
       { title: "Notice Period", url: "/tenants/notice-period", permissionKey: "tenant_view" },
     ],

@@ -910,8 +910,18 @@ export function normalizeSingleTenant(raw: any): PropertyTenant {
   const bank = t.bankDetails || {};
   const kyc = t.kyc || t.kycInfo || {};
 
-  const monthlyRent = stay.rentAmount ?? t.monthlyRent ?? stay.monthlyRent ?? t.roomTenant?.rentAmount ?? t.roomTenant?.monthlyRent ?? 0;
-  const securityDeposit = stay.securityDeposit ?? t.securityDeposit ?? t.roomTenant?.securityDeposit ?? 0;
+  const monthlyRent =
+    Number(
+      [stay.rentAmount, t.monthlyRent, stay.monthlyRent, t.roomTenant?.rentAmount, t.roomTenant?.monthlyRent, t.rentAmount, t.rent, t.fixedRent]
+        .map((v) => Number(v))
+        .find((n) => Number.isFinite(n) && n > 0)
+    ) || undefined;
+  const securityDeposit =
+    Number(
+      [stay.securityDeposit, t.securityDeposit, t.roomTenant?.securityDeposit, t.deposit, t.fixedDeposit]
+        .map((v) => Number(v))
+        .find((n) => Number.isFinite(n) && n > 0)
+    ) || undefined;
   const moveInDate = stay.startDate ?? t.moveInDate ?? stay.moveInDate ?? t.roomTenant?.startDate ?? t.roomTenant?.moveInDate ?? t.createdAt ?? "";
 
   const noticeGivenAt = stay.notice?.noticeStartedAt ?? t.noticeGivenAt ?? t.notice?.noticeStartedAt ?? null;

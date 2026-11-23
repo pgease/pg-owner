@@ -12,6 +12,9 @@ import {
   MessageCircle,
   ExternalLink,
   ShieldCheck,
+  ShieldAlert,
+  FileCheck,
+  FileClock,
   Megaphone,
 } from "lucide-react";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -20,7 +23,7 @@ import { StatusBadge } from "@/components/common/StatusBadge";
 import { SearchInput } from "@/components/common/SearchInput";
 import { ActionMenu } from "@/components/common/ActionMenu";
 import { DataTable } from "@/components/common/DataTable";
-import { MetricDisplay } from "@/components/common/MetricDisplay";
+import { DataTableContainer } from "@/components/common/DataTableContainer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,13 +58,12 @@ import { TrialExpiredGateModal } from "@/components/common/TrialExpiredGateModal
 import { toast } from "@/components/ui/use-toast";
 import {
   tenantDisplayName,
-  tenantInitials,
-  tenantPhotoUrl,
   tenantPhone,
   tenantRentAmount,
   tenantRentDueLabel,
   tenantRoomNo,
   tenantVerificationLabel,
+  tenantAgreementState,
   tenantBlock,
   tenantFloor,
   tenantBedNo,
@@ -70,6 +72,7 @@ import {
 import { formatDate, formatINR } from "@/lib/formatters";
 import { TenantDetailDrawer } from "@/components/tenants/TenantDetailDrawer";
 import { MobileTenantsList } from "@/components/tenants/MobileTenantsList";
+import { TenantAvatar } from "@/components/tenants/TenantAvatar";
 import { cn } from "@/lib/utils";
 
 function phoneDigits(phone: string): string {
@@ -431,20 +434,20 @@ const Tenants = () => {
     const rows = tenantsQuery.data ?? [];
     const verified = rows.filter((t) => tenantVerificationLabel(t) === "verified").length;
     const onNotice = rows.filter((t) => t.notice?.isOnNotice).length;
-    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const recent = rows.filter((t) => {
-      const s = t.roomTenant?.startDate;
-      if (!s) return false;
-      const d = new Date(s).getTime();
-      return !Number.isNaN(d) && d >= weekAgo;
-    }).length;
     return {
       total: rows.length,
       verified,
       onNotice,
-      recent,
     };
   }, [tenantsQuery.data]);
+
+  const dueCount = useMemo(() => {
+    return (tenantsQuery.data ?? []).filter((t) => {
+      if (tenantStayStatus(t) === "MOVED_OUT") return false;
+      const ids = [t.id, t.roomTenantId, t.roomTenant?.id].filter(Boolean).map(String);
+      return !ids.some((id) => paidThisMonth.has(id));
+    }).length;
+  }, [tenantsQuery.data, paidThisMonth]);
 
   // Export to CSV
   const handleExportCSV = () => {
@@ -489,14 +492,19 @@ const Tenants = () => {
         paidThisMonth={paidThisMonth}
         onOpenTenant={(t) => navigate(`/tenants/${t.id}`)}
         onAddTenant={handleAddTenantClick}
+        summary={{
+          total: kpi.total,
+          due: dueCount,
+          kycPending: Math.max(0, kpi.total - kpi.verified),
+        }}
       />
-      <div className="hidden space-y-5 pb-8 md:block">
+      <div className="hidden space-y-4 pb-8 md:block">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
           <div>
-            <h1 className="text-xl font-semibold text-[var(--gray-900)]">Tenants</h1>
-            <p className="text-xs text-[var(--gray-600)] mt-0.5">
-              Directory of current and previous residents with room assignments and billing status.
+            <h1 className="text-2xl font-semibold tracking-tight text-[var(--gray-900)]">Tenants</h1>
+            <p className="text-sm text-[var(--gray-600)] mt-1">
+              {kpi.total} residents · {dueCount} rent due · {kpi.verified} KYC verified · {kpi.onNotice} on notice
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -518,22 +526,36 @@ const Tenants = () => {
           </div>
         </div>
 
-        {/* Operational Metrics Bar */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <MetricDisplay label="Total tenants" value={kpi.total} />
-          <MetricDisplay label="KYC verified" value={kpi.verified} tone="success" />
-          <MetricDisplay label="On notice" value={kpi.onNotice} tone={kpi.onNotice > 0 ? "warning" : "default"} />
-          <MetricDisplay label="New (last 7 days)" value={kpi.recent} />
+        <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-[var(--gray-200)] bg-white md:grid-cols-4">
+          {[
+            { label: "Total tenants", value: kpi.total, tone: "text-[var(--gray-900)]" },
+            { label: "Rent due", value: dueCount, tone: dueCount > 0 ? "text-amber-700" : "text-[var(--gray-900)]" },
+            { label: "KYC verified", value: kpi.verified, tone: "text-emerald-700" },
+            { label: "On notice", value: kpi.onNotice, tone: kpi.onNotice > 0 ? "text-amber-700" : "text-[var(--gray-900)]" },
+          ].map((item, i) => (
+            <div
+              key={item.label}
+              className={cn(
+                "border-[var(--gray-200)] px-4 py-3",
+                i < 2 && "border-b md:border-b-0",
+                i % 2 === 0 && "border-r",
+                i < 3 && "md:border-r",
+              )}
+            >
+              <p className="text-xs text-[var(--gray-500)]">{item.label}</p>
+              <p className={cn("mt-1 text-2xl font-semibold tabular-nums tracking-tight", item.tone)}>{item.value}</p>
+            </div>
+          ))}
         </div>
 
         {/* Lifecycle Status Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto border-b border-[var(--gray-200)] pb-2 pt-1 scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto rounded-xl border border-[var(--gray-200)] bg-white p-1.5">
           {(
             [
-              ["all", `All (${statusCounts.all})`],
-              ["active", `Active (${statusCounts.active})`],
-              ["notice", `Under Notice (${statusCounts.notice})`],
-              ["moved_out", `Moved Out (${statusCounts.movedOut})`],
+              ["all", `All ${statusCounts.all}`],
+              ["active", `Active ${statusCounts.active}`],
+              ["notice", `Notice ${statusCounts.notice}`],
+              ["moved_out", `Moved out ${statusCounts.movedOut}`],
             ] as const
           ).map(([key, label]) => (
             <button
@@ -541,9 +563,9 @@ const Tenants = () => {
               type="button"
               onClick={() => setStatusFilter(key)}
               className={cn(
-                "px-3 py-1.5 text-xs font-medium rounded-sm transition-colors tabular-nums",
+                "rounded-full px-3 py-1.5 text-xs font-medium transition-colors tabular-nums",
                 statusFilter === key
-                  ? "bg-[var(--brand-50)] text-[var(--brand-700)] font-semibold border border-[var(--brand-100)]"
+                  ? "bg-[#008080] text-white"
                   : "text-[var(--gray-600)] hover:bg-[var(--gray-100)] hover:text-[var(--gray-900)]",
               )}
             >
@@ -684,8 +706,7 @@ const Tenants = () => {
           </div>
         </div>
 
-        {/* Standardized DataTable with responsive horizontal scroll container */}
-        <div className="w-full overflow-x-auto rounded-[6px]">
+        <DataTableContainer>
         <DataTable
           className="min-w-[820px]"
           columns={[
@@ -693,19 +714,11 @@ const Tenants = () => {
               id: "tenant",
               header: "Tenant",
               sortable: true,
-              render: (t: PropertyTenant) => {
-                const photo = tenantPhotoUrl(t);
-                return (
+              render: (t: PropertyTenant) => (
                 <div className="flex items-center gap-2.5">
-                  <div className="h-8 w-8 overflow-hidden rounded-full bg-[var(--brand-50)] border border-[var(--brand-100)] text-[var(--brand-700)] flex items-center justify-center font-medium text-xs shrink-0">
-                    {photo ? (
-                      <img src={photo} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      tenantInitials(t)
-                    )}
-                  </div>
+                  <TenantAvatar tenant={t} className="h-8 w-8 shrink-0 border border-[var(--brand-100)]" />
                   <div className="min-w-0">
-                    <span className="block font-medium text-[var(--gray-900)] truncate">
+                    <span className="block truncate font-medium text-[var(--gray-900)]">
                       {tenantDisplayName(t)}
                     </span>
                     <span className="block text-xs text-[var(--gray-500)] tabular-nums">
@@ -713,8 +726,7 @@ const Tenants = () => {
                     </span>
                   </div>
                 </div>
-                );
-              },
+              ),
             },
             {
               id: "roomBed",
@@ -769,14 +781,26 @@ const Tenants = () => {
             },
             {
               id: "kyc",
-              header: "KYC",
+              header: "Checks",
               render: (t: PropertyTenant) => {
-                const isVerified = tenantVerificationLabel(t) === "verified";
+                const kycDone = tenantVerificationLabel(t) === "verified";
+                const agreement = tenantAgreementState(t);
                 return (
-                  <StatusBadge
-                    status={isVerified ? "kyc_completed" : "kyc_pending"}
-                    size="sm"
-                  />
+                  <span
+                    className="inline-flex items-center gap-2 text-[var(--gray-500)]"
+                    title={`${kycDone ? "KYC verified" : "KYC pending"} · ${agreement === "signed" ? "Agreement signed" : "Agreement pending"}`}
+                  >
+                    {kycDone ? (
+                      <ShieldCheck className="h-4 w-4 text-emerald-600" aria-label="KYC verified" />
+                    ) : (
+                      <ShieldAlert className="h-4 w-4 text-amber-600" aria-label="KYC pending" />
+                    )}
+                    {agreement === "signed" ? (
+                      <FileCheck className="h-4 w-4 text-emerald-600" aria-label="Agreement signed" />
+                    ) : (
+                      <FileClock className="h-4 w-4 text-amber-600" aria-label="Agreement pending" />
+                    )}
+                  </span>
                 );
               },
             },
@@ -913,7 +937,7 @@ const Tenants = () => {
             />
           }
         />
-        </div>
+        </DataTableContainer>
 
         {/* Tenant Detail Drawer (Opened on row click) */}
         <TenantDetailDrawer

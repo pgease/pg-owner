@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CreditCard, ShieldCheck } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { CanAccessPage } from "@/components/PermissionGuard";
 import { BankAccountManager } from "@/components/property/BankAccountManager";
 import { EasebuzzGatewayCard } from "@/components/property/EasebuzzGatewayCard";
@@ -27,16 +26,10 @@ export const BankAccountPage = () => {
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <h1 className="text-page-title flex items-center gap-2.5">
-                <CreditCard className="h-6 w-6 text-primary" />
-                Bank Account & Payment Gateway
-              </h1>
-              <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 text-xs font-bold gap-1">
-                <ShieldCheck className="h-3.5 w-3.5" /> 0% Commission
-              </Badge>
+              <h1 className="text-page-title">Bank accounts</h1>
             </div>
             <p className="text-sm text-muted-foreground pl-10">
-              Configure your verified bank account and automated Easebuzz UPI gateway for direct tenant rent settlements at {selectedPg?.name || "your property"}.
+              Accounts for {selectedPg?.name || "this PG"}. Online collection is set up below.
             </p>
           </div>
         </div>

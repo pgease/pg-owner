@@ -5,9 +5,7 @@ import {
   Wifi,
   Plus,
   Edit2,
-  Shield,
   Signal,
-  Server,
   Save,
   CheckCircle2,
   Copy,
@@ -449,15 +447,9 @@ export default function WifiManagementPage() {
                 <Wifi className="h-6 w-6" />
               </div>
               <div>
-                <h1 className="text-page-title flex items-center gap-2">
-                  WiFi Management
-                </h1>
+                <h1 className="text-page-title">WiFi</h1>
                 <p className="text-sm text-muted-foreground">
-                  Configure high-speed internet, passwords, router specs, and QR codes for{" "}
-                  <span className="font-semibold text-foreground">
-                    {selectedPg?.name || "your property"}
-                  </span>
-                  .
+                  Network name and password for {selectedPg?.name || "this PG"}, by block and floor.
                 </p>
               </div>
             </div>
@@ -476,84 +468,27 @@ export default function WifiManagementPage() {
             </Button>
 
             <Button
-              className="bg-teal-600 hover:bg-teal-700 text-white font-bold gap-1.5 h-9 shadow-sm"
+              className="bg-[#008080] hover:bg-[#006666] text-white gap-1.5 h-9"
               onClick={handleOpenGeneralAdd}
             >
-              <Plus className="h-4 w-4" /> Add / Configure WiFi
+              <Plus className="h-4 w-4" /> Add WiFi
             </Button>
           </div>
         </div>
 
-        {/* METRICS / HIGHLIGHT CARDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="border-teal-200/70 bg-gradient-to-br from-teal-50/70 to-white dark:from-teal-950/20 dark:to-card shadow-2xs">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-teal-800 dark:text-teal-300 flex items-center gap-2">
-                <Signal className="h-4 w-4 text-teal-600 dark:text-teal-400" /> Active Networks
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-teal-950 dark:text-teal-100">
-                  {stats.configuredCount}
-                </span>
-                <span className="text-xs font-medium text-teal-700 dark:text-teal-300">
-                  / {stats.totalZones} zones configured
-                </span>
-              </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                {stats.totalBlocks} Blocks &bull; {stats.totalFloors} Floors total
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-emerald-200/70 bg-gradient-to-br from-emerald-50/70 to-white dark:from-emerald-950/20 dark:to-card shadow-2xs">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
-                <Server className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> Max Fiber Speed
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-black text-emerald-950 dark:text-emerald-100">
-                {stats.maxSpeed} Mbps
-              </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Optical fiber high-speed gigabit ready
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-sky-200/70 bg-gradient-to-br from-sky-50/70 to-white dark:from-sky-950/20 dark:to-card shadow-2xs">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-sky-800 dark:text-sky-300 flex items-center gap-2">
-                <Shield className="h-4 w-4 text-sky-600 dark:text-sky-400" /> Network Security
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-black text-sky-950 dark:text-sky-100">
-                WPA2 / WPA3
-              </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Encrypted password protection enabled
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-indigo-200/70 bg-gradient-to-br from-indigo-50/70 to-white dark:from-indigo-950/20 dark:to-card shadow-2xs">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-indigo-800 dark:text-indigo-300 flex items-center gap-2">
-                <QrCode className="h-4 w-4 text-indigo-600 dark:text-indigo-400" /> Instant Connect
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-black text-indigo-950 dark:text-indigo-100">
-                QR Standees
-              </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Printable QR codes for seamless tenant onboarding
-              </p>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-3 overflow-hidden rounded-xl border bg-white">
+          <div className="border-r px-4 py-3">
+            <p className="text-xs text-muted-foreground">Saved networks</p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums">{stats.configuredCount}</p>
+          </div>
+          <div className="border-r px-4 py-3">
+            <p className="text-xs text-muted-foreground">Still to set</p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums">{Math.max(0, stats.totalZones - stats.configuredCount)}</p>
+          </div>
+          <div className="px-4 py-3">
+            <p className="text-xs text-muted-foreground">Blocks / floors</p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums">{stats.totalBlocks}<span className="text-base font-medium text-muted-foreground"> / {stats.totalFloors}</span></p>
+          </div>
         </div>
 
         {/* SEARCH & FILTERS */}
@@ -642,7 +577,7 @@ export default function WifiManagementPage() {
                   className="border-border shadow-xs overflow-hidden transition-all hover:border-teal-200 dark:hover:border-teal-800"
                 >
                   {/* BLOCK HEADER */}
-                  <div className="bg-gradient-to-r from-slate-50 to-teal-50/30 dark:from-slate-900 dark:to-teal-950/20 p-4 border-b border-border">
+                  <div className="bg-white p-4 border-b border-border">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <div className="p-2 rounded-xl bg-teal-600 text-white font-bold text-sm shadow-xs">

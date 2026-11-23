@@ -1,11 +1,10 @@
 import { Link } from "react-router-dom";
-import { MessageCircle, Phone, Plus } from "lucide-react";
+import { FileCheck, FileClock, MessageCircle, Phone, Plus, ShieldAlert, ShieldCheck } from "lucide-react";
 import type { PropertyTenant } from "@/api/propertyOwner";
 import {
+  tenantAgreementState,
   tenantDisplayName,
-  tenantInitials,
   tenantPhone,
-  tenantPhotoUrl,
   tenantRentAmount,
   tenantRoomNo,
   tenantBedNo,
@@ -13,6 +12,7 @@ import {
   tenantVerificationLabel,
 } from "@/lib/tenantDisplay";
 import { MobileCard, MobileChips, MobileEmpty, MobileSearch } from "@/components/mobile/MobileUi";
+import { TenantAvatar } from "@/components/tenants/TenantAvatar";
 import { cn } from "@/lib/utils";
 
 function waHref(phone: string): string | null {
@@ -32,6 +32,7 @@ export function MobileTenantsList({
   paidThisMonth,
   onOpenTenant,
   onAddTenant,
+  summary,
 }: {
   searchQuery: string;
   onSearch: (v: string) => void;
@@ -43,9 +44,26 @@ export function MobileTenantsList({
   paidThisMonth: Set<string>;
   onOpenTenant: (t: PropertyTenant) => void;
   onAddTenant: (e: React.MouseEvent) => void;
+  summary?: { total: number; due: number; kycPending: number };
 }) {
   return (
     <div className="md:hidden space-y-3 pb-24">
+      {summary ? (
+        <div className="grid grid-cols-3 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+          <div className="border-r border-slate-200 px-3 py-2.5">
+            <p className="text-[11px] text-slate-500">Tenants</p>
+            <p className="text-lg font-semibold tabular-nums tracking-tight text-slate-900">{summary.total}</p>
+          </div>
+          <div className="border-r border-slate-200 px-3 py-2.5">
+            <p className="text-[11px] text-slate-500">Rent due</p>
+            <p className={cn("text-lg font-semibold tabular-nums tracking-tight", summary.due > 0 ? "text-amber-700" : "text-slate-900")}>{summary.due}</p>
+          </div>
+          <div className="px-3 py-2.5">
+            <p className="text-[11px] text-slate-500">KYC pending</p>
+            <p className="text-lg font-semibold tabular-nums tracking-tight text-slate-900">{summary.kycPending}</p>
+          </div>
+        </div>
+      ) : null}
       <MobileSearch
         value={searchQuery}
         onChange={onSearch}
@@ -56,10 +74,10 @@ export function MobileTenantsList({
         value={statusFilter}
         onChange={(id) => onStatus(id as typeof statusFilter)}
         items={[
-          { id: "all", label: `All ${statusCounts.all}` },
-          { id: "active", label: `Active ${statusCounts.active}` },
-          { id: "notice", label: `Notice ${statusCounts.notice}` },
-          { id: "moved_out", label: `Moved out ${statusCounts.movedOut}` },
+          { id: "all", label: `All · ${statusCounts.all}` },
+          { id: "active", label: `Active · ${statusCounts.active}` },
+          { id: "notice", label: `Notice · ${statusCounts.notice}` },
+          { id: "moved_out", label: `Moved out · ${statusCounts.movedOut}` },
         ]}
       />
 
@@ -86,26 +104,24 @@ export function MobileTenantsList({
       ) : (
         <div className="space-y-2.5">
           {tenants.map((t, idx) => {
-            const photo = tenantPhotoUrl(t);
             const phone = tenantPhone(t);
             const wa = phone !== "—" ? waHref(phone) : null;
             const stay = tenantStayStatus(t);
             const ids = [t.id, t.roomTenantId, t.roomTenant?.id].filter(Boolean).map(String);
             const isPaid = ids.some((id) => paidThisMonth.has(id));
-            const kyc = tenantVerificationLabel(t);
+            const kycDone = tenantVerificationLabel(t) === "verified";
+            const agreement = tenantAgreementState(t);
             return (
               <MobileCard key={t.id || `t-${idx}`} onClick={() => onOpenTenant(t)}>
                 <div className="flex items-start gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#E8FFFF] text-[13px] font-semibold text-[#008080]">
-                    {photo ? <img src={photo} alt="" className="h-full w-full object-cover" /> : tenantInitials(t)}
-                  </div>
+                  <TenantAvatar tenant={t} className="h-12 w-12 shrink-0 text-[13px]" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <p className="truncate text-[16px] font-semibold text-[#101010]">{tenantDisplayName(t)}</p>
                       <span
                         className={cn(
                           "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium",
-                          isPaid ? "bg-[#D2FDC0] text-[#187D3F]" : "bg-[#FFE7CC] text-[#FF8800]",
+                          isPaid ? "bg-[#D2FDC0] text-[#187D3F]" : "bg-[#F5F5F5] text-[#636363]",
                         )}
                       >
                         {isPaid ? "Paid" : "Due"}
@@ -129,8 +145,13 @@ export function MobileTenantsList({
                       >
                         {stay === "UNDER_NOTICE" ? "Notice" : stay === "MOVED_OUT" ? "Moved out" : "Active"}
                       </span>
-                      <span className="rounded-full bg-[#F5F5F5] px-2 py-0.5 text-[11px] text-[#636363]">
-                        KYC {kyc === "verified" ? "verified" : "pending"}
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#F5F5F5] px-2 py-0.5 text-[11px] text-[#636363]" title={kycDone ? "KYC verified" : "KYC pending"}>
+                        {kycDone ? <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> : <ShieldAlert className="h-3.5 w-3.5 text-amber-600" />}
+                        {kycDone ? "KYC done" : "KYC pending"}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#F5F5F5] px-2 py-0.5 text-[11px] text-[#636363]" title={agreement === "signed" ? "Agreement signed" : "Agreement pending"}>
+                        {agreement === "signed" ? <FileCheck className="h-3.5 w-3.5 text-emerald-600" /> : <FileClock className="h-3.5 w-3.5 text-amber-600" />}
+                        {agreement === "signed" ? "Agreement signed" : "Agreement pending"}
                       </span>
                     </div>
                   </div>
