@@ -80,3 +80,16 @@ export function initAppShell(): boolean {
   return enabled;
 }
 
+export async function hideSplashScreen(): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    const w = window as any;
+    if (w.Capacitor?.Plugins?.SplashScreen?.hide) {
+      await w.Capacitor.Plugins.SplashScreen.hide({ fadeOutDuration: 250 });
+    }
+  } catch (err) {
+    /* ignore fallback */
+  }
+}
+
+

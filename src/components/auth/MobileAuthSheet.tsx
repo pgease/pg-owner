@@ -158,7 +158,7 @@ export function MobileAuthSheet({
   const onOtpStep = step === "otp";
 
   return (
-    <div className="md:hidden relative min-h-[100dvh] bg-[#F8FAFC] flex flex-col justify-between overflow-x-hidden">
+    <div className="md:hidden relative min-h-[100dvh] bg-[#F8FAFC] flex flex-col justify-between overflow-x-hidden font-poppins">
       {/* Top Deep Teal Curved Header */}
       <div className="relative bg-gradient-to-b from-[#004D4D] via-[#006060] to-[#008080] pt-7 pb-20 px-6 text-white overflow-hidden">
         {/* Soft Decorative Ambient Circles */}
@@ -190,16 +190,16 @@ export function MobileAuthSheet({
 
         {/* Brand App Icon & Title & Owner App Badge */}
         <div className="relative z-10 flex flex-col items-center text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#008080] border-2 border-white/20 shadow-lg p-2.5 mb-2.5">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-md shadow-md p-3 mb-2.5 border border-white/20">
             <img
-              src="/favicon.png"
+              src="/assets/pgease-logo-white-mark.png"
               alt="PG Ease"
               className="h-full w-full object-contain filter drop-shadow"
             />
           </div>
 
-          <h1 className="text-xl font-bold tracking-tight text-white">PG Ease</h1>
-          <span className="mt-1 inline-flex items-center rounded-full bg-white/20 px-3 py-0.5 text-[11px] font-semibold text-white/95 backdrop-blur-md">
+          <h1 className="text-xl font-bold tracking-tight text-white font-poppins">PG Ease</h1>
+          <span className="mt-1 inline-flex items-center rounded-full bg-white/20 px-3 py-0.5 text-[11px] font-semibold text-white/95 backdrop-blur-md font-poppins">
             Owner App
           </span>
         </div>

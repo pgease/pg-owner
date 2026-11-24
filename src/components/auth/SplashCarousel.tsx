@@ -1,39 +1,64 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import pgeaseLogo from "@/assets/pgease-logo.png";
-import { ArrowRight, ChevronRight, Sparkles } from "lucide-react";
+import { ChevronRight, ArrowRight } from "lucide-react";
+import { hideSplashScreen } from "@/lib/appShell";
 
 const CAROUSEL_SEEN_KEY = "pgease_onboarding_carousel_seen";
+const PGEASE_TOKEN_KEY = "pgease_token";
+const ACCESS_TOKEN_KEY = "access_token";
 
 interface SlideData {
-  src: string;
+  svg: string;
+  fallback: string;
   title: string;
   subtitle: string;
-  alt: string;
 }
 
 const OWNER_SLIDES: SlideData[] = [
   {
-
-        src: "/slides/slide-3.jpg",
-    title: "Run your PG smoothly",
-    subtitle: "Manage complaints and daily updates.",
-    alt: "Run your PG smoothly slide",
+    svg: "/slides/slide-1.svg",
+    fallback: "/slides/slide-1.jpg",
+    title: "Manage your PG in one app",
+    subtitle: "Rooms, beds, tenants and rent, all in one place.",
   },
   {
-    src: "/slides/slide-1.jpg",
-    title: "Manage tenants easily",
-    subtitle: "Rooms, beds and tenant details in one place.",
-    alt: "Manage tenants easily slide",
+    svg: "/slides/slide-2.svg",
+    fallback: "/slides/slide-2.jpg",
+    title: "Collect rent without chasing",
+    subtitle: "Auto reminders on WhatsApp and online or UPI payments.",
   },
   {
-
-        src: "/slides/slide-2.jpg",
-    title: "Stay on top of rent",
-    subtitle: "Track payments, dues and reminders.",
-    alt: "Stay on top of rent slide",
+    svg: "/slides/slide-3.svg",
+    fallback: "/slides/slide-3.jpg",
+    title: "Know your PG at a glance",
+    subtitle: "Vacant beds, dues, complaints and reports, live.",
   },
 ];
+
+function isUserLoggedIn(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return Boolean(
+      window.localStorage.getItem(PGEASE_TOKEN_KEY) ||
+      window.localStorage.getItem(ACCESS_TOKEN_KEY) ||
+      window.localStorage.getItem("pgease_auth_token")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function hasSeenOnboardingCarousel(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const isTour = new URLSearchParams(window.location.search).get("tour") === "1";
+    if (isTour) return false;
+    if (isUserLoggedIn()) return true;
+    return window.localStorage.getItem(CAROUSEL_SEEN_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
 
 function markSeen() {
   try {
@@ -43,57 +68,43 @@ function markSeen() {
   }
 }
 
-function hasSeenOnboardingCarousel(): boolean {
-  try {
-    const isTour = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tour") === "1";
-    if (isTour) return false;
-    return window.localStorage.getItem(CAROUSEL_SEEN_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
 export function SplashCarousel({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const isTour = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tour") === "1";
 
-  const [phase, setPhase] = useState<"splash" | "carousel" | "auth">(() => {
-    if (isTour) return "carousel";
-    return hasSeenOnboardingCarousel() ? "auth" : "splash";
+  const [hasCompleted, setHasCompleted] = useState<boolean>(() => {
+    if (isTour) return false;
+    return hasSeenOnboardingCarousel();
   });
 
   const [index, setIndex] = useState(0);
   const startX = useRef<number | null>(null);
   const currentX = useRef<number | null>(null);
 
-  // Splash timer (1.2s cold boot splash)
+  // Hide native Capacitor splash screen smoothly once React mounts
   useEffect(() => {
-    if (phase !== "splash") return;
-    const timer = window.setTimeout(() => {
-      setPhase("carousel");
-    }, 1200);
-    return () => window.clearTimeout(timer);
-  }, [phase]);
+    hideSplashScreen();
+  }, []);
 
   // Keyboard navigation
   useEffect(() => {
-    if (phase !== "carousel") return;
+    if (hasCompleted) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") {
         setIndex((prev) => Math.min(prev + 1, OWNER_SLIDES.length - 1));
       } else if (e.key === "ArrowLeft") {
         setIndex((prev) => Math.max(prev - 1, 0));
       } else if (e.key === "Escape") {
-        goAuth("/login");
+        finishToAuth("/login");
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [phase]);
+  }, [hasCompleted]);
 
-  const goAuth = (path: "/login" | "/signup") => {
+  const finishToAuth = (path: string = "/login") => {
     markSeen();
-    setPhase("auth");
+    setHasCompleted(true);
     navigate(path);
   };
 
@@ -101,7 +112,7 @@ export function SplashCarousel({ children }: { children: ReactNode }) {
     if (index < OWNER_SLIDES.length - 1) {
       setIndex((prev) => prev + 1);
     } else {
-      goAuth("/login");
+      finishToAuth("/login");
     }
   };
 
@@ -109,7 +120,7 @@ export function SplashCarousel({ children }: { children: ReactNode }) {
     setIndex((prev) => Math.max(prev - 1, 0));
   };
 
-  // Swipe gesture handling
+  // Touch & Swipe gestures
   const handleTouchStart = (e: React.TouchEvent | React.MouseEvent) => {
     const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
     startX.current = clientX;
@@ -125,43 +136,25 @@ export function SplashCarousel({ children }: { children: ReactNode }) {
   const handleTouchEnd = () => {
     if (startX.current === null || currentX.current === null) return;
     const diff = startX.current - currentX.current;
-    if (diff > 40 && index < OWNER_SLIDES.length - 1) {
+    if (diff > 45 && index < OWNER_SLIDES.length - 1) {
       nextSlide();
-    } else if (diff < -40 && index > 0) {
+    } else if (diff < -45 && index > 0) {
       prevSlide();
     }
     startX.current = null;
     currentX.current = null;
   };
 
-  if (phase === "auth") {
+  if (hasCompleted) {
     return <>{children}</>;
   }
 
-  // 1. Initial Launch Splash Screen
-  if (phase === "splash") {
-    return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#004d40] text-white">
-        <div className="relative flex flex-col items-center animate-in fade-in zoom-in-95 duration-500">
-          <div className="h-24 w-24 rounded-3xl bg-white/10 backdrop-blur-md p-4 flex items-center justify-center shadow-2xl border border-white/20">
-            <img src={pgeaseLogo} alt="PG Ease" className="h-16 w-16 object-contain" />
-          </div>
-          <h1 className="mt-5 text-2xl font-bold tracking-tight text-white">PG Ease</h1>
-          <p className="mt-1 text-xs font-medium tracking-wide text-white/70 uppercase">Owner Portal</p>
-          <div className="mt-6 flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-xs text-white/80 font-medium">Starting up...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const isLast = index === OWNER_SLIDES.length - 1;
 
-  // 2. Full-Screen Interactive 3-Slide Walkthrough
   return (
-    <div className="fixed inset-0 z-50 bg-[#00382e] flex items-center justify-center overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-[#F9FAFB] flex items-center justify-center select-none overflow-hidden font-poppins">
       <div
-        className="relative w-full h-[100dvh] max-w-[440px] mx-auto bg-[#004d40] flex flex-col justify-between overflow-hidden sm:rounded-3xl sm:h-[92dvh] sm:shadow-2xl sm:border sm:border-white/10"
+        className="relative w-full h-[100dvh] max-w-md mx-auto bg-white flex flex-col justify-between overflow-hidden sm:rounded-3xl sm:h-[92dvh] sm:shadow-2xl sm:border sm:border-gray-100"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -169,27 +162,29 @@ export function SplashCarousel({ children }: { children: ReactNode }) {
         onMouseMove={handleTouchMove}
         onMouseUp={handleTouchEnd}
       >
-        {/* Floating Top Bar */}
+        {/* Top Header with Skip */}
         <div
-          className="absolute top-0 inset-x-0 z-30 flex items-center justify-between px-5 pt-4 pb-2"
-          style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}
+          className="absolute top-0 inset-x-0 z-30 flex items-center justify-between px-6 pt-4 pb-2"
+          style={{ paddingTop: "max(1.25rem, env(safe-area-inset-top))" }}
         >
-          <div className="flex items-center gap-2 rounded-full bg-black/35 backdrop-blur-md px-3 py-1.5 border border-white/15">
-            <img src={pgeaseLogo} alt="" className="h-4 w-4 object-contain brightness-200" />
-            <span className="text-[11px] font-bold tracking-wider text-white uppercase">PG Ease</span>
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 rounded-lg bg-[#008080] flex items-center justify-center text-white text-[11px] font-bold">
+              PG
+            </div>
+            <span className="text-xs font-bold tracking-wider text-[#1F2937] uppercase">PG Ease</span>
           </div>
 
           <button
             type="button"
-            onClick={() => goAuth("/login")}
-            className="rounded-full bg-black/40 hover:bg-black/60 active:scale-95 backdrop-blur-md px-4 py-1.5 text-xs font-semibold text-white border border-white/20 shadow-sm transition-all"
+            onClick={() => finishToAuth("/login")}
+            className="px-3.5 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 active:scale-95 text-xs font-semibold text-[#4B5563] transition-colors"
           >
             Skip
           </button>
         </div>
 
         {/* Slides Track */}
-        <div className="relative flex-1 w-full h-full overflow-hidden">
+        <div className="relative flex-1 w-full h-full overflow-hidden flex flex-col justify-between pt-16 pb-28">
           <div
             className="flex h-full w-full transition-transform duration-300 ease-out"
             style={{ transform: `translateX(-${index * 100}%)` }}
@@ -197,25 +192,41 @@ export function SplashCarousel({ children }: { children: ReactNode }) {
             {OWNER_SLIDES.map((slide, i) => (
               <div
                 key={slide.title}
-                className="relative h-full w-full shrink-0 basis-full flex items-center justify-center overflow-hidden select-none bg-[#004d40]"
+                className="relative h-full w-full shrink-0 basis-full flex flex-col items-center justify-between px-6 pt-4 pb-2 select-none"
               >
-                <img
-                  src={slide.src}
-                  alt={slide.alt}
-                  className="w-full h-full object-cover select-none pointer-events-none"
-                  draggable={false}
-                />
+                {/* Top 50-55%: Illustration */}
+                <div className="w-full flex-1 max-h-[52vh] flex items-center justify-center">
+                  <img
+                    src={slide.svg}
+                    alt={slide.title}
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = slide.fallback;
+                    }}
+                    className="w-full h-full max-h-[300px] object-contain pointer-events-none drop-shadow-sm"
+                    draggable={false}
+                  />
+                </div>
+
+                {/* Middle: Title & Subtitle */}
+                <div className="w-full text-center mt-3 mb-2 px-2 flex flex-col items-center">
+                  <h2 className="text-2xl font-semibold text-[#1F2937] tracking-tight leading-snug">
+                    {slide.title}
+                  </h2>
+                  <p className="mt-2 text-sm font-normal text-[#4B5563] leading-relaxed max-w-xs">
+                    {slide.subtitle}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Floating Bottom Navigation & Controls */}
+        {/* Bottom Navigation & Controls */}
         <div
-          className="absolute bottom-0 inset-x-0 z-30 flex flex-col items-center gap-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-12 pb-6 px-6"
-          style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
+          className="absolute bottom-0 inset-x-0 z-30 flex flex-col items-center gap-5 bg-gradient-to-t from-white via-white/95 to-transparent pt-6 pb-6 px-6"
+          style={{ paddingBottom: "max(1.75rem, env(safe-area-inset-bottom))" }}
         >
-          {/* Pagination Dots */}
+          {/* Pagination Dots (Elongated Teal pill for active, small gray circles for inactive) */}
           <div className="flex items-center gap-2">
             {OWNER_SLIDES.map((_, i) => (
               <button
@@ -227,53 +238,27 @@ export function SplashCarousel({ children }: { children: ReactNode }) {
               >
                 <span
                   className={`block h-2 rounded-full transition-all duration-300 ${
-                    i === index ? "w-7 bg-white" : "w-2 bg-white/40 hover:bg-white/70"
+                    i === index ? "w-7 bg-[#008080]" : "w-2 bg-gray-200 hover:bg-gray-300"
                   }`}
                 />
               </button>
             ))}
           </div>
 
-          {/* Action Buttons */}
-          <div className="w-full flex flex-col gap-2.5">
-            {index < OWNER_SLIDES.length - 1 ? (
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => goAuth("/login")}
-                  className="flex-1 py-3 text-white/80 hover:text-white text-sm font-semibold text-center transition-colors"
-                >
-                  Sign In
-                </button>
-                <button
-                  type="button"
-                  onClick={nextSlide}
-                  className="flex-[1.5] py-3.5 px-5 rounded-full bg-white text-[#004d40] font-bold text-sm shadow-xl hover:bg-gray-100 transition-all flex items-center justify-center gap-2 active:scale-95"
-                >
-                  <span>Next</span>
-                  <ChevronRight className="w-4 h-4 stroke-[2.5]" />
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-2.5 w-full">
-                <button
-                  type="button"
-                  onClick={() => goAuth("/signup")}
-                  className="w-full py-4 rounded-full bg-white text-[#004d40] font-extrabold text-base shadow-2xl hover:bg-gray-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-                >
-                  <Sparkles className="w-4 h-4 text-emerald-600" />
-                  <span>Get Started</span>
-                  <ArrowRight className="w-4 h-4 stroke-[2.5]" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => goAuth("/login")}
-                  className="w-full py-2 text-white/90 hover:text-white text-xs font-medium text-center transition-colors"
-                >
-                  Already registered? <span className="underline font-bold text-white">Login directly</span>
-                </button>
-              </div>
-            )}
+          {/* Primary Action Button (Teal #008080, min 48dp target) */}
+          <div className="w-full flex items-center gap-3">
+            <button
+              type="button"
+              onClick={nextSlide}
+              className="w-full h-[52px] rounded-2xl bg-[#008080] hover:bg-[#006e6e] active:scale-[0.98] text-white font-semibold text-base shadow-md flex items-center justify-center gap-2 transition-all"
+            >
+              <span>{isLast ? "Get Started" : "Next"}</span>
+              {isLast ? (
+                <ArrowRight className="w-5 h-5 stroke-[2.5]" />
+              ) : (
+                <ChevronRight className="w-5 h-5 stroke-[2.5]" />
+              )}
+            </button>
           </div>
         </div>
       </div>

@@ -16,6 +16,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'Noto Sans Devanagari', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        poppins: ['Poppins', 'sans-serif'],
       },
       colors: {
         brand: {
