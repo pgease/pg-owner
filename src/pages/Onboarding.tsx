@@ -728,6 +728,8 @@ const Onboarding = () => {
                       value={ownerName}
                       onChange={(e) => setOwnerName(e.target.value)}
                       placeholder={T.ownerNamePlaceholder}
+                      autoComplete="off"
+                      data-lpignore="true"
                       className="h-12 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-sm font-medium text-gray-900 px-4 transition-all"
                     />
                   </div>
@@ -743,6 +745,8 @@ const Onboarding = () => {
                       value={pgName}
                       onChange={(e) => setPgName(e.target.value)}
                       placeholder={T.pgNamePlaceholder}
+                      autoComplete="off"
+                      data-lpignore="true"
                       className="h-12 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-sm font-medium text-gray-900 px-4 transition-all"
                     />
                   </div>
@@ -756,15 +760,15 @@ const Onboarding = () => {
                     <span className="text-red-500 font-bold">*</span>
                   </Label>
 
-                  {/* Mobile View: Clean Select Dropdown */}
-                  <div className="block sm:hidden">
+                  {/* Mobile View (<768px): Clean Select Dropdown */}
+                  <div className="block md:hidden">
                     <Select value={propertyTypeId} onValueChange={setPropertyTypeId}>
-                      <SelectTrigger className="h-11 rounded-xl border-gray-200 bg-[#F9FAFB] text-sm text-gray-800 focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15">
+                      <SelectTrigger className="h-12 rounded-xl border-gray-200 bg-[#F9FAFB] text-sm text-gray-800 focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15">
                         <SelectValue placeholder={T.selectTypePlaceholder} />
                       </SelectTrigger>
                       <SelectContent>
                         {availablePropertyTypes.map((type) => (
-                          <SelectItem key={type.id} value={type.id} className="text-sm py-2">
+                          <SelectItem key={type.id} value={type.id} className="text-sm py-2.5">
                             <span className="font-medium">{type.name}</span>
                           </SelectItem>
                         ))}
@@ -772,8 +776,8 @@ const Onboarding = () => {
                     </Select>
                   </div>
 
-                  {/* Desktop / Tablet View: Grid Tiles */}
-                  <div className="hidden sm:grid sm:grid-cols-3 gap-2">
+                  {/* Desktop View (>=768px): Grid Tiles */}
+                  <div className="hidden md:grid md:grid-cols-3 gap-2">
                     {availablePropertyTypes.slice(0, 3).map((type) => {
                       const isSelected = propertyTypeId === type.id;
                       return (
@@ -781,7 +785,7 @@ const Onboarding = () => {
                           key={type.id}
                           type="button"
                           onClick={() => setPropertyTypeId(type.id)}
-                          className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
+                          className={`flex items-center gap-2.5 p-3 rounded-xl border text-left transition-all ${
                             isSelected
                               ? "border-[#008080] bg-teal-50/70 shadow-2xs ring-1 ring-[#008080]"
                               : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/60"
@@ -805,7 +809,7 @@ const Onboarding = () => {
 
                   {/* Overflow Property Types for Desktop if more than 3 */}
                   {availablePropertyTypes.length > 3 && (
-                    <div className="hidden sm:block">
+                    <div className="hidden md:block">
                       <Select value={propertyTypeId} onValueChange={setPropertyTypeId}>
                         <SelectTrigger className="h-10 rounded-xl border-gray-200 bg-[#F9FAFB] text-xs sm:text-sm text-gray-800 mt-1">
                           <SelectValue placeholder={T.selectTypePlaceholder} />
@@ -830,15 +834,15 @@ const Onboarding = () => {
                     <span className="text-red-500 font-bold">*</span>
                   </Label>
 
-                  {/* Mobile View: Clean Select Dropdown */}
-                  <div className="block sm:hidden">
+                  {/* Mobile View (<768px): Clean Select Dropdown */}
+                  <div className="block md:hidden">
                     <Select value={bedRange} onValueChange={setBedRange}>
-                      <SelectTrigger className="h-11 rounded-xl border-gray-200 bg-[#F9FAFB] text-sm text-gray-800 focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15">
+                      <SelectTrigger className="h-12 rounded-xl border-gray-200 bg-[#F9FAFB] text-sm text-gray-800 focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15">
                         <SelectValue placeholder={T.selectRangePlaceholder} />
                       </SelectTrigger>
                       <SelectContent>
                         {bedOptions.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value} className="text-sm py-2">
+                          <SelectItem key={opt.value} value={opt.value} className="text-sm py-2.5">
                             <span className="font-medium">{opt.label}</span>
                           </SelectItem>
                         ))}
@@ -846,8 +850,8 @@ const Onboarding = () => {
                     </Select>
                   </div>
 
-                  {/* Desktop / Tablet View: Pill Buttons */}
-                  <div className="hidden sm:grid sm:grid-cols-5 gap-1.5">
+                  {/* Desktop View (>=768px): Pill Buttons */}
+                  <div className="hidden md:grid md:grid-cols-5 gap-1.5">
                     {bedOptions.map((opt) => {
                       const isSelected = bedRange === opt.value;
                       return (
@@ -855,7 +859,7 @@ const Onboarding = () => {
                           key={opt.value}
                           type="button"
                           onClick={() => setBedRange(opt.value)}
-                          className={`h-10 rounded-xl border text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center ${
+                          className={`h-11 rounded-xl border text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center ${
                             isSelected
                               ? "bg-[#008080] border-[#008080] text-white shadow-2xs"
                               : "bg-[#F9FAFB] border-gray-200 text-gray-700 hover:border-teal-300 hover:bg-teal-50/20"
@@ -910,6 +914,8 @@ const Onboarding = () => {
                         value={addressLine1}
                         onChange={(e) => setAddressLine1(e.target.value)}
                         placeholder={T.addressLine1Placeholder}
+                        autoComplete="off"
+                        data-lpignore="true"
                         className="h-11 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs sm:text-sm text-gray-900 px-3.5 transition-all"
                       />
                     </div>
@@ -923,6 +929,8 @@ const Onboarding = () => {
                         value={street}
                         onChange={(e) => setStreet(e.target.value)}
                         placeholder={T.streetPlaceholder}
+                        autoComplete="off"
+                        data-lpignore="true"
                         className="h-11 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs sm:text-sm text-gray-900 px-3.5 transition-all"
                       />
                     </div>
@@ -939,6 +947,8 @@ const Onboarding = () => {
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
                         placeholder={T.cityPlaceholder}
+                        autoComplete="off"
+                        data-lpignore="true"
                         className="h-11 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs sm:text-sm text-gray-900 px-3.5 transition-all"
                       />
                     </div>
@@ -971,22 +981,24 @@ const Onboarding = () => {
                         maxLength={6}
                         onChange={(e) => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                         placeholder={T.pincodePlaceholder}
+                        autoComplete="off"
+                        data-lpignore="true"
                         className="h-11 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs sm:text-sm font-mono text-gray-900 px-3.5 transition-all"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Form Action Button (Enabled ONLY when mandatory fields are filled) */}
+                {/* Form Action Button (Enabled with visual prompt) */}
                 <div className="pt-2 sm:pt-3 space-y-1.5">
                   <Button
                     type="button"
                     onClick={() => void handlePropertyContinue()}
-                    disabled={!isFormValid || isSubmitting}
-                    className={`w-full h-13 sm:h-14 rounded-xl text-base font-bold transition-all flex items-center justify-center gap-2 ${
+                    disabled={isSubmitting}
+                    className={`w-full h-13 sm:h-14 rounded-xl text-base font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                       isFormValid && !isSubmitting
-                        ? "bg-[#008080] hover:bg-[#006e6e] text-white shadow-lg shadow-teal-700/25 active:scale-[0.99] cursor-pointer"
-                        : "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed shadow-none"
+                        ? "bg-[#008080] hover:bg-[#006e6e] text-white shadow-lg shadow-teal-700/25 active:scale-[0.99]"
+                        : "bg-[#008080]/70 hover:bg-[#008080] text-white/90 shadow-sm"
                     }`}
                   >
                     {isSubmitting ? (

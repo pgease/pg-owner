@@ -40,9 +40,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       if (!authStorage.isLoggedIn()) {
         authStorage.clear();
-        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
-          window.location.href = "/login";
-        }
+        setProperties([]);
         return;
       }
       const raw = await getProperties();
@@ -66,10 +64,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch (err: any) {
       if (err?.status === 401 || !authStorage.isLoggedIn()) {
         authStorage.clear();
-        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
-          window.location.href = "/login";
-        }
-        return;
       }
       setProperties([]);
     } finally {

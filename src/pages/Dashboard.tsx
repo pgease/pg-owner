@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Building2, UserPlus, IndianRupee, BedDouble, Users, MessageSquareWarning, RefreshCw, ChevronDown, ShieldCheck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,10 @@ const Dashboard = () => {
   const [celebrationOpen, setCelebrationOpen] = useState(false);
   const [celebrationPgName, setCelebrationPgName] = useState("");
   const [gateModalOpen, setGateModalOpen] = useState(false);
+
+  const handleCloseCelebration = useCallback(() => {
+    setCelebrationOpen(false);
+  }, []);
 
   // If user is not logged in, immediately redirect to login (never show empty dashboard)
   useEffect(() => {
@@ -127,7 +131,7 @@ const Dashboard = () => {
             />
           </div>
         </div>
-        <CelebrationDialog open={celebrationOpen} onClose={() => setCelebrationOpen(false)} pgName={celebrationPgName} />
+        <CelebrationDialog open={celebrationOpen} onClose={handleCloseCelebration} pgName={celebrationPgName} />
         <TrialExpiredGateModal open={gateModalOpen} onOpenChange={handleGateModalClose} featureName="Add New Property" />
       </CanAccessPage>
     );
@@ -248,7 +252,7 @@ const Dashboard = () => {
           </>
         )}
       </div>
-      <CelebrationDialog open={celebrationOpen} onClose={() => setCelebrationOpen(false)} pgName={celebrationPgName} />
+      <CelebrationDialog open={celebrationOpen} onClose={handleCloseCelebration} pgName={celebrationPgName} />
       <TrialExpiredGateModal open={gateModalOpen} onOpenChange={handleGateModalClose} featureName="PG Management" />
     </CanAccessPage>
   );

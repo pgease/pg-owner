@@ -60,6 +60,8 @@ import PublicListingPage from "./pages/property/PublicListingPage";
 import FeatureCataloguePage from "./pages/FeatureCataloguePage";
 import { TutorialProvider } from "./context/TutorialContext";
 
+import { GlobalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -74,12 +76,13 @@ const queryClient = new QueryClient({
 });
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <OfflineScreen />
-      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+  <GlobalErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <OfflineScreen />
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           {/* Auth routes (no layout) — logged-in users go to dashboard; app shell shows splash first */}
           <Route path="/" element={<PublicAuthGate><Login /></PublicAuthGate>} />
@@ -216,6 +219,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+</GlobalErrorBoundary>
 );
 
 export default App;
