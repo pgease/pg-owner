@@ -339,6 +339,9 @@ export function MobileAuthSheet({
                     maxLength={10}
                     value={phone}
                     onChange={(e) => onPhoneChange(e.target.value)}
+                    onFocus={(e) => {
+                      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && canSubmitPhone && !isSendingOtp) {
                         e.preventDefault();
