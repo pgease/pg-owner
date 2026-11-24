@@ -16,7 +16,7 @@ type Lang = "en" | "hi";
 
 const COPY = {
   en: {
-    welcomeTitle: "Welcome Back 👋",
+    welcomeTitle: "Welcome to PG Ease",
     welcomeSubtitle: "Enter your mobile number to sign in or register",
     mobileNumber: "Mobile Number",
     phonePlaceholder: "10-digit number",
@@ -45,7 +45,7 @@ const COPY = {
     successBody: "Connecting to your property portfolio...",
   },
   hi: {
-    welcomeTitle: "वापसी पर स्वागत है 👋",
+    welcomeTitle: "Welcome to PG Ease",
     welcomeSubtitle: "साइन इन या रजिस्टर करने के लिए मोबाइल नंबर दर्ज करें",
     mobileNumber: "मोबाइल नंबर",
     phonePlaceholder: "10-अंकीय नंबर दर्ज करें",
@@ -78,34 +78,23 @@ const COPY = {
 function WhatsAppIcon({ size = 16, className = "" }: { size?: number; className?: string }) {
   return (
     <svg
-      viewBox="0 0 24 24"
       width={size}
       height={size}
-      className={`shrink-0 ${className}`}
-      fill="none"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
       aria-hidden="true"
     >
-      <path
-        fill="#25D366"
-        d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2Z"
-      />
-      <path
-        fill="#FFFFFF"
-        d="M17.53 14.39C17.23 14.24 15.77 13.52 15.5 13.42C15.23 13.32 15.03 13.27 14.83 13.57C14.63 13.87 14.06 14.54 13.89 14.74C13.72 14.94 13.54 14.96 13.25 14.81C12.95 14.66 12 14.35 10.86 13.34C9.98 12.55 9.38 11.58 9.21 11.28C9.03 10.98 9.19 10.82 9.34 10.67C9.47 10.54 9.64 10.33 9.79 10.15C9.93 9.98 9.98 9.85 10.08 9.66C10.18 9.46 10.13 9.28 10.06 9.14C9.98 8.99 9.38 7.53 9.14 6.93C8.89 6.35 8.65 6.43 8.47 6.42C8.3 6.41 8.1 6.41 7.9 6.41C7.7 6.41 7.38 6.48 7.11 6.78C6.83 7.08 6.06 7.8 6.06 9.26C6.06 10.72 7.13 12.13 7.27 12.33C7.42 12.53 9.37 15.53 12.35 16.82C13.06 17.13 13.61 17.31 14.04 17.45C14.75 17.67 15.4 17.64 15.91 17.57C16.48 17.48 17.67 16.85 17.92 16.15C18.16 15.46 18.16 14.86 18.09 14.74C18.02 14.61 17.82 14.54 17.53 14.39Z"
-      />
+      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2Z" fill="#25D366" />
+      <path d="M17.53 14.39C17.23 14.24 15.77 13.52 15.5 13.42C15.23 13.32 15.03 13.27 14.83 13.57C14.63 13.87 14.06 14.54 13.89 14.74C13.72 14.94 13.54 14.96 13.25 14.81C12.95 14.66 12 14.35 10.86 13.34C9.98 12.55 9.38 11.58 9.21 11.28C9.03 10.98 9.19 10.82 9.34 10.67C9.47 10.54 9.64 10.33 9.79 10.15C9.93 9.98 9.98 9.85 10.08 9.66C10.18 9.46 10.13 9.28 10.06 9.14C9.98 8.99 9.38 7.53 9.14 6.93C8.89 6.35 8.65 6.43 8.47 6.42C8.3 6.41 8.1 6.41 7.9 6.41C7.7 6.41 7.38 6.48 7.11 6.78C6.83 7.08 6.06 7.8 6.06 9.26C6.06 10.72 7.13 12.13 7.27 12.33C7.42 12.53 9.37 15.53 12.35 16.82C13.06 17.13 13.61 17.31 14.04 17.45C14.75 17.67 15.4 17.64 15.91 17.57C16.48 17.48 17.67 16.85 17.92 16.15C18.16 15.46 18.16 14.86 18.09 14.74C18.02 14.61 17.82 14.54 17.53 14.39Z" fill="#FFFFFF" />
     </svg>
   );
 }
 
 export function MobileAuthSheet({
-  isSignup: _isSignup,
   lang,
   onLangToggle,
   step,
-  showSuccess,
-  ownerName: _ownerName,
-  onOwnerNameChange: _onOwnerNameChange,
-  nameError: _nameError,
   phone,
   onPhoneChange,
   phoneError,
@@ -126,14 +115,9 @@ export function MobileAuthSheet({
   canResend,
   shaking,
 }: {
-  isSignup: boolean;
   lang: Lang;
   onLangToggle: () => void;
-  step: "phone" | "otp" | "first_time_name";
-  showSuccess: boolean;
-  ownerName: string;
-  onOwnerNameChange: (v: string) => void;
-  nameError: string;
+  step: "phone" | "otp";
   phone: string;
   onPhoneChange: (v: string) => void;
   phoneError: string;
@@ -158,108 +142,102 @@ export function MobileAuthSheet({
   const onOtpStep = step === "otp";
 
   return (
-    <div className="md:hidden relative min-h-[100dvh] bg-[#F8FAFC] flex flex-col justify-between overflow-x-hidden font-poppins">
-      {/* Top Deep Teal Curved Header */}
-      <div className="relative bg-gradient-to-b from-[#004D4D] via-[#006060] to-[#008080] pt-7 pb-20 px-6 text-white overflow-hidden">
-        {/* Soft Decorative Ambient Circles */}
-        <div className="absolute -top-12 -right-12 h-44 w-44 rounded-full bg-white/10 blur-xl pointer-events-none" />
-        <div className="absolute top-24 -left-14 h-40 w-40 rounded-full bg-white/5 blur-lg pointer-events-none" />
+    <div className="md:hidden relative min-h-[100dvh] bg-[#FFFFFF] flex flex-col justify-between overflow-x-hidden font-poppins select-none">
+      {/* Top 320dp Soft Gradient from #E6F3F3 to #FFFFFF */}
+      <div className="absolute top-0 inset-x-0 h-[320px] bg-gradient-to-b from-[#E6F3F3] to-[#FFFFFF] pointer-events-none" />
 
-        {/* Top Header Row with Back Button and Language Pill */}
-        <div className="relative z-10 flex items-center justify-between mb-4">
+      {/* Top Navigation Row: Back / Language Toggle */}
+      <div
+        className="relative z-20 flex items-center justify-between px-6 pt-4 pb-2"
+        style={{ paddingTop: "max(1.25rem, env(safe-area-inset-top))" }}
+      >
+        {onOtpStep ? (
           <button
             type="button"
-            onClick={() => {
-              if (onOtpStep) onChangeNumber();
-            }}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md hover:bg-white/25 active:scale-95 transition-all tap-target"
+            onClick={onChangeNumber}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-gray-700 shadow-xs border border-gray-200/60 hover:bg-white active:scale-95 transition-all"
             title="Go Back"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
+        ) : (
+          <div className="w-10 h-10" />
+        )}
 
-          <button
-            type="button"
-            onClick={onLangToggle}
-            className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs text-white backdrop-blur-md hover:bg-white/25 transition-all font-semibold"
-          >
-            <Globe className="h-3.5 w-3.5 text-white/90" />
-            <span>{lang === "en" ? "हिंदी" : "English"}</span>
-          </button>
-        </div>
-
-        {/* Brand App Icon & Title & Owner App Badge */}
-        <div className="relative z-10 flex flex-col items-center text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-md shadow-md p-3 mb-2.5 border border-white/20">
-            <img
-              src="/assets/pgease-logo-white-mark.png"
-              alt="PG Ease"
-              className="h-full w-full object-contain filter drop-shadow"
-            />
-          </div>
-
-          <h1 className="text-xl font-bold tracking-tight text-white font-poppins">PG Ease</h1>
-          <span className="mt-1 inline-flex items-center rounded-full bg-white/20 px-3 py-0.5 text-[11px] font-semibold text-white/95 backdrop-blur-md font-poppins">
-            Owner App
-          </span>
-        </div>
+        <button
+          type="button"
+          onClick={onLangToggle}
+          className="flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-xs text-gray-700 shadow-xs border border-gray-200/60 hover:bg-white transition-all font-semibold"
+        >
+          <Globe className="h-3.5 w-3.5 text-[#008080]" />
+          <span>{lang === "en" ? "हिंदी" : "English"}</span>
+        </button>
       </div>
 
-      {/* Floating White Card */}
-      <div className="relative z-20 -mt-10 px-5 flex-1 flex flex-col justify-between">
-        <div className={`rounded-3xl bg-white p-6 shadow-xl border border-gray-100/80 space-y-4 animate-fade-in ${shaking ? "animate-shake" : ""}`}>
-          {showSuccess ? (
-            <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#B4E5C5] bg-[#ECFAF1] text-[#157F3D]">
-                <Check className="h-7 w-7 stroke-[2.5]" />
-              </div>
-              <h3 className="text-lg font-bold text-[#18212B]">{t.successTitle}</h3>
-              <p className="text-xs text-gray-500">{t.successBody}</p>
-            </div>
-          ) : onOtpStep ? (
+      {/* Main Content Area */}
+      <div className="relative z-10 flex-1 flex flex-col items-center px-6 pt-4 pb-8 max-w-md mx-auto w-full">
+        {/* Logo: 96dp Teal (#008080) Circle with White Mark Inside (60dp tall, centered, NO white box) */}
+        <div className="flex h-[96px] w-[96px] items-center justify-center rounded-full bg-[#008080] shadow-md mb-6">
+          <img
+            src="/brand/pgease-mark-white.svg"
+            alt="PG Ease"
+            className="h-[60px] w-auto object-contain"
+          />
+        </div>
+
+        {/* Title and Subtitle: Truly Centered */}
+        <div className="w-full text-center mb-7">
+          <h1 className="text-[24px] font-semibold text-[#1F2937] leading-[34px] tracking-tight w-full text-center">
+            {onOtpStep ? t.verifyTitle : t.welcomeTitle}
+          </h1>
+          <p className="mt-1.5 text-[14px] font-normal text-[#6B7280] leading-[22px] max-w-[300px] mx-auto text-center">
+            {onOtpStep ? (
+              <>
+                {channel === "whatsapp" ? t.verifySubtitleWa : t.verifySubtitleSms}{" "}
+                <strong className="text-gray-900 tabular-nums">+91 {phone}</strong>
+              </>
+            ) : (
+              t.welcomeSubtitle
+            )}
+          </p>
+        </div>
+
+        {/* Form Container */}
+        <div className={`w-full space-y-5 ${shaking ? "animate-shake" : ""}`}>
+          {onOtpStep ? (
             /* ================= OTP VERIFICATION ================= */
             <div className="space-y-4">
-              <div>
-                <h2 className="text-lg font-bold tracking-tight text-gray-900">
-                  {t.verifyTitle}
-                </h2>
-                <p className="mt-1 text-xs text-gray-500 leading-relaxed">
-                  {channel === "whatsapp" ? t.verifySubtitleWa : t.verifySubtitleSms}{" "}
-                  <strong className="text-gray-800 tabular-nums">+91 {phone}</strong>
-                </p>
-              </div>
-
               {/* 4 Digit Boxes */}
-              <div className="flex justify-center items-center gap-2.5 sm:gap-3 py-1">
-                {[0, 1, 2, 3].map((index) => (
+              <div className="flex justify-center items-center gap-3 py-1">
+                {[0, 1, 2, 3].map((idx) => (
                   <input
-                    key={index}
+                    key={idx}
                     type="tel"
                     inputMode="numeric"
                     maxLength={1}
-                    value={otp[index] || ""}
+                    value={otp[idx] || ""}
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, "").slice(-1);
                       const newOtpArr = (otp || "").split("");
-                      newOtpArr[index] = val;
+                      newOtpArr[idx] = val;
                       const newOtp = newOtpArr.join("");
                       onOtpChange(newOtp);
-                      if (val && index < 3) {
-                        const nextEl = document.getElementById(`owner-sheet-otp-${index + 1}`);
+                      if (val && idx < 3) {
+                        const nextEl = document.getElementById(`owner-sheet-otp-${idx + 1}`);
                         nextEl?.focus();
                       }
-                      if (val && index === 3 && newOtp.length === 4) {
+                      if (val && idx === 3 && newOtp.length === 4) {
                         onVerify();
                       }
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === "Backspace" && !otp[index] && index > 0) {
-                        const prevEl = document.getElementById(`owner-sheet-otp-${index - 1}`);
+                      if (e.key === "Backspace" && !otp[idx] && idx > 0) {
+                        const prevEl = document.getElementById(`owner-sheet-otp-${idx - 1}`);
                         prevEl?.focus();
                       }
                     }}
-                    id={`owner-sheet-otp-${index}`}
-                    className="h-14 w-12 sm:w-14 rounded-2xl border-2 border-gray-200 bg-gray-50/50 text-center text-xl font-black text-gray-900 focus:border-[#008080] focus:bg-white focus:outline-none transition-all shadow-sm"
+                    id={`owner-sheet-otp-${idx}`}
+                    className="h-[52px] w-[52px] rounded-[12px] border border-[#D1D5DB] bg-[#F9FAFB] text-center text-xl font-bold text-gray-900 focus:border-[#008080] focus:bg-white focus:outline-none transition-all shadow-xs"
                   />
                 ))}
               </div>
@@ -283,7 +261,7 @@ export function MobileAuthSheet({
                     type="button"
                     onClick={onResend}
                     disabled={isSendingOtp}
-                    className="flex items-center gap-1 font-bold text-[#008080] hover:underline"
+                    className="flex items-center gap-1 font-semibold text-[#008080] hover:underline"
                   >
                     <RotateCcw className="h-3 w-3" />
                     <span>{t.resendCode}</span>
@@ -295,12 +273,12 @@ export function MobileAuthSheet({
                 )}
               </div>
 
-              {/* Verify Button */}
+              {/* Verify Button: 52dp height, radius 12, #008080 */}
               <button
                 type="button"
                 onClick={onVerify}
                 disabled={otp.length !== 4 || isVerifyingOtp}
-                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-[#008080] py-3.5 text-sm font-bold text-white shadow-md shadow-[#008080]/25 hover:bg-[#006b6b] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none tap-target"
+                className="w-full h-[52px] flex items-center justify-center gap-2 rounded-[12px] bg-[#008080] text-sm font-semibold text-white shadow-sm hover:bg-[#006e6e] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
               >
                 {isVerifyingOtp ? (
                   <>
@@ -315,8 +293,8 @@ export function MobileAuthSheet({
                 )}
               </button>
 
-              {/* On-Demand Fallback (Switch to SMS or WhatsApp) */}
-              <div className="pt-2.5 border-t border-gray-100 text-center">
+              {/* Fallback Channel */}
+              <div className="pt-2 text-center">
                 <button
                   type="button"
                   onClick={() =>
@@ -328,7 +306,7 @@ export function MobileAuthSheet({
                   className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 font-medium transition-colors"
                 >
                   <span>{channel === "whatsapp" ? t.didntReceiveWa : t.preferWa}</span>
-                  <span className="font-bold text-[#008080] underline flex items-center gap-1">
+                  <span className="font-semibold text-[#008080] underline flex items-center gap-1">
                     {channel === "whatsapp" ? (
                       <>
                         <Smartphone className="h-3.5 w-3.5" />
@@ -347,25 +325,11 @@ export function MobileAuthSheet({
           ) : (
             /* ================= PHONE INPUT FORM ================= */
             <div className="space-y-4">
-              {/* Card Title & Subtitle */}
-              <div>
-                <h2 className="text-xl font-bold tracking-tight text-gray-900 flex items-center gap-1.5">
-                  {t.welcomeTitle}
-                </h2>
-                <p className="mt-1 text-xs text-gray-500 leading-relaxed">
-                  {t.welcomeSubtitle}
-                </p>
-              </div>
-
-              {/* Mobile Number Input */}
-              <div className="space-y-1.5 pt-0.5">
-                <label className="text-xs font-bold text-gray-700">
-                  {t.mobileNumber}
-                </label>
-                <div className="flex items-center rounded-2xl border border-gray-200 bg-white px-3 py-2 shadow-sm focus-within:border-[#008080] focus-within:ring-2 focus-within:ring-[#008080]/10 transition-all">
-                  {/* Flag + Country Code Pill */}
-                  <div className="flex items-center gap-1.5 rounded-xl bg-gray-50 border border-gray-200/80 px-2.5 py-1.5 text-xs font-bold text-gray-800 mr-2.5 flex-shrink-0 select-none">
-                    <span className="text-sm">🇮🇳</span>
+              {/* Input: height 52, radius 12, border #D1D5DB, fill #F9FAFB, divider after +91 */}
+              <div className="space-y-1.5">
+                <div className="flex items-center h-[52px] rounded-[12px] border border-[#D1D5DB] bg-[#F9FAFB] px-3 shadow-xs focus-within:border-[#008080] focus-within:bg-white transition-all">
+                  {/* +91 Prefix with clean divider */}
+                  <div className="flex items-center gap-1 text-sm font-semibold text-gray-800 pr-2.5 border-r border-[#D1D5DB] flex-shrink-0 select-none">
                     <span>+91</span>
                   </div>
 
@@ -383,7 +347,7 @@ export function MobileAuthSheet({
                     }}
                     placeholder={t.phonePlaceholder}
                     autoFocus
-                    className="w-full bg-transparent text-sm font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none tracking-wide"
+                    className="w-full bg-transparent pl-3 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none tracking-wide"
                   />
                 </div>
                 {phoneError && (
@@ -391,16 +355,16 @@ export function MobileAuthSheet({
                 )}
               </div>
 
-              {/* Channel Selector with Official WhatsApp Logo */}
-              <div className="flex items-center justify-between text-xs pt-1 px-0.5">
+              {/* Channel Selector */}
+              <div className="flex items-center justify-between text-xs pt-0.5 px-0.5">
                 <span className="text-gray-400 font-medium">{t.receiveVia}</span>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => onChannel("whatsapp")}
-                    className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-all ${
                       channel === "whatsapp"
-                        ? "bg-emerald-50 text-emerald-800 border border-emerald-400 font-bold shadow-xs"
+                        ? "bg-emerald-50 text-emerald-800 border border-emerald-400 font-semibold"
                         : "text-gray-500 hover:bg-gray-100 border border-transparent"
                     }`}
                   >
@@ -411,9 +375,9 @@ export function MobileAuthSheet({
                   <button
                     type="button"
                     onClick={() => onChannel("sms")}
-                    className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
+                    className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-all ${
                       channel === "sms"
-                        ? "bg-teal-50 text-teal-800 border border-teal-400 font-bold shadow-xs"
+                        ? "bg-teal-50 text-teal-800 border border-teal-400 font-semibold"
                         : "text-gray-500 hover:bg-gray-100 border border-transparent"
                     }`}
                   >
@@ -423,12 +387,12 @@ export function MobileAuthSheet({
                 </div>
               </div>
 
-              {/* Submit Button */}
+              {/* CTA Button: 52dp height, radius 12, #008080, disabled until 10 digits */}
               <button
                 type="button"
-                disabled={!canSubmitPhone || isSendingOtp}
                 onClick={onSendOtp}
-                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-[#008080] py-3.5 text-sm font-bold text-white shadow-md shadow-[#008080]/25 hover:bg-[#006b6b] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none tap-target"
+                disabled={!canSubmitPhone || isSendingOtp}
+                className="w-full h-[52px] flex items-center justify-center gap-2 rounded-[12px] bg-[#008080] text-sm font-semibold text-white shadow-sm hover:bg-[#006e6e] active:scale-[0.98] transition-all disabled:opacity-40 disabled:pointer-events-none"
               >
                 {isSendingOtp ? (
                   <>
@@ -437,43 +401,29 @@ export function MobileAuthSheet({
                   </>
                 ) : (
                   <>
-                    {channel === "whatsapp" ? (
-                      <WhatsAppIcon size={16} />
-                    ) : (
-                      <Smartphone className="h-4 w-4 text-white" />
-                    )}
-                    <span>
-                      {channel === "whatsapp" ? t.getOtpWhatsapp : t.getOtpSms}
-                    </span>
+                    <span>{channel === "whatsapp" ? t.getOtpWhatsapp : t.getOtpSms}</span>
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
               </button>
-
-              {/* 100% Safe Verification Trust Badge */}
-              <div className="flex items-center justify-center gap-1.5 rounded-full bg-gray-50 border border-gray-200/60 py-2 px-3 text-xs text-gray-500 font-medium">
-                <Lock className="h-3.5 w-3.5 text-gray-400" />
-                <span>{t.safeBadge}</span>
-              </div>
             </div>
           )}
         </div>
 
-        {/* Footer Terms & Conditions */}
-        <div className="py-6 text-center space-y-3">
-          <p className="text-[11px] text-gray-400 leading-relaxed px-4">
+        {/* Safe Badge & Footer Terms */}
+        <div className="w-full text-center mt-auto pt-8 pb-2 space-y-2">
+          <div className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-400">
+            <Lock className="h-3 w-3 text-emerald-600" />
+            <span>{t.safeBadge}</span>
+          </div>
+
+          <p className="text-[11px] text-gray-400 leading-tight">
             {t.termsPrefix}{" "}
-            <Link
-              to="/terms"
-              className="text-[#008080] underline font-medium hover:text-[#006060]"
-            >
+            <Link to="/terms" className="text-gray-600 underline font-medium">
               {t.termsLink}
             </Link>{" "}
             {t.and}{" "}
-            <Link
-              to="/privacy"
-              className="text-[#008080] underline font-medium hover:text-[#006060]"
-            >
+            <Link to="/privacy" className="text-gray-600 underline font-medium">
               {t.privacyLink}
             </Link>
           </p>

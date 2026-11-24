@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, ArrowRight } from "lucide-react";
 import { hideSplashScreen } from "@/lib/appShell";
 
 const CAROUSEL_SEEN_KEY = "pgease_onboarding_carousel_seen";
@@ -8,28 +7,28 @@ const PGEASE_TOKEN_KEY = "pgease_token";
 const ACCESS_TOKEN_KEY = "access_token";
 
 interface SlideData {
-  svg: string;
-  fallback: string;
+  imageWebp: string;
+  imagePng: string;
   title: string;
   subtitle: string;
 }
 
 const OWNER_SLIDES: SlideData[] = [
   {
-    svg: "/slides/slide-1.svg",
-    fallback: "/slides/slide-1.jpg",
+    imageWebp: "/onboarding/onboarding-1.webp",
+    imagePng: "/onboarding/onboarding-1.png",
     title: "Manage your PG in one app",
     subtitle: "Rooms, beds, tenants and rent, all in one place.",
   },
   {
-    svg: "/slides/slide-2.svg",
-    fallback: "/slides/slide-2.jpg",
+    imageWebp: "/onboarding/onboarding-2.webp",
+    imagePng: "/onboarding/onboarding-2.png",
     title: "Collect rent without chasing",
     subtitle: "Auto reminders on WhatsApp and online or UPI payments.",
   },
   {
-    svg: "/slides/slide-3.svg",
-    fallback: "/slides/slide-3.jpg",
+    imageWebp: "/onboarding/onboarding-3.webp",
+    imagePng: "/onboarding/onboarding-3.png",
     title: "Know your PG at a glance",
     subtitle: "Vacant beds, dues, complaints and reports, live.",
   },
@@ -152,9 +151,9 @@ export function SplashCarousel({ children }: { children: ReactNode }) {
   const isLast = index === OWNER_SLIDES.length - 1;
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#F9FAFB] flex items-center justify-center select-none overflow-hidden font-poppins">
+    <div className="fixed inset-0 z-50 bg-[#FFFFFF] flex items-center justify-center select-none overflow-hidden font-poppins">
       <div
-        className="relative w-full h-[100dvh] max-w-md mx-auto bg-white flex flex-col justify-between overflow-hidden sm:rounded-3xl sm:h-[92dvh] sm:shadow-2xl sm:border sm:border-gray-100"
+        className="relative w-full h-[100dvh] max-w-md mx-auto bg-[#FFFFFF] flex flex-col justify-between overflow-hidden"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -162,57 +161,55 @@ export function SplashCarousel({ children }: { children: ReactNode }) {
         onMouseMove={handleTouchMove}
         onMouseUp={handleTouchEnd}
       >
-        {/* Top Header with Skip */}
+        {/* Top Header with Skip (hidden on slide 3) */}
         <div
-          className="absolute top-0 inset-x-0 z-30 flex items-center justify-between px-6 pt-4 pb-2"
-          style={{ paddingTop: "max(1.25rem, env(safe-area-inset-top))" }}
+          className="absolute top-0 inset-x-0 z-30 flex items-center justify-end px-6 pt-4 pb-2"
+          style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}
         >
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-lg bg-[#008080] flex items-center justify-center text-white text-[11px] font-bold">
-              PG
-            </div>
-            <span className="text-xs font-bold tracking-wider text-[#1F2937] uppercase">PG Ease</span>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => finishToAuth("/login")}
-            className="px-3.5 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 active:scale-95 text-xs font-semibold text-[#4B5563] transition-colors"
-          >
-            Skip
-          </button>
+          {!isLast && (
+            <button
+              type="button"
+              onClick={() => finishToAuth("/login")}
+              className="w-[58px] h-[30px] rounded-[15px] bg-[#EEF5F5] hover:bg-[#E0ECEC] active:scale-95 text-[14px] font-medium text-[#008080] flex items-center justify-center transition-all"
+            >
+              Skip
+            </button>
+          )}
         </div>
 
         {/* Slides Track */}
-        <div className="relative flex-1 w-full h-full overflow-hidden flex flex-col justify-between pt-16 pb-28">
+        <div className="relative flex-1 w-full h-full overflow-hidden flex flex-col justify-between pt-12 pb-32">
           <div
             className="flex h-full w-full transition-transform duration-300 ease-out"
             style={{ transform: `translateX(-${index * 100}%)` }}
           >
-            {OWNER_SLIDES.map((slide, i) => (
+            {OWNER_SLIDES.map((slide) => (
               <div
                 key={slide.title}
-                className="relative h-full w-full shrink-0 basis-full flex flex-col items-center justify-between px-6 pt-4 pb-2 select-none"
+                className="relative h-full w-full shrink-0 basis-full flex flex-col items-center justify-between px-6 pt-2 pb-2 select-none"
               >
-                {/* Top 50-55%: Illustration */}
-                <div className="w-full flex-1 max-h-[52vh] flex items-center justify-center">
-                  <img
-                    src={slide.svg}
-                    alt={slide.title}
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = slide.fallback;
-                    }}
-                    className="w-full h-full max-h-[300px] object-contain pointer-events-none drop-shadow-sm"
-                    draggable={false}
-                  />
+                {/* Illustration (1080x900 aspect ratio, scale down on short screens) */}
+                <div className="w-full flex-1 max-h-[48vh] sm:max-h-[50vh] flex items-center justify-center min-h-[160px]">
+                  <picture>
+                    <source srcSet={slide.imageWebp} type="image/webp" />
+                    <img
+                      src={slide.imagePng}
+                      alt={slide.title}
+                      className="w-full h-full max-h-[320px] aspect-[1080/900] object-contain pointer-events-none"
+                      draggable={false}
+                    />
+                  </picture>
                 </div>
 
-                {/* Middle: Title & Subtitle */}
+                {/* Title & Subtitle */}
                 <div className="w-full text-center mt-3 mb-2 px-2 flex flex-col items-center">
-                  <h2 className="text-2xl font-semibold text-[#1F2937] tracking-tight leading-snug">
+                  <h2
+                    className="text-[24px] font-semibold text-[#1F2937] leading-[34px] tracking-tight max-w-[320px]"
+                    style={{ textWrap: "balance" as any }}
+                  >
                     {slide.title}
                   </h2>
-                  <p className="mt-2 text-sm font-normal text-[#4B5563] leading-relaxed max-w-xs">
+                  <p className="mt-2 text-[15px] font-normal text-[#6B7280] leading-[24px] max-w-[290px]">
                     {slide.subtitle}
                   </p>
                 </div>
@@ -221,43 +218,38 @@ export function SplashCarousel({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        {/* Bottom Navigation & Controls */}
+        {/* Bottom Controls */}
         <div
-          className="absolute bottom-0 inset-x-0 z-30 flex flex-col items-center gap-5 bg-gradient-to-t from-white via-white/95 to-transparent pt-6 pb-6 px-6"
-          style={{ paddingBottom: "max(1.75rem, env(safe-area-inset-bottom))" }}
+          className="absolute bottom-0 inset-x-0 z-30 flex flex-col items-center gap-5 bg-white pt-2 pb-6 px-6"
+          style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
         >
-          {/* Pagination Dots (Elongated Teal pill for active, small gray circles for inactive) */}
+          {/* Active 24x8 Teal Pill, Inactive 8x8 #CFD8DC Circle, gap 8, animated */}
           <div className="flex items-center gap-2">
             {OWNER_SLIDES.map((_, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => setIndex(i)}
-                className="p-1 focus:outline-none"
+                className="focus:outline-none"
                 aria-label={`Go to slide ${i + 1}`}
               >
                 <span
                   className={`block h-2 rounded-full transition-all duration-300 ${
-                    i === index ? "w-7 bg-[#008080]" : "w-2 bg-gray-200 hover:bg-gray-300"
+                    i === index ? "w-[24px] bg-[#008080]" : "w-[8px] bg-[#CFD8DC]"
                   }`}
                 />
               </button>
             ))}
           </div>
 
-          {/* Primary Action Button (Teal #008080, min 48dp target) */}
-          <div className="w-full flex items-center gap-3">
+          {/* Primary Action Button (52dp height, radius 14, #008080, Poppins SemiBold 16) */}
+          <div className="w-full">
             <button
               type="button"
               onClick={nextSlide}
-              className="w-full h-[52px] rounded-2xl bg-[#008080] hover:bg-[#006e6e] active:scale-[0.98] text-white font-semibold text-base shadow-md flex items-center justify-center gap-2 transition-all"
+              className="w-full h-[52px] rounded-[14px] bg-[#008080] hover:bg-[#006e6e] active:scale-[0.98] text-white font-semibold text-[16px] shadow-sm flex items-center justify-center transition-all"
             >
-              <span>{isLast ? "Get Started" : "Next"}</span>
-              {isLast ? (
-                <ArrowRight className="w-5 h-5 stroke-[2.5]" />
-              ) : (
-                <ChevronRight className="w-5 h-5 stroke-[2.5]" />
-              )}
+              {isLast ? "Get Started" : "Next"}
             </button>
           </div>
         </div>
