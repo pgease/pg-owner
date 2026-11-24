@@ -40,6 +40,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
+import { Browser } from "@capacitor/browser";
 import {
   getPaymentSettings,
   lookupIfsc,
@@ -687,29 +688,37 @@ export const EasebuzzGatewayCard = () => {
               <div>
                 <h3 className="text-base font-semibold text-foreground">Finish KYC on Easebuzz</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Your bank details are saved. Easebuzz still has to verify you before tenants can pay online.
+                  Complete your KYC with Easebuzz to accept online rent payments directly into your bank account.
                 </p>
               </div>
               <ol className="space-y-2 text-sm text-foreground">
-                <li className="flex gap-2"><span className="font-semibold text-[#008080]">1.</span> Open the Easebuzz page. It asks for Aadhaar OTP.</li>
-                <li className="flex gap-2"><span className="font-semibold text-[#008080]">2.</span> Enter PAN and confirm the settlement account.</li>
-                <li className="flex gap-2"><span className="font-semibold text-[#008080]">3.</span> Come back here and press Check status. Online collection turns on after Easebuzz approves it.</li>
+                <li className="flex gap-2"><span className="font-semibold text-[#008080]">1.</span> Open the Easebuzz verification page (requires Aadhaar OTP).</li>
+                <li className="flex gap-2"><span className="font-semibold text-[#008080]">2.</span> Enter business PAN and verify the settlement bank account.</li>
+                <li className="flex gap-2"><span className="font-semibold text-[#008080]">3.</span> Return here and tap Check status. Online collections activate immediately once approved.</li>
               </ol>
 
               {/* Main Action Buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
                 <Button
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
                     const url = kycDashboardUrl || sub?.kycDashboardUrl;
-                    if (url) {
-                      window.open(url, "_blank");
+                    if (url && url.startsWith("http")) {
+                      try {
+                        await Browser.open({ url });
+                      } catch {
+                        window.open(url, "_blank");
+                      }
                     } else {
+                      toast({
+                        title: "Fetching new KYC link",
+                        description: "Retrieving your personalized Easebuzz onboarding link...",
+                      });
                       handleRefreshKycLink();
                     }
                   }}
                   disabled={actionLoading}
-                  className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white font-bold text-xs h-10 px-6 gap-2 shadow-sm"
+                  className="w-full sm:w-auto bg-[#008080] hover:bg-[#006666] text-white font-bold text-xs h-10 px-6 gap-2 shadow-sm"
                 >
                   <ExternalLink className="h-4 w-4" />
                   Open Easebuzz KYC

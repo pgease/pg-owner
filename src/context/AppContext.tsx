@@ -19,6 +19,10 @@ interface AppContextValue {
   setSelectedPgId: (id: string | null) => void;
   properties: PropertyResponse[];
   refreshProperties: () => Promise<void>;
+  isPgSwitcherOpen: boolean;
+  setIsPgSwitcherOpen: (open: boolean) => void;
+  isOwnerDrawerOpen: boolean;
+  setIsOwnerDrawerOpen: (open: boolean) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -27,6 +31,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Lang>(() => appPrefs.getLanguage());
   const [selectedPgId, setSelectedPgIdState] = useState<string | null>(() => appPrefs.getSelectedPgId());
   const [properties, setProperties] = useState<PropertyResponse[]>([]);
+  const [isPgSwitcherOpen, setIsPgSwitcherOpen] = useState(false);
+  const [isOwnerDrawerOpen, setIsOwnerDrawerOpen] = useState(false);
 
   const refreshProperties = useCallback(async () => {
     try {
@@ -75,6 +81,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSelectedPgId,
     properties,
     refreshProperties,
+    isPgSwitcherOpen,
+    setIsPgSwitcherOpen,
+    isOwnerDrawerOpen,
+    setIsOwnerDrawerOpen,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

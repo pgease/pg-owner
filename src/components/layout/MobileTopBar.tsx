@@ -1,10 +1,9 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, Bell } from "lucide-react";
-import mascotRent from "@/assets/mascot/mascot-rent.png";
+import { ArrowLeft, Bell, Menu } from "lucide-react";
 import { getMobilePageTitle, getParentRoute, isMobileTabRoot } from "@/lib/mobileRoutes";
 import { useOwnerNotifications } from "@/hooks/useOwnerNotifications";
 import { useEntitlements } from "@/hooks/useEntitlements";
-import { ThemeToggle } from "@/components/common/ThemeToggle";
+import { useApp } from "@/context/AppContext";
 import { cn } from "@/lib/utils";
 
 export function MobileTopBar() {
@@ -12,6 +11,8 @@ export function MobileTopBar() {
   const location = useLocation();
   const { unreadCount } = useOwnerNotifications();
   const { isPro, isLite, isTrial, isExpired, daysRemaining, isLoading } = useEntitlements();
+  const { setIsOwnerDrawerOpen } = useApp();
+
   const title = getMobilePageTitle(location.pathname);
   const showBack = !isMobileTabRoot(location.pathname);
 
@@ -26,26 +27,23 @@ export function MobileTopBar() {
     const days = Math.max(0, daysRemaining);
     if (isTrial) {
       return {
-        label: `Trial · ${days} ${days === 1 ? "day" : "days"}`,
+        label: `Trial · ${days}d`,
         className: "bg-amber-100 text-amber-800 border border-amber-300",
       };
     }
     if (isPro) {
       return {
         label: "Pro",
-        className: "bg-amber-100 text-amber-800 border border-amber-300",
+        className: "bg-teal-100 text-teal-800 border border-teal-300",
       };
     }
     if (isLite) {
       return {
         label: "Lite",
-        className: "bg-teal-100 text-teal-800 border border-teal-300",
+        className: "bg-slate-100 text-slate-700 border border-slate-300",
       };
     }
-    return {
-      label: "Free",
-      className: "bg-slate-100 text-slate-600 border border-slate-300",
-    };
+    return null;
   })();
 
   const goBack = () => {
@@ -59,24 +57,36 @@ export function MobileTopBar() {
 
   return (
     <header
-      className="pgease-mobile-topbar md:hidden sticky top-0 z-30 bg-white border-b border-[#E2E6EA]"
+      className="pgease-mobile-topbar md:hidden sticky top-0 z-30 bg-white border-b border-[#E2E6EA] shadow-2xs"
       style={{ paddingTop: "var(--safe-top)" }}
     >
-      <div className="relative flex h-12 items-center px-2">
-        {showBack ? (
-          <button
-            type="button"
-            onClick={goBack}
-            className="flex h-11 w-11 items-center justify-center text-[#18212B] shrink-0"
-            aria-label="Back"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-        ) : (
-          <span className="w-11 shrink-0" />
-        )}
-        <div className="absolute inset-x-24 flex items-center justify-center gap-1.5 pointer-events-none">
-          <h1 className="truncate text-[16px] font-semibold text-[#18212B]">{title}</h1>
+      <div className="relative flex h-14 items-center justify-between px-3">
+        {/* Left: Back button or Hamburger menu */}
+        <div className="flex items-center">
+          {showBack ? (
+            <button
+              type="button"
+              onClick={goBack}
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/80 bg-slate-50 text-[#18212B] hover:bg-slate-100 transition-colors"
+              aria-label="Back"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsOwnerDrawerOpen(true)}
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/80 bg-slate-50 text-[#18212B] hover:bg-slate-100 transition-colors cursor-pointer"
+              aria-label="Open navigation drawer"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+
+        {/* Center: Title + Plan Chip */}
+        <div className="flex items-center gap-1.5 min-w-0 max-w-[60%] justify-center">
+          <h1 className="truncate text-[15px] font-bold text-[#18212B]">{title}</h1>
           {planChip && (
             <span
               className={cn(
@@ -88,28 +98,23 @@ export function MobileTopBar() {
             </span>
           )}
         </div>
-        <button
-          type="button"
-          onClick={() => window.dispatchEvent(new Event("open-ease-buddy"))}
-          className="ml-auto flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-[#E2E6EA] bg-white"
-          aria-label="Open Ease Buddy AI"
-        >
-          <img src={mascotRent} alt="" className="h-7 w-7 rounded-full object-cover object-top" />
-        </button>
-        <ThemeToggle className="h-9 w-9 rounded-full border-[#E2E6EA] dark:border-slate-700 shrink-0" />
-        <button
-          type="button"
-          onClick={() => navigate("/notifications")}
-          className="relative flex h-11 w-11 items-center justify-center text-[#18212B] shrink-0 pointer-events-auto"
-          aria-label="Notifications"
-        >
-          <Bell className="h-5 w-5" />
-          {unreadCount > 0 ? (
-            <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[#008080] text-white text-[10px] font-semibold leading-4 text-center">
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
-          ) : null}
-        </button>
+
+        {/* Right: 40dp Notification bell */}
+        <div className="flex items-center">
+          <button
+            type="button"
+            onClick={() => navigate("/notifications")}
+            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/80 bg-slate-50 text-[#18212B] hover:bg-slate-100 transition-colors"
+            aria-label="Notifications"
+          >
+            <Bell className="h-4 w-4" />
+            {unreadCount > 0 ? (
+              <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[#008080] text-white text-[10px] font-semibold leading-4 text-center">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            ) : null}
+          </button>
+        </div>
       </div>
     </header>
   );

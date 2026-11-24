@@ -10,6 +10,9 @@ import StaffExpiredLockout from "./StaffExpiredLockout";
 import { authStorage } from "@/api/http";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { shouldHideMobileTabBar } from "@/lib/mobileRoutes";
+import { PgSwitcherSheet } from "@/components/common/PgSwitcherSheet";
+import { OwnerDrawer } from "./OwnerDrawer";
+import { useApp } from "@/context/AppContext";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -38,6 +41,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { isExpired, isLoading } = useEntitlements();
+  const { isPgSwitcherOpen, setIsPgSwitcherOpen, isOwnerDrawerOpen, setIsOwnerDrawerOpen } = useApp();
   const isStaff = authStorage.isStaff();
   const isMobileDashboardHome =
     location.pathname === "/dashboard" || location.pathname === "/kpis" || location.pathname === "/";
@@ -90,7 +94,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
       />
       <div className="flex-1 h-dvh flex flex-col min-w-0 overflow-hidden overflow-x-hidden">
         <AppHeader
-          onMenuToggle={() => setMobileOpen((v) => !v)}
+          onMenuToggle={() => setIsOwnerDrawerOpen(true)}
           onSidebarToggle={() => setCollapsed((v) => !v)}
           isSidebarCollapsed={collapsed}
         />
@@ -112,6 +116,13 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         </main>
         <MobileBottomNav />
       </div>
+
+      <PgSwitcherSheet open={isPgSwitcherOpen} onOpenChange={setIsPgSwitcherOpen} />
+      <OwnerDrawer
+        open={isOwnerDrawerOpen}
+        onClose={() => setIsOwnerDrawerOpen(false)}
+        onOpenSwitcher={() => setIsPgSwitcherOpen(true)}
+      />
     </div>
   );
 };

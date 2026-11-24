@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-import mascotRent from "@/assets/mascot/mascot-rent.png";
 import { useOverlayHistory } from "@/lib/useOverlayHistory";
 
 interface Message {
@@ -156,11 +155,9 @@ export const EaseBuddyAI: React.FC<{
             title="Ease Buddy AI Assistant"
             aria-label="Open Ease Buddy AI"
           >
-            <img
-              src={mascotRent}
-              alt="Ease Buddy"
-              className="h-full w-full object-cover object-top rounded-full"
-            />
+            <div className="flex h-full w-full items-center justify-center rounded-full bg-[#008080] text-white">
+              <Sparkles className="h-5 w-5" />
+            </div>
             <span className="absolute top-0 right-0 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white" />
           </button>
         </div>
@@ -172,12 +169,8 @@ export const EaseBuddyAI: React.FC<{
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-[var(--gray-50)] border-b border-[var(--gray-200)] shrink-0">
             <div className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-full bg-[var(--brand-50)] border border-[var(--brand-100)] overflow-hidden shrink-0">
-                <img
-                  src={mascotRent}
-                  alt="Ease Buddy"
-                  className="h-full w-full object-cover object-top"
-                />
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-teal-50 text-[#008080] border border-teal-100 overflow-hidden shrink-0">
+                <Sparkles className="h-4 w-4" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -240,12 +233,8 @@ export const EaseBuddyAI: React.FC<{
                 className={`flex gap-2 ${m.sender === "user" ? "justify-end" : "justify-start"}`}
               >
                 {m.sender === "bot" && (
-                  <div className="h-6 w-6 rounded-full bg-[var(--brand-50)] border border-[var(--brand-100)] overflow-hidden shrink-0 mt-0.5 shadow-2xs">
-                    <img
-                      src={mascotRent}
-                      alt="Ease Buddy"
-                      className="h-full w-full object-cover object-top"
-                    />
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-teal-50 text-[#008080] border border-teal-100 overflow-hidden shrink-0 mt-0.5 shadow-2xs">
+                    <Sparkles className="h-3 w-3" />
                   </div>
                 )}
                 <div

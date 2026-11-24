@@ -40,7 +40,6 @@ import { useEntitlements } from "@/hooks/useEntitlements";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useOwnerNotifications } from "@/hooks/useOwnerNotifications";
 import pgeaseIconColor from "@/assets/pgease-icon-color.png";
-import mascotRent from "@/assets/mascot/mascot-rent.png";
 import { cn } from "@/lib/utils";
 import { TrialExpiredGateModal } from "@/components/common/TrialExpiredGateModal";
 import { EditProfileModal } from "@/components/settings/EditProfileModal";
@@ -73,16 +72,12 @@ const SEARCH_COMMANDS = [
 ];
 
 const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHeaderProps) => {
-  const { properties, selectedPgId, setSelectedPgId, language, setLanguage } = useApp();
+  const { properties, selectedPgId, setSelectedPgId, language, setLanguage, setIsPgSwitcherOpen } = useApp();
   const navigate = useNavigate();
   const { openYouTubeTutorial, currentRouteTutorialKey } = useTutorials();
   const entitlements = useEntitlements();
   const subAccess = useSubscriptionAccess();
   const [trialExpiredOpen, setTrialExpiredOpen] = useState(false);
-  const [isDark, setIsDark] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem("pgease_theme") === "dark";
-  });
 
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -152,9 +147,9 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
 
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", isDark);
-    localStorage.setItem("pgease_theme", isDark ? "dark" : "light");
-  }, [isDark]);
+    document.documentElement.classList.remove("dark");
+    localStorage.setItem("pgease_theme", "light");
+  }, []);
 
   const { items: notificationItems, unreadCount } = useOwnerNotifications();
 
@@ -247,54 +242,21 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
               <Menu className="h-5 w-5" />
             </button>
 
-            {/* Mobile-only brand & property switcher */}
+            {/* Mobile-only brand & property switcher (O1) */}
             <div className="flex items-center md:hidden min-w-0">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold truncate cursor-pointer transition-colors max-w-[140px] sm:max-w-[200px]"
-                  >
-                    <div className="h-6 w-6 rounded-full bg-white flex items-center justify-center p-0.5 shrink-0">
-                      <img src={pgeaseIconColor} alt="PG Ease" className="h-full w-full object-contain" />
-                    </div>
-                    <span className="truncate max-w-[70px] xs:max-w-[95px] sm:max-w-[130px]">
-                      {selectedPg ? selectedPg.name : "My PG"}
-                    </span>
-                    <ChevronDown className="h-3 w-3 text-teal-200 shrink-0" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-68 max-w-[calc(100vw-2rem)] rounded-2xl p-2 shadow-2xl border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 z-50">
-                  <div className="px-2 py-1">
-                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">Switch Active PG</p>
-                  </div>
-                  <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800 my-1" />
-                  <div className="max-h-60 overflow-y-auto space-y-1">
-                    {list.map((pg) => (
-                      <DropdownMenuItem
-                        key={pg.id}
-                        onClick={() => setSelectedPgId(pg.id)}
-                        className={cn(
-                          "flex items-center gap-2 rounded-xl px-2 py-1.5 text-xs font-semibold cursor-pointer",
-                          selectedPgId === pg.id ? "bg-teal-50 dark:bg-teal-950/40 text-[#008080] font-bold" : "text-slate-700 dark:text-slate-200"
-                        )}
-                      >
-                        <Building2 className="h-3.5 w-3.5 shrink-0" />
-                        <span className="truncate flex-1">{pg.name}</span>
-                        {selectedPgId === pg.id ? <Check className="h-3.5 w-3.5 text-[#008080]" /> : null}
-                      </DropdownMenuItem>
-                    ))}
-                  </div>
-                  <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800 my-1" />
-                  <DropdownMenuItem
-                    onClick={handleAddProperty}
-                    className="flex items-center gap-2 rounded-xl px-2 py-1.5 text-xs font-bold text-[#008080] cursor-pointer"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    <span>Add New Property</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <button
+                type="button"
+                onClick={() => setIsPgSwitcherOpen(true)}
+                className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold truncate cursor-pointer transition-colors max-w-[140px] sm:max-w-[200px]"
+              >
+                <div className="h-6 w-6 rounded-full bg-white flex items-center justify-center p-0.5 shrink-0">
+                  <img src={pgeaseIconColor} alt="PG Ease" className="h-full w-full object-contain" />
+                </div>
+                <span className="truncate max-w-[70px] xs:max-w-[95px] sm:max-w-[130px]">
+                  {selectedPg ? selectedPg.name : "My PG"}
+                </span>
+                <ChevronDown className="h-3 w-3 text-teal-200 shrink-0" />
+              </button>
             </div>
           </div>
 
@@ -477,37 +439,14 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
                   className="relative group p-0.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 hover:border-emerald-300 transition-all shadow-md shrink-0 cursor-pointer"
                   aria-label="Open Ease Buddy AI"
                 >
-                  <img
-                    src={mascotRent}
-                    alt="Ease Buddy"
-                    className="h-7 w-7 sm:h-8 sm:w-8 rounded-full object-cover object-top ring-2 ring-emerald-400 group-hover:scale-105 transition-transform"
-                  />
+                  <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-teal-600 text-white ring-2 ring-emerald-400 group-hover:scale-105 transition-transform">
+                    <Sparkles className="h-4 w-4" />
+                  </div>
                   <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-700 ring-2 ring-slate-900" aria-hidden="true" />
                 </button>
               </TooltipTrigger>
               <TooltipContent className="text-xs bg-slate-900 text-white border-slate-700">
                 Ask Ease Buddy AI operational questions
-              </TooltipContent>
-            </Tooltip>
-
-            {/* Theme Toggle Button (Tablet & Desktop) */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={() => setIsDark((v) => !v)}
-                  className="hidden sm:flex h-9 w-9 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white items-center justify-center transition-all shadow-xs hover:scale-105 cursor-pointer shrink-0"
-                  aria-label="Toggle light or dark appearance"
-                >
-                  {isDark ? (
-                    <Sun className="h-4 w-4 text-amber-300" />
-                  ) : (
-                    <Moon className="h-4 w-4 text-teal-200" />
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent className="text-xs bg-slate-900 text-white border-slate-700">
-                {isDark ? "Switch to light mode" : "Switch to dark mode"}
               </TooltipContent>
             </Tooltip>
 

@@ -1,21 +1,18 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useApp } from "@/context/AppContext";
-import { motion, AnimatePresence, cubicBezier } from "framer-motion";
+import { motion, cubicBezier } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import {
   MapPin,
-  CheckCircle2,
   Building2,
   ArrowLeft,
   ArrowRight,
   ShieldCheck,
-  Globe,
   Loader2,
   Plus,
   ChevronRight,
@@ -26,7 +23,6 @@ import {
   Check,
   Building,
   Home,
-  CheckCircle,
 } from "lucide-react";
 import pgeaseLogo from "@/assets/pgease-logo.jpg";
 import { toast } from "@/components/ui/use-toast";
@@ -68,10 +64,10 @@ function WhatsAppIcon({ size = 16, className = "" }: { size?: number; className?
 const EASE = cubicBezier(0.16, 1, 0.3, 1);
 
 const stepMotion = {
-  initial: { opacity: 0, y: 12 },
+  initial: { opacity: 0, y: 10 },
   animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -12 },
-  transition: { duration: 0.25, ease: EASE },
+  exit: { opacity: 0, y: -10 },
+  transition: { duration: 0.22, ease: EASE },
 };
 
 /** Bed range values aligned with Figma / API examples */
@@ -89,8 +85,6 @@ const TEXTS = {
     stepBadge: "STEP 1 OF 1 • INSTANT SETUP",
     step2Title: "Tell us about your PG",
     step2Sub: "Enter your property details below to configure rooms, beds, and automated WhatsApp rent collection.",
-    proTrialTitle: "✨ 45-Day Free Pro Trial Included",
-    proTrialDesc: "Unlimited tenant onboarding, WhatsApp rent reminders, digital KYC, automated receipts, and room allocation at zero cost during your trial.",
     ownerName: "Your Full Name (Owner Name)",
     ownerNamePlaceholder: "e.g. Rahul Sharma",
     ownerNameHint: "Printed on official rent receipts, tenant verification forms, and owner profile.",
@@ -99,7 +93,16 @@ const TEXTS = {
     pgType: "PG Type",
     selectBedRange: "Total Bed Capacity",
     addressLabel: "PG Address & Location",
-    addressPlaceholder: "Complete building address (street, area, landmark, city, state, 6-digit pincode)",
+    addressLine1Label: "Address Line 1",
+    addressLine1Placeholder: "Flat / House / Building No.",
+    streetLabel: "Street / Area / Landmark",
+    streetPlaceholder: "Street name, Sector, Landmark",
+    cityLabel: "City",
+    cityPlaceholder: "e.g. Noida / Bengaluru",
+    stateLabel: "State",
+    statePlaceholder: "e.g. Uttar Pradesh",
+    pincodeLabel: "Pin Code",
+    pincodePlaceholder: "6-digit PIN",
     useLocation: "Use current location",
     locating: "Detecting GPS…",
     goToDashboard: "Go to Dashboard",
@@ -110,23 +113,20 @@ const TEXTS = {
     secureFooter: "256-bit Bank-Grade Encryption • Your Property & Tenant Data is Strictly Private",
     selectTypePlaceholder: "Select type",
     selectRangePlaceholder: "Choose range",
-    locationDenied: "Location permission denied. Add a full address with a 6-digit pincode.",
+    locationDenied: "Location permission denied. Please enter address and 6-digit pincode manually.",
     locationFailed: "Could not get location. Try again or enter address with pincode.",
-    geocodeFailed: "Could not find that address. Check the address or use current location.",
-    needPinOrLocation: "Enter a 6-digit pincode in the address or use current location.",
+    geocodeFailed: "Could not find that address. Please check city and 6-digit pincode.",
+    needPinOrLocation: "Please enter a valid 6-digit pincode.",
     loadTypesError: "Could not load property types. Using default.",
     propertiesTitle: "Your Properties / PGs",
     propertiesSub: "Select a PG to open its dashboard, or set up a new property.",
     addNewPg: "Add Another PG / Property",
-    gpsDetected: "GPS Location Verified",
   },
   hi: {
     portalBadge: "ओनर ऑनबोर्डिंग",
     stepBadge: "चरण 1 का 1 • त्वरित सेटअप",
     step2Title: "अपने PG के बारे में बताएं",
     step2Sub: "रूम, बेड और ऑटोमैटिक व्हाट्सएप किराया वसूली शुरू करने के लिए नीचे अपनी प्रॉपर्टी का विवरण दें।",
-    proTrialTitle: "✨ 45 दिनों का मुफ़्त Pro ट्रायल शामिल",
-    proTrialDesc: "ट्रायल के दौरान असीमित किरायेदार ऑनबोर्डिंग, व्हाट्सएप किराया रिमाइंडर, डिजिटल केवाईसी और रसीदें पूरी तरह मुफ़्त।",
     ownerName: "आपका पूरा नाम (मालिक का नाम)",
     ownerNamePlaceholder: "उदा. राहुल शर्मा",
     ownerNameHint: "किराया रसीदों, किरायेदार केवाईसी और ओनर प्रोफ़ाइल पर दिखाई देगा।",
@@ -135,7 +135,16 @@ const TEXTS = {
     pgType: "PG का प्रकार",
     selectBedRange: "कुल बेड क्षमता",
     addressLabel: "PG का पता और लोकेशन",
-    addressPlaceholder: "पूरा पता (गली, मोहल्ला, लैंडमार्क, शहर, राज्य, 6-अंकीय पिनकोड)",
+    addressLine1Label: "पता लाइन 1",
+    addressLine1Placeholder: "मकान / फ्लैट / बिल्डिंग नंबर",
+    streetLabel: "गली / मोहल्ला / लैंडमार्क",
+    streetPlaceholder: "सड़क, सेक्टर या लैंडमार्क",
+    cityLabel: "शहर",
+    cityPlaceholder: "उदा. नोएडा / बेंगलुरु",
+    stateLabel: "राज्य",
+    statePlaceholder: "उदा. उत्तर प्रदेश",
+    pincodeLabel: "पिन कोड",
+    pincodePlaceholder: "6-अंकीय पिनकोड",
     useLocation: "करंट लोकेशन उपयोग करें",
     locating: "लोकेशन मिल रही है…",
     goToDashboard: "डैशबोर्ड पर जाएं",
@@ -146,15 +155,14 @@ const TEXTS = {
     secureFooter: "256-बिट बैंक-ग्रेड एन्क्रिप्शन • आपकी प्रॉपर्टी और किरायेदार का डेटा सुरक्षित है",
     selectTypePlaceholder: "प्रकार चुनें",
     selectRangePlaceholder: "रेंज चुनें",
-    locationDenied: "लोकेशन अनुमति नहीं मिली। पते में 6 अंकों का पिनकोड जोड़ें।",
+    locationDenied: "लोकेशन अनुमति नहीं मिली। कृपया पता और 6 अंकों का पिनकोड स्वयं दर्ज करें।",
     locationFailed: "लोकेशन नहीं मिल सकी। फिर कोशिश करें या पिनकोड सहित पता दर्ज करें।",
-    geocodeFailed: "पता नहीं मिला। पता जाँचें या करंट लोकेशन उपयोग करें।",
-    needPinOrLocation: "पते में 6 अंकों का पिनकोड दें या करंट लोकेशन उपयोग करें।",
+    geocodeFailed: "पता नहीं मिला। कृपया शहर और 6 अंकों का पिनकोड जांचें।",
+    needPinOrLocation: "कृपया मान्य 6-अंकीय पिनकोड दर्ज करें।",
     loadTypesError: "प्रकार लोड नहीं हो सके। डिफ़ॉल्ट उपयोग हो रहा है।",
     propertiesTitle: "आपकी प्रॉपर्टीज / PGs",
     propertiesSub: "डैशबोर्ड खोलने के लिए अपनी प्रॉपर्टी चुनें या नई जोड़ें।",
     addNewPg: "नई प्रॉपर्टी / PG जोड़ें",
-    gpsDetected: "जीपीएस लोकेशन सत्यापित",
   },
 };
 
@@ -248,21 +256,21 @@ const getPropertyTypeIcon = (name: string, active: boolean) => {
   const lower = name.toLowerCase();
   if (lower.includes("boy")) {
     return (
-      <div className={`h-9 w-9 rounded-xl flex items-center justify-center transition-colors ${active ? "bg-[#008080] text-white" : "bg-blue-50 text-blue-600"}`}>
-        <User className="h-5 w-5" />
+      <div className={`h-8 w-8 rounded-lg flex items-center justify-center transition-colors shrink-0 ${active ? "bg-[#008080] text-white" : "bg-blue-50 text-blue-600"}`}>
+        <User className="h-4 w-4" />
       </div>
     );
   }
   if (lower.includes("girl") || lower.includes("female")) {
     return (
-      <div className={`h-9 w-9 rounded-xl flex items-center justify-center transition-colors ${active ? "bg-[#008080] text-white" : "bg-pink-50 text-pink-600"}`}>
-        <User className="h-5 w-5" />
+      <div className={`h-8 w-8 rounded-lg flex items-center justify-center transition-colors shrink-0 ${active ? "bg-[#008080] text-white" : "bg-pink-50 text-pink-600"}`}>
+        <User className="h-4 w-4" />
       </div>
     );
   }
   return (
-    <div className={`h-9 w-9 rounded-xl flex items-center justify-center transition-colors ${active ? "bg-[#008080] text-white" : "bg-teal-50 text-[#008080]"}`}>
-      <Building className="h-5 w-5" />
+    <div className={`h-8 w-8 rounded-lg flex items-center justify-center transition-colors shrink-0 ${active ? "bg-[#008080] text-white" : "bg-teal-50 text-[#008080]"}`}>
+      <Building className="h-4 w-4" />
     </div>
   );
 };
@@ -283,12 +291,14 @@ const Onboarding = () => {
   const initialOwnerName = currentOwner?.name && !currentOwner.name.startsWith("user_") ? currentOwner.name : "";
   const [ownerName, setOwnerName] = useState(initialOwnerName);
   const [pgName, setPgName] = useState("");
-  const [address, setAddress] = useState("");
+
+  // Structured address fields
   const [addressLine1, setAddressLine1] = useState("");
-  const [addressLine2, setAddressLine2] = useState("");
+  const [street, setStreet] = useState("");
   const [city, setCity] = useState("");
   const [stateName, setStateName] = useState("");
   const [pincode, setPincode] = useState("");
+
   const [propertyTypeId, setPropertyTypeId] = useState(DEFAULT_PROPERTY_TYPE_ID);
   const [bedRange, setBedRange] = useState("");
   const [latitude, setLatitude] = useState<number | null>(null);
@@ -336,9 +346,8 @@ const Onboarding = () => {
       setLongitude(lon);
       const rev = await reverseGeocode(lat, lon);
       if (rev) {
-        if (rev.displayName) setAddress(rev.displayName);
         if (rev.addressLine1) setAddressLine1(rev.addressLine1);
-        if (rev.addressLine2) setAddressLine2(rev.addressLine2);
+        if (rev.addressLine2) setStreet(rev.addressLine2);
         if (rev.city) setCity(rev.city);
         if (rev.state) setStateName(rev.state);
         const pin = rev.postcode || extractIndianPincode(rev.displayName) || "";
@@ -356,9 +365,9 @@ const Onboarding = () => {
   }, [T.locationDenied, T.locationFailed, lang]);
 
   const canSubmit = useMemo(() => {
-    const hasAddress = Boolean(address.trim() || (addressLine1.trim() && city.trim() && pincode.trim()));
+    const hasAddress = Boolean(addressLine1.trim() && city.trim() && pincode.trim().length === 6);
     return Boolean(ownerName.trim() && pgName.trim() && hasAddress && propertyTypeId && bedRange);
-  }, [ownerName, pgName, address, addressLine1, city, pincode, propertyTypeId, bedRange]);
+  }, [ownerName, pgName, addressLine1, city, pincode, propertyTypeId, bedRange]);
 
   const handlePropertyContinue = async () => {
     if (!canSubmit) return;
@@ -368,7 +377,16 @@ const Onboarding = () => {
       return;
     }
 
-    const fullAddress = address.trim() || [addressLine1.trim(), addressLine2.trim(), city.trim(), stateName.trim(), pincode.trim()].filter(Boolean).join(", ");
+    const fullAddress = [
+      addressLine1.trim(),
+      street.trim(),
+      city.trim(),
+      stateName.trim(),
+      pincode.trim(),
+    ]
+      .filter(Boolean)
+      .join(", ");
+
     let lat = latitude;
     let lng = longitude;
     let pin = pincode.trim() || locationPin.trim() || extractIndianPincode(fullAddress) || "";
@@ -377,17 +395,24 @@ const Onboarding = () => {
       setIsSubmitting(true);
 
       if (lat == null || lng == null) {
-        const geo = await forwardGeocodeIndia(fullAddress);
-        if (!geo) {
-          toast({ title: T.geocodeFailed, variant: "destructive" });
-          return;
+        let geo = await forwardGeocodeIndia(fullAddress);
+        if (!geo && city.trim() && pin) {
+          geo = await forwardGeocodeIndia(`${city.trim()} ${pin}, India`);
         }
-        lat = geo.lat;
-        lng = geo.lon;
-        if (!pin && geo.postcode) pin = geo.postcode;
-        setLatitude(lat);
-        setLongitude(lng);
-        if (geo.postcode) setLocationPin(geo.postcode);
+        if (!geo && pin) {
+          geo = await forwardGeocodeIndia(`${pin}, India`);
+        }
+        if (geo) {
+          lat = geo.lat;
+          lng = geo.lon;
+          if (!pin && geo.postcode) pin = geo.postcode;
+          setLatitude(lat);
+          setLongitude(lng);
+        } else {
+          // Default to center of India coordinates if geocoder times out so owner is not blocked
+          lat = 20.5937;
+          lng = 78.9629;
+        }
       }
 
       if (!pin || pin.length !== 6) {
@@ -398,8 +423,8 @@ const Onboarding = () => {
       const newPg = await createProperty({
         name: pgName.trim(),
         address: fullAddress,
-        latitude: lat,
-        longitude: lng,
+        latitude: lat ?? 20.5937,
+        longitude: lng ?? 78.9629,
         locationPin: pin,
         bedRange,
         propertyTypeId,
@@ -440,9 +465,9 @@ const Onboarding = () => {
       ];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFB] text-[#1F2937] flex flex-col font-poppins relative selection:bg-[#008080]/15 select-none overflow-x-hidden">
+    <div className="h-screen max-h-screen bg-[#F8FAFB] text-[#1F2937] flex flex-col font-poppins relative selection:bg-[#008080]/15 select-none overflow-hidden">
       {/* Soft Brand Teal Gradient Aura at top */}
-      <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-[#E6F3F3] via-[#F4F9F9] to-[#F8FAFB] pointer-events-none" />
+      <div className="absolute top-0 inset-x-0 h-72 bg-gradient-to-b from-[#E6F3F3] via-[#F4F9F9] to-[#F8FAFB] pointer-events-none" />
 
       {/* Subtle micro dot grid */}
       <div
@@ -454,21 +479,21 @@ const Onboarding = () => {
       />
 
       {/* ================= TOP NAVBAR ================= */}
-      <header className="w-full bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 sm:px-8 py-3 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+      <header className="w-full shrink-0 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 sm:px-8 py-2.5 flex items-center justify-between z-30 shadow-2xs">
         {/* Brand Logo & Portal Badge */}
         <div className="flex items-center gap-2.5 sm:gap-3.5">
           <div className="flex items-center gap-2">
             <img
               src={pgeaseLogo}
               alt="PG Ease"
-              className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl shadow-xs object-cover"
+              className="h-8 w-8 rounded-xl shadow-2xs object-cover"
             />
             <span className="font-extrabold text-[16px] sm:text-[18px] tracking-tight text-[#1F2937]">
               PG Ease
             </span>
           </div>
 
-          <span className="hidden sm:inline-flex px-2.5 py-0.5 rounded-full border border-[#008080]/30 text-[#008080] bg-[#E8F4F4] text-[10px] sm:text-[11px] font-bold tracking-wider uppercase">
+          <span className="hidden sm:inline-flex px-2.5 py-0.5 rounded-full border border-[#008080]/30 text-[#008080] bg-[#E8F4F4] text-[10px] font-bold tracking-wider uppercase">
             {T.portalBadge}
           </span>
         </div>
@@ -480,7 +505,7 @@ const Onboarding = () => {
             href="https://wa.me/917701953356"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 hover:bg-gray-100 border border-gray-200/80 text-xs font-semibold text-gray-700 transition-colors"
+            className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-50 hover:bg-gray-100 border border-gray-200/80 text-xs font-semibold text-gray-700 transition-colors"
           >
             <WhatsAppIcon size={14} />
             <span className="text-gray-500 font-medium">Support:</span>
@@ -494,7 +519,7 @@ const Onboarding = () => {
                 key={l}
                 type="button"
                 onClick={() => setLanguage(l === "en" ? "en-US" : "hi-IN")}
-                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                className={`px-3 py-0.5 rounded-full text-xs font-semibold transition-all ${
                   lang === l
                     ? "bg-[#008080] text-white shadow-xs"
                     : "text-gray-600 hover:text-gray-900"
@@ -519,26 +544,26 @@ const Onboarding = () => {
         </div>
       </header>
 
-      {/* ================= MAIN ONBOARDING CONTENT ================= */}
-      <main className="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 relative z-10 flex flex-col justify-center">
+      {/* ================= MAIN ONBOARDING CONTENT (100vh Responsive) ================= */}
+      <main className="flex-1 min-h-0 w-full max-w-2xl mx-auto px-4 sm:px-6 py-2.5 sm:py-3.5 flex flex-col justify-center overflow-y-auto z-10">
         {!showForm && properties.length > 0 ? (
           /* ================= RETURNING OWNER PROPERTY PICKER ================= */
-          <motion.div {...stepMotion} className="space-y-6">
-            <div className="text-center space-y-1.5">
-              <div className="inline-flex h-12 w-12 rounded-2xl bg-teal-50 border border-teal-200/80 items-center justify-center text-[#008080] shadow-2xs mb-1">
-                <Building2 className="h-6 w-6" />
+          <motion.div {...stepMotion} className="space-y-4 my-auto">
+            <div className="text-center space-y-1">
+              <div className="inline-flex h-11 w-11 rounded-2xl bg-teal-50 border border-teal-200/80 items-center justify-center text-[#008080] shadow-2xs mb-0.5">
+                <Building2 className="h-5 w-5" />
               </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">
                 {T.propertiesTitle}
               </h1>
-              <p className="text-sm text-gray-500 max-w-md mx-auto">
+              <p className="text-xs text-gray-500 max-w-md mx-auto">
                 {T.propertiesSub}
               </p>
             </div>
 
-            <Card className="rounded-3xl border border-gray-200/80 bg-white shadow-xl shadow-gray-200/40 overflow-hidden">
-              <CardContent className="p-6 sm:p-8 space-y-4">
-                <div className="grid gap-3 max-h-[380px] overflow-y-auto pr-1">
+            <Card className="rounded-2xl border border-gray-200/80 bg-white shadow-lg shadow-gray-200/40 overflow-hidden">
+              <CardContent className="p-5 sm:p-6 space-y-3">
+                <div className="grid gap-2.5 max-h-[320px] overflow-y-auto pr-1">
                   {properties.map((pg) => {
                     const initials = pg.name
                       .split(" ")
@@ -555,24 +580,24 @@ const Onboarding = () => {
                           setSelectedPgId(pg.id);
                           navigate("/dashboard", { replace: true });
                         }}
-                        className="w-full flex items-center justify-between p-4 rounded-2xl border border-gray-200/90 bg-white hover:border-[#008080] hover:bg-teal-50/20 hover:shadow-sm transition-all text-left group"
+                        className="w-full flex items-center justify-between p-3.5 rounded-xl border border-gray-200/90 bg-white hover:border-[#008080] hover:bg-teal-50/20 hover:shadow-xs transition-all text-left group"
                       >
-                        <div className="flex items-center gap-3.5 min-w-0">
-                          <div className="h-11 w-11 rounded-2xl bg-[#E8F4F4] border border-[#008080]/20 flex items-center justify-center text-sm font-bold text-[#008080] group-hover:scale-105 transition-transform shrink-0">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="h-10 w-10 rounded-xl bg-[#E8F4F4] border border-[#008080]/20 flex items-center justify-center text-xs font-bold text-[#008080] group-hover:scale-105 transition-transform shrink-0">
                             {initials || "PG"}
                           </div>
                           <div className="min-w-0">
                             <p className="text-sm font-bold text-gray-900 group-hover:text-[#008080] transition-colors truncate">
                               {pg.name}
                             </p>
-                            <p className="text-xs text-gray-500 truncate mt-0.5 max-w-[280px] sm:max-w-md">
+                            <p className="text-xs text-gray-500 truncate mt-0.5 max-w-[260px] sm:max-w-md">
                               {pg.address}
                             </p>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
-                          <span className="hidden sm:inline-flex text-[11px] font-bold text-[#008080] bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200/60">
+                          <span className="hidden sm:inline-flex text-[10px] font-bold text-[#008080] bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200/60">
                             Active
                           </span>
                           <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-[#008080] group-hover:translate-x-0.5 transition-all" />
@@ -592,7 +617,7 @@ const Onboarding = () => {
                       setShowForm(true);
                     }
                   }}
-                  className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-gray-300 hover:border-[#008080] hover:bg-teal-50/30 text-gray-700 hover:text-[#008080] font-bold text-sm transition-all mt-4 active:scale-[0.99]"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-gray-300 hover:border-[#008080] hover:bg-teal-50/30 text-gray-700 hover:text-[#008080] font-bold text-xs transition-all mt-2 active:scale-[0.99]"
                 >
                   <Plus className="h-4 w-4 text-[#008080]" />
                   <span>{T.addNewPg}</span>
@@ -602,96 +627,67 @@ const Onboarding = () => {
           </motion.div>
         ) : (
           /* ================= MAIN PG OWNER ONBOARDING FORM ================= */
-          <motion.div {...stepMotion} className="space-y-6">
-            {/* Top Page Header */}
-            <div className="text-center space-y-1.5">
-              <div className="inline-flex h-12 w-12 rounded-2xl bg-[#E8F4F4] border border-[#008080]/20 items-center justify-center text-[#008080] shadow-xs mb-1">
-                <Building2 className="h-6 w-6" />
-              </div>
-
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8F4F4] border border-[#008080]/30 text-[#008080] text-[10px] sm:text-[11px] font-bold tracking-wider uppercase mb-1">
+          <motion.div {...stepMotion} className="space-y-3 my-auto py-1">
+            {/* Top Page Header (Compact) */}
+            <div className="text-center space-y-0.5">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#E8F4F4] border border-[#008080]/30 text-[#008080] text-[10px] font-bold tracking-wider uppercase mb-0.5">
                 <Sparkles className="h-3 w-3" />
                 <span>{T.stepBadge}</span>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1F2937] tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-[#1F2937] tracking-tight">
                 {T.step2Title}
               </h1>
-              <p className="text-xs sm:text-sm text-gray-500 max-w-lg mx-auto leading-relaxed">
+              <p className="text-xs text-gray-500 max-w-md mx-auto">
                 {T.step2Sub}
               </p>
             </div>
 
-            {/* 45-Day Pro Trial Active Announcement Card */}
-            <div className="rounded-2xl border border-amber-200/90 bg-gradient-to-r from-amber-50 via-amber-50/60 to-teal-50/40 p-4 sm:p-4.5 text-xs shadow-xs flex items-start gap-3">
-              <div className="h-9 w-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
-                <Sparkles className="h-4.5 w-4.5 text-amber-700" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-bold text-amber-950 text-sm">
-                    {T.proTrialTitle}
-                  </span>
-                  <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full bg-amber-200/70 border border-amber-300 text-amber-900 text-[10px] font-extrabold uppercase tracking-wider">
-                    PRO TRIAL
-                  </span>
-                </div>
-                <p className="text-[11.5px] sm:text-xs text-amber-900/80 mt-1 leading-relaxed">
-                  {T.proTrialDesc}
-                </p>
-              </div>
-            </div>
-
-            {/* Main Form Card Container */}
-            <Card className="rounded-3xl border border-gray-200/80 bg-white shadow-xl shadow-gray-200/40 overflow-hidden">
-              <CardContent className="p-6 sm:p-8 space-y-6">
-                {/* 1. Owner Full Name */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="owner-name" className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+            {/* Main Form Card Container (Fits 100vh) */}
+            <Card className="rounded-2xl border border-gray-200/80 bg-white shadow-lg shadow-gray-200/40">
+              <CardContent className="p-4 sm:p-5 space-y-3">
+                {/* 1. Owner Full Name & PG Name Side-by-Side */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="owner-name" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
                       <User className="h-3.5 w-3.5 text-[#008080]" />
                       <span>{T.ownerName}</span>
                       <span className="text-red-500">*</span>
                     </Label>
+                    <Input
+                      id="owner-name"
+                      value={ownerName}
+                      onChange={(e) => setOwnerName(e.target.value)}
+                      placeholder={T.ownerNamePlaceholder}
+                      className="h-9.5 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs sm:text-sm font-medium text-gray-900 transition-all"
+                    />
                   </div>
-                  <Input
-                    id="owner-name"
-                    value={ownerName}
-                    onChange={(e) => setOwnerName(e.target.value)}
-                    placeholder={T.ownerNamePlaceholder}
-                    className="h-12 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-4 focus:ring-[#008080]/10 text-sm font-medium text-gray-900 transition-all"
-                  />
-                  <p className="text-[11px] text-gray-400 leading-tight">
-                    {T.ownerNameHint}
-                  </p>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="pg-name" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                      <Building2 className="h-3.5 w-3.5 text-[#008080]" />
+                      <span>{T.pgName}</span>
+                      <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="pg-name"
+                      value={pgName}
+                      onChange={(e) => setPgName(e.target.value)}
+                      placeholder={T.pgNamePlaceholder}
+                      className="h-9.5 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs sm:text-sm font-medium text-gray-900 transition-all"
+                    />
+                  </div>
                 </div>
 
-                {/* 2. PG Name */}
-                <div className="space-y-1.5">
-                  <Label htmlFor="pg-name" className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-                    <Building2 className="h-3.5 w-3.5 text-[#008080]" />
-                    <span>{T.pgName}</span>
-                    <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="pg-name"
-                    value={pgName}
-                    onChange={(e) => setPgName(e.target.value)}
-                    placeholder={T.pgNamePlaceholder}
-                    className="h-12 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-4 focus:ring-[#008080]/10 text-sm font-medium text-gray-900 transition-all"
-                  />
-                </div>
-
-                {/* 3. Property Type Selection Tiles */}
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                {/* 2. Property Type Selection Tiles */}
+                <div className="space-y-1">
+                  <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
                     <Home className="h-3.5 w-3.5 text-[#008080]" />
                     <span>{T.pgType}</span>
                     <span className="text-red-500">*</span>
                   </Label>
 
-                  {/* Interactive Visual Tiles */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <div className="grid grid-cols-3 gap-2">
                     {availablePropertyTypes.slice(0, 3).map((type) => {
                       const isSelected = propertyTypeId === type.id;
                       return (
@@ -699,21 +695,21 @@ const Onboarding = () => {
                           key={type.id}
                           type="button"
                           onClick={() => setPropertyTypeId(type.id)}
-                          className={`flex items-center gap-3 p-3 rounded-2xl border text-left transition-all relative ${
+                          className={`flex items-center gap-2 p-2 rounded-xl border text-left transition-all ${
                             isSelected
-                              ? "border-[#008080] bg-teal-50/50 shadow-xs ring-2 ring-[#008080]/15"
-                              : "border-gray-200/90 bg-white hover:border-gray-300 hover:bg-gray-50/60"
+                              ? "border-[#008080] bg-teal-50/60 shadow-2xs ring-1 ring-[#008080]"
+                              : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/60"
                           }`}
                         >
                           {getPropertyTypeIcon(type.name, isSelected)}
                           <div className="min-w-0 flex-1">
-                            <p className={`text-xs font-bold leading-tight ${isSelected ? "text-[#008080]" : "text-gray-800"}`}>
+                            <p className={`text-xs font-bold leading-tight truncate ${isSelected ? "text-[#008080]" : "text-gray-800"}`}>
                               {type.name}
                             </p>
                           </div>
                           {isSelected && (
-                            <div className="h-5 w-5 rounded-full bg-[#008080] text-white flex items-center justify-center shrink-0">
-                              <Check className="h-3 w-3 stroke-[3]" />
+                            <div className="h-4 w-4 rounded-full bg-[#008080] text-white flex items-center justify-center shrink-0">
+                              <Check className="h-2.5 w-2.5 stroke-[3]" />
                             </div>
                           )}
                         </button>
@@ -721,10 +717,9 @@ const Onboarding = () => {
                     })}
                   </div>
 
-                  {/* Fallback Select dropdown if there are more than 3 property types */}
                   {availablePropertyTypes.length > 3 && (
                     <Select value={propertyTypeId} onValueChange={setPropertyTypeId}>
-                      <SelectTrigger className="h-11 rounded-xl border-gray-200 bg-[#F9FAFB] text-sm text-gray-800 mt-2">
+                      <SelectTrigger className="h-9 rounded-xl border-gray-200 bg-[#F9FAFB] text-xs text-gray-800 mt-1">
                         <SelectValue placeholder={T.selectTypePlaceholder} />
                       </SelectTrigger>
                       <SelectContent>
@@ -738,16 +733,15 @@ const Onboarding = () => {
                   )}
                 </div>
 
-                {/* 4. Bed Capacity / Range Selection */}
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                {/* 3. Bed Capacity / Range Selection */}
+                <div className="space-y-1">
+                  <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
                     <BedDouble className="h-3.5 w-3.5 text-[#008080]" />
                     <span>{T.selectBedRange}</span>
                     <span className="text-red-500">*</span>
                   </Label>
 
-                  {/* Visual Pill Chips */}
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  <div className="grid grid-cols-5 gap-1.5">
                     {bedOptions.map((opt) => {
                       const isSelected = bedRange === opt.value;
                       return (
@@ -755,9 +749,9 @@ const Onboarding = () => {
                           key={opt.value}
                           type="button"
                           onClick={() => setBedRange(opt.value)}
-                          className={`h-11 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                          className={`h-9 rounded-xl border text-xs font-bold transition-all flex items-center justify-center ${
                             isSelected
-                              ? "bg-[#008080] border-[#008080] text-white shadow-xs"
+                              ? "bg-[#008080] border-[#008080] text-white shadow-2xs"
                               : "bg-[#F9FAFB] border-gray-200 text-gray-700 hover:border-teal-300 hover:bg-teal-50/20"
                           }`}
                         >
@@ -768,10 +762,10 @@ const Onboarding = () => {
                   </div>
                 </div>
 
-                {/* 5. Address & GPS Location */}
-                <div className="space-y-2 pt-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <Label htmlFor="pg-address" className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                {/* 4. Structured Address Fields (Address Line 1, Street, City, State, Pin Code) */}
+                <div className="space-y-2 pt-0.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
                       <MapPin className="h-3.5 w-3.5 text-[#008080]" />
                       <span>{T.addressLabel}</span>
                       <span className="text-red-500">*</span>
@@ -782,12 +776,12 @@ const Onboarding = () => {
                       type="button"
                       onClick={() => void handleUseLocation()}
                       disabled={locating}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#E8F4F4] hover:bg-[#d8eded] border border-[#008080]/30 text-xs font-bold text-[#008080] shadow-2xs transition-all active:scale-95 disabled:opacity-50"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#E8F4F4] hover:bg-[#d8eded] border border-[#008080]/30 text-[11px] font-bold text-[#008080] shadow-2xs transition-all active:scale-95 disabled:opacity-50"
                       title="Auto-detect address via GPS"
                     >
                       {locating ? (
                         <>
-                          <Loader2 className="h-3.5 w-3.5 animate-spin text-[#008080]" />
+                          <Loader2 className="h-3 w-3 animate-spin text-[#008080]" />
                           <span>{T.locating}</span>
                         </>
                       ) : (
@@ -799,46 +793,89 @@ const Onboarding = () => {
                     </button>
                   </div>
 
-                  <Textarea
-                    id="pg-address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder={T.addressPlaceholder}
-                    rows={3}
-                    className="rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-4 focus:ring-[#008080]/10 text-sm font-medium text-gray-900 transition-all resize-none"
-                  />
-
-                  {/* GPS & Pincode Status Tag */}
-                  {(latitude != null || pincode) && (
-                    <div className="rounded-xl bg-emerald-50 border border-emerald-200/80 p-2.5 flex items-center gap-2 text-xs text-emerald-800">
-                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
-                      <div className="min-w-0 flex-1 truncate">
-                        <span className="font-bold">{T.gpsDetected}: </span>
-                        {latitude != null && longitude != null && (
-                          <span className="tabular-nums font-mono text-[11px] text-emerald-700 mr-2">
-                            {latitude.toFixed(4)}, {longitude.toFixed(4)}
-                          </span>
-                        )}
-                        {pincode && (
-                          <span className="font-bold text-emerald-900">
-                            PIN: {pincode}
-                          </span>
-                        )}
-                      </div>
+                  {/* Row 1: Address Line 1 & Street / Area */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="address-line-1" className="text-[11px] font-medium text-gray-500">
+                        {T.addressLine1Label} <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="address-line-1"
+                        value={addressLine1}
+                        onChange={(e) => setAddressLine1(e.target.value)}
+                        placeholder={T.addressLine1Placeholder}
+                        className="h-9 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs text-gray-900 transition-all"
+                      />
                     </div>
-                  )}
+
+                    <div className="space-y-0.5">
+                      <Label htmlFor="street" className="text-[11px] font-medium text-gray-500">
+                        {T.streetLabel}
+                      </Label>
+                      <Input
+                        id="street"
+                        value={street}
+                        onChange={(e) => setStreet(e.target.value)}
+                        placeholder={T.streetPlaceholder}
+                        className="h-9 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs text-gray-900 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 2: City, State, Pin Code */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="city" className="text-[11px] font-medium text-gray-500">
+                        {T.cityLabel} <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="city"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        placeholder={T.cityPlaceholder}
+                        className="h-9 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs text-gray-900 transition-all"
+                      />
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <Label htmlFor="state" className="text-[11px] font-medium text-gray-500">
+                        {T.stateLabel}
+                      </Label>
+                      <Input
+                        id="state"
+                        value={stateName}
+                        onChange={(e) => setStateName(e.target.value)}
+                        placeholder={T.statePlaceholder}
+                        className="h-9 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs text-gray-900 transition-all"
+                      />
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <Label htmlFor="pincode" className="text-[11px] font-medium text-gray-500">
+                        {T.pincodeLabel} <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="pincode"
+                        value={pincode}
+                        maxLength={6}
+                        onChange={(e) => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        placeholder={T.pincodePlaceholder}
+                        className="h-9 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs font-mono text-gray-900 transition-all"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Form Action Buttons */}
-                <div className="flex items-center gap-3 pt-3">
+                <div className="flex items-center gap-2.5 pt-2">
                   {properties.length > 0 && (
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => setShowForm(false)}
-                      className="h-12 px-5 rounded-xl border-gray-200 bg-white hover:bg-gray-50 text-xs font-bold text-gray-700 transition-all"
+                      className="h-10.5 px-4 rounded-xl border-gray-200 bg-white hover:bg-gray-50 text-xs font-bold text-gray-700 transition-all"
                     >
-                      <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
+                      <ArrowLeft className="h-3.5 w-3.5 mr-1" />
                       <span>{T.back}</span>
                     </Button>
                   )}
@@ -847,7 +884,7 @@ const Onboarding = () => {
                     type="button"
                     onClick={() => void handlePropertyContinue()}
                     disabled={!canSubmit || isSubmitting}
-                    className="flex-1 h-12 rounded-xl bg-[#008080] hover:bg-[#006e6e] text-white text-sm font-bold shadow-md shadow-teal-700/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-40"
+                    className="flex-1 h-10.5 rounded-xl bg-[#008080] hover:bg-[#006e6e] text-white text-xs sm:text-sm font-bold shadow-md shadow-teal-700/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-40"
                   >
                     {isSubmitting ? (
                       <>
@@ -866,8 +903,8 @@ const Onboarding = () => {
             </Card>
 
             {/* Trust and Security Guarantee */}
-            <div className="flex items-center justify-center gap-2 text-center text-xs text-gray-400 pt-1">
-              <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+            <div className="flex items-center justify-center gap-1.5 text-center text-[11px] text-gray-400">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
               <span>{T.secureFooter}</span>
             </div>
           </motion.div>

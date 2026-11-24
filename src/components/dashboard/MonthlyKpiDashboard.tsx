@@ -128,17 +128,12 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
           <Button
             size="sm"
             variant="outline"
-            className="text-xs h-8 gap-1.5 border-teal-600/30 text-teal-800 dark:text-teal-300 bg-teal-50/60 hover:bg-teal-100/70 font-semibold shadow-2xs rounded-lg transition-colors"
-            onClick={() => setStatementModalOpen(true)}
+            className="text-xs h-8 gap-1.5 border-[#008080]/30 text-[#008080] bg-[#E6F3F3] hover:bg-[#D9F3F3] font-semibold shadow-2xs rounded-lg transition-colors cursor-pointer"
+            onClick={() => navigate("/reports")}
           >
-            <FileSpreadsheet className="h-3.5 w-3.5 text-teal-700" />
-            Month-End Statement
+            <FileSpreadsheet className="h-3.5 w-3.5 text-[#008080]" />
+            View Reports
           </Button>
-          {!isProUser && (
-            <Badge className="bg-amber-50 text-amber-800 border-amber-200/80 gap-1 text-[11px] font-medium">
-              <Lock className="h-3 w-3 text-amber-600" /> Free Plan
-            </Badge>
-          )}
         </div>
       </div>
 
@@ -147,7 +142,7 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
         {/* 1. Collected (R2) */}
         <MetricDisplay
           label={`Collected (${period?.monthName.slice(0, 3) ?? "This Month"})`}
-          value={headline ? headline.collected.formatted : "—"}
+          value={headline?.collected.formatted ?? (isLoading ? "—" : "₹0")}
           subText="Cash received this month"
           formula={headline?.collected.formula}
           tone="success"
@@ -158,7 +153,7 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
         {/* 2. Pending This Month (R4) */}
         <MetricDisplay
           label={`Pending (${period?.monthName.slice(0, 3) ?? "This Month"})`}
-          value={headline ? headline.pendingThisMonth.formatted : "—"}
+          value={headline?.pendingThisMonth.formatted ?? (isLoading ? "—" : "₹0")}
           subText={headline && headline.pendingThisMonth.value > 0 ? "Awaiting collection" : "All cleared"}
           formula={headline?.pendingThisMonth.formula}
           tone={headline && headline.pendingThisMonth.value > 0 ? "warning" : "default"}
@@ -169,7 +164,7 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
         {/* 3. Collection % (R3) */}
         <MetricDisplay
           label="Collection %"
-          value={headline ? headline.collectionPercentage.formatted : "—"}
+          value={headline?.collectionPercentage.formatted ?? (isLoading ? "—" : "0%")}
           subText={
             headline
               ? `${headline.collectionPercentage.value}% of month's dues collected`
@@ -188,10 +183,9 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
         />
 
         {/* 4. Total Outstanding (R5) */}
-        {/* NOTE: Cumulative figure (e.g. ₹5,00,19,870) is raw backend seed/mock data accumulation across all historical billing cycles; flagged as a backend data issue. Frontend displays faithfully with full INR grouping. */}
         <MetricDisplay
           label="Total Outstanding"
-          value={headline ? headline.totalOutstanding.formatted : "—"}
+          value={headline?.totalOutstanding.formatted ?? (isLoading ? "—" : "₹0")}
           subText={
             headline && headline.totalOutstanding.activeTenantsAmount > 0
               ? `${formatInr(headline.totalOutstanding.activeTenantsAmount)} from active tenants`
@@ -209,7 +203,7 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
           value={
             headline
               ? `${headline.occupancy.occupiedBeds}/${headline.occupancy.totalBeds} beds`
-              : "—"
+              : (isLoading ? "—" : "0/0 beds")
           }
           subText={
             headline
@@ -224,7 +218,7 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
         {/* 6. Under Notice (O5) */}
         <MetricDisplay
           label="Under Notice"
-          value={headline ? String(headline.underNotice.count) : "—"}
+          value={headline ? String(headline.underNotice.count) : (isLoading ? "—" : "0")}
           subText={
             headline && headline.underNotice.count > 0
               ? `${headline.underNotice.count} vacating soon`
@@ -239,7 +233,7 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
         {/* 7. Open Complaints (C3) */}
         <MetricDisplay
           label="Open Complaints"
-          value={headline ? String(headline.openComplaints.count) : "—"}
+          value={headline ? String(headline.openComplaints.count) : (isLoading ? "—" : "0")}
           subText={
             headline && headline.openComplaints.count > 0
               ? `${headline.openComplaints.open} new, ${headline.openComplaints.inProgress} in progress`
@@ -254,7 +248,7 @@ export const MonthlyKpiDashboard: React.FC<MonthlyKpiDashboardProps> = ({
         {/* 8. Deposits Held (Liability) (R11) */}
         <MetricDisplay
           label="Deposits Held (Liability)"
-          value={headline ? headline.depositsHeld.formatted : "—"}
+          value={headline?.depositsHeld.formatted ?? (isLoading ? "—" : "₹0")}
           subText="Excluded from income"
           formula={headline?.depositsHeld.formula}
           badge={

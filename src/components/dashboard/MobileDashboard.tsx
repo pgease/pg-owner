@@ -9,12 +9,13 @@ import {
   Plus,
   RefreshCw,
   Search,
-  Settings,
   TriangleAlert,
   UserPlus,
   Users,
   Wallet,
   MessageSquare,
+  Menu,
+  Sparkles,
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { useDashboardData } from "@/components/dashboard/useDashboardData";
@@ -26,8 +27,6 @@ import { MonthlyKpiDashboard } from "@/components/dashboard/MonthlyKpiDashboard"
 import { PendingRentCard } from "@/components/dashboard/PendingRentCard";
 import { RoomGrid } from "@/components/dashboard/RoomGrid";
 import { OwnerSupportCommunityCards } from "@/components/dashboard/OwnerSupportCommunityCards";
-import { ThemeToggle } from "@/components/common/ThemeToggle";
-import mascotRent from "@/assets/mascot/mascot-rent.png";
 
 const MONTHS = [
   "January",
@@ -64,7 +63,7 @@ function dashValue(value: string | number | undefined | null, loading?: boolean)
 
 export function MobileDashboard() {
   const navigate = useNavigate();
-  const { properties, selectedPgId, setSelectedPgId } = useApp();
+  const { properties, selectedPgId, setIsPgSwitcherOpen, setIsOwnerDrawerOpen } = useApp();
   const list = Array.isArray(properties) ? properties : [];
   const selectedPg = list.find((p) => p.id === selectedPgId);
   const data = useDashboardData(selectedPgId);
@@ -72,7 +71,6 @@ export function MobileDashboard() {
   const { unreadCount } = useOwnerNotifications();
 
   const [query, setQuery] = useState("");
-  const [switcherOpen, setSwitcherOpen] = useState(false);
 
   const filteredActions = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -90,40 +88,48 @@ export function MobileDashboard() {
   return (
     <div className="md:hidden -mx-0 min-h-full bg-[var(--figma-dash-header-bg,#F0FFFF)]">
       <header
-        className="bg-[var(--figma-dash-header-bg,#F0FFFF)] px-4 pb-3"
+        className="bg-[var(--figma-dash-header-bg,#F0FFFF)] px-3 pb-3"
         style={{ paddingTop: "calc(var(--safe-top) + 8px)" }}
       >
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center justify-between gap-2">
+          {/* Hamburger Menu (O2) */}
           <button
             type="button"
-            className="flex min-w-0 flex-1 items-start gap-2.5 !h-auto !min-h-0 rounded-xl py-1 text-left"
-            onClick={() => setSwitcherOpen((v) => !v)}
-            aria-expanded={switcherOpen}
-            aria-haspopup="listbox"
+            onClick={() => setIsOwnerDrawerOpen(true)}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200/80 bg-white text-[#101010] shadow-2xs hover:bg-slate-50 transition-colors cursor-pointer"
+            aria-label="Open navigation menu"
           >
-            <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[#D9F3F3] text-[#184040]">
-              <Building2 className="h-5 w-5" strokeWidth={2} />
-            </span>
-            <span className="min-w-0">
-              <span className="flex items-center gap-1">
-                <span className="truncate text-[18px] font-semibold leading-6 text-[#101010]">
-                  {selectedPg?.name ?? "Select a PG"}
-                </span>
-                <ChevronDown className="h-4 w-4 shrink-0 text-[#101010]" />
-              </span>
-              <span className="mt-0.5 flex items-center gap-1 text-[12px] leading-4 text-[#636363]">
-                <MapPin className="h-3 w-3 shrink-0" />
-                <span className="truncate">
-                  {selectedPg?.address || "Add your property address"}
-                </span>
-              </span>
-            </span>
+            <Menu className="h-5 w-5" />
           </button>
 
-          <div className="flex shrink-0 items-center gap-1.5 pt-0.5">
+          {/* Consistent PG Switcher Pill (O1) */}
+          <button
+            type="button"
+            className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-teal-200/60 bg-white px-2.5 py-1.5 text-left shadow-2xs hover:border-[#008080] transition-colors cursor-pointer"
+            onClick={() => setIsPgSwitcherOpen(true)}
+            aria-label="Switch property"
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#D9F3F3] text-[#008080]">
+              <Building2 className="h-4 w-4" strokeWidth={2.2} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1">
+                <span className="truncate text-[14px] font-bold text-[#101010]">
+                  {selectedPg?.name ?? "Select Property"}
+                </span>
+                <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+              </div>
+              <p className="truncate text-[11px] text-[#636363]">
+                {selectedPg?.address || "Tap to switch property"}
+              </p>
+            </div>
+          </button>
+
+          {/* Action icons: 40dp light outline tonal buttons (O5) */}
+          <div className="flex shrink-0 items-center gap-1.5">
             <button
               type="button"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#E4EEEE] bg-white text-[#101010] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition-colors"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/80 bg-white text-[#101010] shadow-2xs hover:bg-slate-50 transition-colors"
               aria-label="Refresh dashboard"
               title="Refresh dashboard"
               onClick={data.refetchAll}
@@ -131,73 +137,28 @@ export function MobileDashboard() {
             >
               <RefreshCw className={cn("h-4 w-4", data.isFetching && "animate-spin")} />
             </button>
-            <ThemeToggle className="h-10 w-10 rounded-full border-[#E4EEEE] dark:border-slate-700 dark:bg-slate-800" />
             <button
               type="button"
-              className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#E4EEEE] bg-white text-[#101010] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+              className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/80 bg-white text-[#101010] shadow-2xs hover:bg-slate-50 transition-colors"
               aria-label="Notifications"
               title="Notifications"
               onClick={() => navigate("/notifications")}
             >
               <Bell className="h-4 w-4" />
               {unreadCount > 0 ? (
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[#FF3D00]" />
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#008080]" />
               ) : null}
-            </button>
-            <button
-              type="button"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#E4EEEE] bg-white text-[#101010] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-              aria-label="Settings"
-              title="Settings"
-              onClick={() => navigate("/settings")}
-            >
-              <Settings className="h-4 w-4" />
             </button>
           </div>
         </div>
-
-        {switcherOpen ? (
-          <ul
-            className="mt-3 max-h-56 overflow-y-auto rounded-2xl border border-[#E5E5E5] bg-white p-1.5 shadow-sm"
-            role="listbox"
-          >
-            {list.map((pg) => (
-              <li key={pg.id}>
-                <button
-                  type="button"
-                  role="option"
-                  aria-selected={pg.id === selectedPgId}
-                  className={cn(
-                    "flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[14px] font-medium",
-                    pg.id === selectedPgId ? "bg-[#E8FFFF] text-[#008080]" : "text-[#101010]",
-                  )}
-                  onClick={() => {
-                    setSelectedPgId(pg.id);
-                    setSwitcherOpen(false);
-                  }}
-                >
-                  <Building2 className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{pg.name}</span>
-                </button>
-              </li>
-            ))}
-            {list.length === 0 ? (
-              <li className="px-3 py-2 text-[13px] text-[#636363]">No properties yet</li>
-            ) : null}
-          </ul>
-        ) : null}
       </header>
 
-      <div className="flex items-center justify-between gap-3 bg-[var(--figma-dash-banner,#184040)] px-4 py-2 text-[12px] font-medium leading-4 text-white">
-        <p className="min-w-0 flex-1 text-center">Manage tenants, rent, and issues in one app.</p>
-        <button
-          type="button"
-          className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white"
-          aria-label="Open Ease Buddy AI"
-          onClick={() => window.dispatchEvent(new Event("open-ease-buddy"))}
-        >
-          <img src={mascotRent} alt="" className="h-8 w-8 rounded-full object-cover object-top" />
-        </button>
+      {/* Clean tip banner (O5: mascot removed) */}
+      <div className="flex items-center gap-2.5 bg-[#005F5F] px-4 py-2.5 text-[12px] font-medium leading-4 text-white">
+        <Sparkles className="h-4 w-4 text-teal-200 shrink-0" />
+        <p className="min-w-0 flex-1 text-teal-50">
+          Manage tenants, rent collection, and beds in one place.
+        </p>
       </div>
 
       <section className="bg-[var(--figma-dash-hero,#F2FEFE)] px-4 pb-5 pt-4">
@@ -231,15 +192,19 @@ export function MobileDashboard() {
         </div>
 
         <div className="mt-8 flex flex-col items-center text-center">
-          <div className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.08em] text-[#101010]">
+          <div className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.08em] text-[#008080]">
             <Users className="h-4 w-4" />
             Total Tenants
           </div>
-          <p className="mt-2 text-[56px] font-medium leading-none tabular-nums text-[#101010]">
-            {dashValue(tenantTotal, data.loading.tenants)}
-          </p>
-          <p className="mt-2 text-[13px] leading-5 text-[#636363]">
-            Vacant Beds: {dashValue(vacantBeds, data.loading.rooms)}
+          {data.loading.tenants ? (
+            <div className="my-2 h-14 w-28 animate-pulse rounded-xl bg-slate-200/70" />
+          ) : (
+            <p className="mt-2 text-[56px] font-bold leading-none tabular-nums text-[#101010]">
+              {tenantTotal ?? 0}
+            </p>
+          )}
+          <p className="mt-2 text-[13px] font-semibold leading-5 text-[#636363]">
+            {data.loading.rooms ? "Loading beds..." : `Vacant beds: ${vacantBeds ?? 0}`}
           </p>
         </div>
 
