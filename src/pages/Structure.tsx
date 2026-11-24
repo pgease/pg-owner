@@ -844,13 +844,23 @@ export default function Structure() {
                     </div>
 
                     <div className="flex items-center justify-between pt-1 border-t border-[var(--gray-200)] text-xs text-[var(--gray-500)]">
-                      <span>
-                        {r.floorName || r.floor?.name
-                          ? `Floor ${r.floorName || r.floor?.name}`
-                          : r.floorNumber != null
-                            ? `Floor ${r.floorNumber}`
-                            : "Floor not set"}
-                      </span>
+                      {(() => {
+                        const floorVal = (typeof r.floor === "string" && r.floor.trim())
+                          ? r.floor.trim()
+                          : r.floorName || r.floor?.name || (r.floorNumber != null ? String(r.floorNumber) : (r.floorId ? floors.find((f: any) => f.id === r.floorId)?.name : null));
+                        const blockVal = (typeof r.block === "string" && r.block.trim())
+                          ? r.block.trim()
+                          : r.blockName || (r.blockId ? blocks.find((b: any) => b.id === r.blockId)?.name : null);
+                        const floorDisplay = floorVal
+                          ? (floorVal.toLowerCase().startsWith("floor") || floorVal.toLowerCase().includes("ground") || floorVal.toLowerCase().includes("basement") ? floorVal : `Floor ${floorVal}`)
+                          : "Floor not set";
+                        const blockDisplay = blockVal ? `${blockVal} · ` : "";
+                        return (
+                          <span className="truncate" title={`${blockDisplay}${floorDisplay}`}>
+                            {blockDisplay}{floorDisplay}
+                          </span>
+                        );
+                      })()}
                       {!r.id.startsWith("synth-") && (
                         <button
                           type="button"
