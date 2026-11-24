@@ -538,6 +538,7 @@ export default function PublicListingPage() {
       try {
         await updateProperty(selectedPgId, {
           name: propertyName.trim() || undefined,
+          mobileContactNumber: contactNumber.trim() || undefined,
           address: address.trim() || undefined,
           locationPin: locationPin.trim() || undefined,
           latitude: Number(latitude) || undefined,
