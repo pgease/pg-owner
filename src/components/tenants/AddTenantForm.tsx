@@ -1241,6 +1241,8 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                   id="tenant-name-input"
                   placeholder="Enter tenant full name"
                   value={name}
+                  maxLength={100}
+                  showCount={true}
                   onBlur={() => setNameTouched(true)}
                   onChange={(e) => {
                     setName(e.target.value);

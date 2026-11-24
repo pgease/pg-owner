@@ -458,6 +458,8 @@ const Expenses = () => {
                 <Input
                   id="desc"
                   value={description}
+                  maxLength={254}
+                  showCount={true}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="e.g. Motor repair and plumber visit"
                   className="h-9 text-sm"

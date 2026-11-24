@@ -844,16 +844,28 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
                   <div className="flex rounded-lg border border-gray-300 bg-white overflow-hidden focus-within:border-[#008080] focus-within:ring-2 focus-within:ring-[#CCE6E6] h-11 sm:h-12 transition-all">
                     <input
                       autoFocus
+                      maxLength={100}
                       value={firstTimeOwnerName}
-                      onChange={(e) => setFirstTimeOwnerName(e.target.value)}
+                      onChange={(e) => setFirstTimeOwnerName(e.target.value.slice(0, 100))}
+                      onPaste={(e) => {
+                        const paste = e.clipboardData.getData("text");
+                        if (firstTimeOwnerName.length + paste.length > 100) {
+                          e.preventDefault();
+                          const allowed = 100 - firstTimeOwnerName.length;
+                          setFirstTimeOwnerName((prev) => (prev + paste.slice(0, Math.max(0, allowed))).slice(0, 100));
+                        }
+                      }}
                       placeholder={T.namePlaceholder}
                       autoComplete="name"
                       className="flex-1 h-full px-3 text-sm font-semibold text-gray-900 placeholder:text-gray-400 outline-none"
                     />
                   </div>
-                  <p className="text-[10.5px] sm:text-[11px] text-gray-400">
-                    {T.nameHint}
-                  </p>
+                  <div className="flex justify-between items-center text-[10.5px] sm:text-[11px] text-gray-400">
+                    <span>{T.nameHint}</span>
+                    <span className={`font-mono tabular-nums ${firstTimeOwnerName.length >= 100 ? "text-red-500 font-semibold" : "text-gray-400"}`}>
+                      {firstTimeOwnerName.length}/100
+                    </span>
+                  </div>
                 </div>
 
                 <button

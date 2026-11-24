@@ -604,6 +604,8 @@ export default function NightOutRequestsPage() {
                 <Label htmlFor="nightout-destination">Destination / Hometown Address</Label>
                 <Input
                   id="nightout-destination"
+                  maxLength={254}
+                  showCount={true}
                   value={destinationAddress}
                   onChange={(e) => setDestinationAddress(e.target.value)}
                   placeholder="e.g. Sector 62 Noida, Parents Home Jaipur"
@@ -626,6 +628,8 @@ export default function NightOutRequestsPage() {
                 <Label htmlFor="nightout-reason">Reason for Leaving</Label>
                 <Input
                   id="nightout-reason"
+                  maxLength={254}
+                  showCount={true}
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="e.g. Weekend hometown visit, Family function"

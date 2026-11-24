@@ -726,6 +726,8 @@ const Onboarding = () => {
                     <Input
                       id="owner-name"
                       value={ownerName}
+                      maxLength={100}
+                      showCount={true}
                       onChange={(e) => setOwnerName(e.target.value)}
                       placeholder={T.ownerNamePlaceholder}
                       autoComplete="off"
@@ -743,6 +745,8 @@ const Onboarding = () => {
                     <Input
                       id="pg-name"
                       value={pgName}
+                      maxLength={100}
+                      showCount={true}
                       onChange={(e) => setPgName(e.target.value)}
                       placeholder={T.pgNamePlaceholder}
                       autoComplete="off"
@@ -912,6 +916,8 @@ const Onboarding = () => {
                       <Input
                         id="address-line-1"
                         value={addressLine1}
+                        maxLength={100}
+                        showCount={true}
                         onChange={(e) => setAddressLine1(e.target.value)}
                         placeholder={T.addressLine1Placeholder}
                         autoComplete="off"

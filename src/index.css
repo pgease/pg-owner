@@ -300,3 +300,18 @@
 html.pgease-native [data-website-chrome] {
   display: none !important;
 }
+
+/* Universal Display Safety: Prevent long text and unbroken strings from breaking cards/tables/chips on 360px */
+@layer base {
+  p, span, h1, h2, h3, h4, h5, h6, td, th, li {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+@layer utilities {
+  .overflow-anywhere {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
