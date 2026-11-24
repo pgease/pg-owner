@@ -430,24 +430,26 @@ const Tenants = () => {
     };
   }, [rawTenantsList]);
 
+  const activeResidents = useMemo(() => {
+    return (tenantsQuery.data ?? []).filter((t) => tenantStayStatus(t) !== "MOVED_OUT");
+  }, [tenantsQuery.data]);
+
   const kpi = useMemo(() => {
-    const rows = tenantsQuery.data ?? [];
-    const verified = rows.filter((t) => tenantVerificationLabel(t) === "verified").length;
-    const onNotice = rows.filter((t) => t.notice?.isOnNotice).length;
+    const verified = activeResidents.filter((t) => tenantVerificationLabel(t) === "verified").length;
+    const onNotice = activeResidents.filter((t) => tenantStayStatus(t) === "UNDER_NOTICE").length;
     return {
-      total: rows.length,
+      total: activeResidents.length,
       verified,
       onNotice,
     };
-  }, [tenantsQuery.data]);
+  }, [activeResidents]);
 
   const dueCount = useMemo(() => {
-    return (tenantsQuery.data ?? []).filter((t) => {
-      if (tenantStayStatus(t) === "MOVED_OUT") return false;
+    return activeResidents.filter((t) => {
       const ids = [t.id, t.roomTenantId, t.roomTenant?.id].filter(Boolean).map(String);
       return !ids.some((id) => paidThisMonth.has(id));
     }).length;
-  }, [tenantsQuery.data, paidThisMonth]);
+  }, [activeResidents, paidThisMonth]);
 
   // Export to CSV
   const handleExportCSV = () => {
