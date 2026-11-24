@@ -241,39 +241,15 @@ function parseAddressComponents(displayName: string, rawAddress?: Record<string,
   const road = rawAddress?.road || rawAddress?.pedestrian || rawAddress?.street || "";
   const suburb = rawAddress?.suburb || rawAddress?.neighbourhood || rawAddress?.residential || rawAddress?.subdistrict || "";
 
-  let line1 = [houseNo, road].filter(Boolean).join(" ");
-  let street = suburb;
-
   const cityPart = rawAddress?.city || rawAddress?.town || rawAddress?.village || rawAddress?.city_district || rawAddress?.county || "";
   const statePart = rawAddress?.state || rawAddress?.state_district || "";
   let postcode = rawAddress?.postcode?.match(/\d{6}/)?.[0] || extractIndianPincode(displayName) || "";
   postcode = refinePostcode(displayName, postcode) || postcode;
 
-  // Clean line1: do NOT dump the full displayName or duplicate city/state/postcode
-  if (!line1) {
-    const parts = displayName.split(",").map((p) => p.trim()).filter(Boolean);
-    const stopWords = new Set([
-      "india",
-      cityPart.toLowerCase(),
-      statePart.toLowerCase(),
-      (postcode || "").toLowerCase(),
-    ]);
-    const localParts = parts.filter((p) => !stopWords.has(p.toLowerCase()) && !/^\d{6}$/.test(p));
-    if (localParts.length > 0) {
-      line1 = localParts[0] || "";
-      if (localParts.length > 1 && !street) {
-        street = localParts.slice(1).join(", ");
-      }
-    }
-  }
-
-  // Prevent line1 from mirroring city or state
-  if (cityPart && line1.toLowerCase() === cityPart.toLowerCase()) {
-    line1 = "";
-  }
-  if (statePart && line1.toLowerCase() === statePart.toLowerCase()) {
-    line1 = "";
-  }
+  // Address Line 1 should ONLY be house/flat/building name/number, NEVER full address or city/state/pin
+  const line1 = houseNo;
+  // Street / Area / Landmark
+  const street = [road, suburb].filter(Boolean).join(", ");
 
   return { addressLine1: line1, street, city: cityPart, state: statePart, postcode };
 }
@@ -731,45 +707,45 @@ const Onboarding = () => {
             {/* Main Form Card Container (Fits 100vh) */}
             <Card className="rounded-2xl border border-gray-200/80 bg-white shadow-xl shadow-gray-200/40">
               <CardContent className="p-4 sm:p-5 space-y-3">
-                {/* 1. Owner Full Name & PG Name (Generously spaced) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label htmlFor="owner-name" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                      <User className="h-3.5 w-3.5 text-[#008080]" />
+                {/* 1. Owner Full Name & PG Name (Generously sized & spaced) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="owner-name" className="text-xs sm:text-[13px] font-semibold text-gray-800 flex items-center gap-1.5">
+                      <User className="h-4 w-4 text-[#008080]" />
                       <span>{T.ownerName}</span>
-                      <span className="text-red-500">*</span>
+                      <span className="text-red-500 font-bold">*</span>
                     </Label>
                     <Input
                       id="owner-name"
                       value={ownerName}
                       onChange={(e) => setOwnerName(e.target.value)}
                       placeholder={T.ownerNamePlaceholder}
-                      className="h-10.5 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs sm:text-sm font-medium text-gray-900 transition-all"
+                      className="h-12 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-sm font-medium text-gray-900 px-4 transition-all"
                     />
                   </div>
 
-                  <div className="space-y-1">
-                    <Label htmlFor="pg-name" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                      <Building2 className="h-3.5 w-3.5 text-[#008080]" />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="pg-name" className="text-xs sm:text-[13px] font-semibold text-gray-800 flex items-center gap-1.5">
+                      <Building2 className="h-4 w-4 text-[#008080]" />
                       <span>{T.pgName}</span>
-                      <span className="text-red-500">*</span>
+                      <span className="text-red-500 font-bold">*</span>
                     </Label>
                     <Input
                       id="pg-name"
                       value={pgName}
                       onChange={(e) => setPgName(e.target.value)}
                       placeholder={T.pgNamePlaceholder}
-                      className="h-10.5 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs sm:text-sm font-medium text-gray-900 transition-all"
+                      className="h-12 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-sm font-medium text-gray-900 px-4 transition-all"
                     />
                   </div>
                 </div>
 
                 {/* 2. Property Type Selection Tiles */}
-                <div className="space-y-1">
-                  <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                    <Home className="h-3.5 w-3.5 text-[#008080]" />
+                <div className="space-y-1.5">
+                  <Label className="text-xs sm:text-[13px] font-semibold text-gray-800 flex items-center gap-1.5">
+                    <Home className="h-4 w-4 text-[#008080]" />
                     <span>{T.pgType}</span>
-                    <span className="text-red-500">*</span>
+                    <span className="text-red-500 font-bold">*</span>
                   </Label>
 
                   <div className="grid grid-cols-3 gap-2">
@@ -780,15 +756,15 @@ const Onboarding = () => {
                           key={type.id}
                           type="button"
                           onClick={() => setPropertyTypeId(type.id)}
-                          className={`flex items-center gap-2 p-2 rounded-xl border text-left transition-all ${
+                          className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left transition-all ${
                             isSelected
-                              ? "border-[#008080] bg-teal-50/60 shadow-2xs ring-1 ring-[#008080]"
+                              ? "border-[#008080] bg-teal-50/70 shadow-2xs ring-1 ring-[#008080]"
                               : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/60"
                           }`}
                         >
                           {getPropertyTypeIcon(type.name, isSelected)}
                           <div className="min-w-0 flex-1">
-                            <p className={`text-xs font-bold leading-tight truncate ${isSelected ? "text-[#008080]" : "text-gray-800"}`}>
+                            <p className={`text-xs sm:text-[13px] font-bold leading-tight truncate ${isSelected ? "text-[#008080]" : "text-gray-800"}`}>
                               {type.name}
                             </p>
                           </div>
@@ -804,7 +780,7 @@ const Onboarding = () => {
 
                   {availablePropertyTypes.length > 3 && (
                     <Select value={propertyTypeId} onValueChange={setPropertyTypeId}>
-                      <SelectTrigger className="h-9.5 rounded-xl border-gray-200 bg-[#F9FAFB] text-xs text-gray-800 mt-1">
+                      <SelectTrigger className="h-10 rounded-xl border-gray-200 bg-[#F9FAFB] text-xs sm:text-sm text-gray-800 mt-1">
                         <SelectValue placeholder={T.selectTypePlaceholder} />
                       </SelectTrigger>
                       <SelectContent>
@@ -819,11 +795,11 @@ const Onboarding = () => {
                 </div>
 
                 {/* 3. Bed Capacity / Range Selection */}
-                <div className="space-y-1">
-                  <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                    <BedDouble className="h-3.5 w-3.5 text-[#008080]" />
+                <div className="space-y-1.5">
+                  <Label className="text-xs sm:text-[13px] font-semibold text-gray-800 flex items-center gap-1.5">
+                    <BedDouble className="h-4 w-4 text-[#008080]" />
                     <span>{T.selectBedRange}</span>
-                    <span className="text-red-500">*</span>
+                    <span className="text-red-500 font-bold">*</span>
                   </Label>
 
                   <div className="grid grid-cols-5 gap-1.5">
@@ -834,7 +810,7 @@ const Onboarding = () => {
                           key={opt.value}
                           type="button"
                           onClick={() => setBedRange(opt.value)}
-                          className={`h-9.5 rounded-xl border text-xs font-bold transition-all flex items-center justify-center ${
+                          className={`h-10 rounded-xl border text-xs sm:text-[13px] font-bold transition-all flex items-center justify-center ${
                             isSelected
                               ? "bg-[#008080] border-[#008080] text-white shadow-2xs"
                               : "bg-[#F9FAFB] border-gray-200 text-gray-700 hover:border-teal-300 hover:bg-teal-50/20"
@@ -850,10 +826,10 @@ const Onboarding = () => {
                 {/* 4. Structured Address Fields (Address Line 1, Street, City, State, Pin Code) */}
                 <div className="space-y-2 pt-0.5">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5 text-[#008080]" />
+                    <Label className="text-xs sm:text-[13px] font-semibold text-gray-800 flex items-center gap-1.5">
+                      <MapPin className="h-4 w-4 text-[#008080]" />
                       <span>{T.addressLabel}</span>
-                      <span className="text-red-500">*</span>
+                      <span className="text-red-500 font-bold">*</span>
                     </Label>
 
                     {/* "Use current location" Action Pill */}
@@ -861,7 +837,7 @@ const Onboarding = () => {
                       type="button"
                       onClick={() => void handleUseLocation()}
                       disabled={locating}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#E8F4F4] hover:bg-[#d8eded] border border-[#008080]/30 text-[11px] font-bold text-[#008080] shadow-2xs transition-all active:scale-95 disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8F4F4] hover:bg-[#d8eded] border border-[#008080]/30 text-xs font-bold text-[#008080] shadow-2xs transition-all active:scale-95 disabled:opacity-50"
                       title="Auto-detect address via GPS"
                     >
                       {locating ? (
@@ -871,7 +847,7 @@ const Onboarding = () => {
                         </>
                       ) : (
                         <>
-                          <Navigation className="h-3 w-3 text-[#008080]" />
+                          <Navigation className="h-3.5 w-3.5 text-[#008080]" />
                           <span>{T.useLocation}</span>
                         </>
                       )}
@@ -880,21 +856,21 @@ const Onboarding = () => {
 
                   {/* Row 1: Address Line 1 & Street / Area */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="address-line-1" className="text-[11px] font-medium text-gray-600">
-                        {T.addressLine1Label} <span className="text-red-500">*</span>
+                    <div className="space-y-1">
+                      <Label htmlFor="address-line-1" className="text-xs font-semibold text-gray-700">
+                        {T.addressLine1Label} <span className="text-red-500 font-bold">*</span>
                       </Label>
                       <Input
                         id="address-line-1"
                         value={addressLine1}
                         onChange={(e) => setAddressLine1(e.target.value)}
                         placeholder={T.addressLine1Placeholder}
-                        className="h-10 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs sm:text-sm text-gray-900 transition-all"
+                        className="h-11 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs sm:text-sm text-gray-900 px-3.5 transition-all"
                       />
                     </div>
 
-                    <div className="space-y-0.5">
-                      <Label htmlFor="street" className="text-[11px] font-medium text-gray-600">
+                    <div className="space-y-1">
+                      <Label htmlFor="street" className="text-xs font-semibold text-gray-700">
                         {T.streetLabel}
                       </Label>
                       <Input
@@ -902,32 +878,32 @@ const Onboarding = () => {
                         value={street}
                         onChange={(e) => setStreet(e.target.value)}
                         placeholder={T.streetPlaceholder}
-                        className="h-10 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs sm:text-sm text-gray-900 transition-all"
+                        className="h-11 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs sm:text-sm text-gray-900 px-3.5 transition-all"
                       />
                     </div>
                   </div>
 
                   {/* Row 2: City, State (Dropdown with red *), Pin Code */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="city" className="text-[11px] font-medium text-gray-600">
-                        {T.cityLabel} <span className="text-red-500">*</span>
+                    <div className="space-y-1">
+                      <Label htmlFor="city" className="text-xs font-semibold text-gray-700">
+                        {T.cityLabel} <span className="text-red-500 font-bold">*</span>
                       </Label>
                       <Input
                         id="city"
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
                         placeholder={T.cityPlaceholder}
-                        className="h-10 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs sm:text-sm text-gray-900 transition-all"
+                        className="h-11 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs sm:text-sm text-gray-900 px-3.5 transition-all"
                       />
                     </div>
 
-                    <div className="space-y-0.5">
-                      <Label htmlFor="state" className="text-[11px] font-medium text-gray-600">
-                        {T.stateLabel} <span className="text-red-500">*</span>
+                    <div className="space-y-1">
+                      <Label htmlFor="state" className="text-xs font-semibold text-gray-700">
+                        {T.stateLabel} <span className="text-red-500 font-bold">*</span>
                       </Label>
                       <Select value={stateName} onValueChange={setStateName}>
-                        <SelectTrigger id="state" className="h-10 rounded-xl border-gray-200 bg-[#F9FAFB] text-xs sm:text-sm text-gray-800 focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15">
+                        <SelectTrigger id="state" className="h-11 rounded-xl border-gray-200 bg-[#F9FAFB] text-xs sm:text-sm text-gray-800 focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15">
                           <SelectValue placeholder={T.statePlaceholder} />
                         </SelectTrigger>
                         <SelectContent className="max-h-60">
@@ -940,9 +916,9 @@ const Onboarding = () => {
                       </Select>
                     </div>
 
-                    <div className="space-y-0.5">
-                      <Label htmlFor="pincode" className="text-[11px] font-medium text-gray-600">
-                        {T.pincodeLabel} <span className="text-red-500">*</span>
+                    <div className="space-y-1">
+                      <Label htmlFor="pincode" className="text-xs font-semibold text-gray-700">
+                        {T.pincodeLabel} <span className="text-red-500 font-bold">*</span>
                       </Label>
                       <Input
                         id="pincode"
@@ -950,29 +926,29 @@ const Onboarding = () => {
                         maxLength={6}
                         onChange={(e) => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                         placeholder={T.pincodePlaceholder}
-                        className="h-10 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs sm:text-sm font-mono text-gray-900 transition-all"
+                        className="h-11 rounded-xl border-gray-200 bg-[#F9FAFB] focus:bg-white focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15 text-xs sm:text-sm font-mono text-gray-900 px-3.5 transition-all"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Form Action Button (Always prominent teal, h-12.5) */}
-                <div className="pt-2">
+                {/* Form Action Button (Always prominent vibrant teal, h-13 sm:h-14) */}
+                <div className="pt-2 sm:pt-3">
                   <Button
                     type="button"
                     onClick={() => void handlePropertyContinue()}
                     disabled={isSubmitting}
-                    className="w-full h-12 rounded-xl bg-[#008080] hover:bg-[#006e6e] text-white text-sm sm:text-base font-bold shadow-md shadow-teal-700/25 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full h-13 sm:h-14 rounded-xl bg-[#008080] hover:bg-[#006e6e] text-white text-base font-bold shadow-lg shadow-teal-700/25 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {isSubmitting ? (
                       <>
-                        <Loader2 className="h-4.5 w-4.5 animate-spin text-white" />
+                        <Loader2 className="h-5 w-5 animate-spin text-white" />
                         <span>{T.saving}</span>
                       </>
                     ) : (
                       <>
                         <span>{T.continue}</span>
-                        <ArrowRight className="h-4.5 w-4.5" />
+                        <ArrowRight className="h-5 w-5" />
                       </>
                     )}
                   </Button>
