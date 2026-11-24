@@ -4162,11 +4162,11 @@ function TenantDetailContent() {
                           </span>
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="border-amber-300 text-amber-900 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/40 shrink-0 text-xs font-semibold"
+                          className="border-amber-300 text-amber-900 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/40 w-full sm:w-auto justify-center text-xs font-semibold"
                           onClick={handleConfirmCancelNotice}
                           disabled={cancelNoticeMut.isPending}
                         >
@@ -4175,7 +4175,7 @@ function TenantDetailContent() {
                         </Button>
                         <Button
                           size="sm"
-                          className="bg-rose-600 hover:bg-rose-700 text-white font-bold gap-1.5 shrink-0 text-xs shadow-xs"
+                          className="bg-rose-600 hover:bg-rose-700 text-white font-bold gap-1.5 w-full sm:w-auto justify-center text-xs shadow-xs"
                           onClick={handleOpenMoveOutModal}
                         >
                           <UserMinus className="h-3.5 w-3.5" /> Complete Move-Out
@@ -4191,10 +4191,10 @@ function TenantDetailContent() {
                         Tenant is currently in active stay. When the tenant submits a 30-day move-out notice, record it here to schedule checkout.
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
                       <Button
                         size="sm"
-                        className="bg-amber-600 hover:bg-amber-700 text-white gap-1.5 shrink-0"
+                        className="bg-amber-600 hover:bg-amber-700 text-white gap-1.5 w-full sm:w-auto justify-center"
                         onClick={() => {
                           if (!subAccess.canTrackNotice) {
                             setGateFeature("Notice Period Tracking");
@@ -4209,7 +4209,7 @@ function TenantDetailContent() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-rose-300 text-rose-600 hover:bg-rose-50 gap-1.5 shrink-0 text-xs font-semibold"
+                        className="border-rose-300 text-rose-600 hover:bg-rose-50 gap-1.5 w-full sm:w-auto justify-center text-xs font-semibold"
                         onClick={handleOpenMoveOutModal}
                       >
                         <UserMinus className="h-3.5 w-3.5" /> Direct Move-Out
