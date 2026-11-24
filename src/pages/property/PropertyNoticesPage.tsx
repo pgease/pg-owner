@@ -294,6 +294,7 @@ export default function PropertyNoticesPage() {
                 </Label>
                 <Input
                   type="date"
+                  placeholder="dd/mm/yyyy"
                   value={expiresAt}
                   onChange={(e) => setExpiresAt(e.target.value)}
                   className="h-9 text-sm"

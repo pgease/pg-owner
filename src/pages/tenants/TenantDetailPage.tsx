@@ -2745,6 +2745,7 @@ function TenantDetailContent() {
                       <EditField label="Date Of Joining / Move-in">
                         <Input
                           type="date"
+                          placeholder="dd/mm/yyyy"
                           value={form.joiningDate}
                           onChange={(e) => setForm({ ...form, joiningDate: e.target.value })}
                           className="h-9 text-xs"
@@ -2761,6 +2762,7 @@ function TenantDetailContent() {
                       <EditField label="Expected Move Out Date">
                         <Input
                           type="date"
+                          placeholder="dd/mm/yyyy"
                           value={form.expectedMoveOutDate}
                           onChange={(e) => setForm({ ...form, expectedMoveOutDate: e.target.value })}
                           className="h-9 text-xs"
@@ -2808,6 +2810,7 @@ function TenantDetailContent() {
                       <EditField label="Invoicing Starts Date">
                         <Input
                           type="date"
+                          placeholder="dd/mm/yyyy"
                           value={form.billingStartDate}
                           onChange={(e) => setForm({ ...form, billingStartDate: e.target.value })}
                           className="h-9 text-xs"
@@ -2937,6 +2940,7 @@ function TenantDetailContent() {
                       <EditField label="Last Reading Date">
                         <Input
                           type="date"
+                          placeholder="dd/mm/yyyy"
                           value={form.lastReadingDate}
                           onChange={(e) => setForm({ ...form, lastReadingDate: e.target.value })}
                           className="h-9 text-xs"
@@ -3169,6 +3173,7 @@ function TenantDetailContent() {
                       <EditField label="Date Of Birth">
                         <Input
                           type="date"
+                          placeholder="dd/mm/yyyy"
                           value={form.dob}
                           onChange={(e) => setForm({ ...form, dob: e.target.value })}
                           className="h-9 text-xs"
@@ -4383,6 +4388,7 @@ function TenantDetailContent() {
                 <Label>Notice Given Date</Label>
                 <Input
                   type="date"
+                  placeholder="dd/mm/yyyy"
                   value={noticeForm.noticeGivenAt}
                   onChange={(e) => setNoticeForm({ ...noticeForm, noticeGivenAt: e.target.value })}
                 />
@@ -4391,6 +4397,7 @@ function TenantDetailContent() {
                 <Label>Expected Move-Out Date</Label>
                 <Input
                   type="date"
+                  placeholder="dd/mm/yyyy"
                   value={noticeForm.expectedMoveOutDate}
                   onChange={(e) => setNoticeForm({ ...noticeForm, expectedMoveOutDate: e.target.value })}
                 />
@@ -4548,6 +4555,7 @@ function TenantDetailContent() {
                 <Label>Start Date</Label>
                 <Input
                   type="date"
+                  placeholder="dd/mm/yyyy"
                   value={agreementForm.agreementStartDate}
                   onChange={(e) => setAgreementForm({ ...agreementForm, agreementStartDate: e.target.value })}
                 />
@@ -4836,7 +4844,7 @@ function TenantDetailContent() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>Transfer Effective Date</Label>
-                  <Input type="date" value={transferDate} onChange={(e) => setTransferDate(e.target.value)} />
+                  <Input type="date" placeholder="dd/mm/yyyy" value={transferDate} onChange={(e) => setTransferDate(e.target.value)} />
                 </div>
 
                 <div className="space-y-1.5">

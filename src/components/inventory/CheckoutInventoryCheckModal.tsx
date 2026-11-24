@@ -336,6 +336,7 @@ export const CheckoutInventoryCheckModal = ({
                 <Label className="text-xs font-bold">Move-Out / Vacate Date *</Label>
                 <Input
                   type="date"
+                  placeholder="dd/mm/yyyy"
                   value={moveOutDate}
                   onChange={(e) => setMoveOutDate(e.target.value)}
                   className="h-9 text-xs"

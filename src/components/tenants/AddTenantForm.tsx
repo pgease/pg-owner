@@ -1677,6 +1677,7 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                           <Label>Date of Birth</Label>
                           <Input
                             type="date"
+                            placeholder="dd/mm/yyyy"
                             max={new Date().toISOString().split("T")[0]}
                             value={dob}
                             onChange={(e) => setDob(e.target.value)}
@@ -2030,11 +2031,11 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                   <Label>
                     Move-in Date <span className="text-destructive font-bold">*</span>
                   </Label>
-                  <Input type="date" value={moveInDate} onChange={(e) => setMoveInDate(e.target.value)} />
+                  <Input type="date" placeholder="dd/mm/yyyy" value={moveInDate} onChange={(e) => setMoveInDate(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label>Move-out</Label>
-                  <Input type="date" value={moveOutDate} onChange={(e) => setMoveOutDate(e.target.value)} />
+                  <Input type="date" placeholder="dd/mm/yyyy" value={moveOutDate} onChange={(e) => setMoveOutDate(e.target.value)} />
                 </div>
               </div>
             </div>
@@ -2260,6 +2261,7 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                       <Label className="text-xs">Reading Date</Label>
                       <Input
                         type="date"
+                        placeholder="dd/mm/yyyy"
                         value={meterReadingDate}
                         onChange={(e) => setMeterReadingDate(e.target.value)}
                       />
@@ -2316,6 +2318,7 @@ export function AddTenantForm({ onSuccess, onCancel, showFooter = true }: AddTen
                     <Label>Invoicing Start Date</Label>
                     <Input
                       type="date"
+                      placeholder="dd/mm/yyyy"
                       value={billingStartDate}
                       onChange={(e) => setBillingStartDate(e.target.value)}
                     />

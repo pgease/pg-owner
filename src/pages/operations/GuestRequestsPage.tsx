@@ -780,6 +780,7 @@ export default function GuestRequestsPage() {
                   <Label className="font-semibold text-slate-800">Expected Arrival *</Label>
                   <Input
                     type="date"
+                    placeholder="dd/mm/yyyy"
                     value={arrivalDate}
                     onChange={(e) => setArrivalDate(e.target.value)}
                   />
@@ -788,6 +789,7 @@ export default function GuestRequestsPage() {
                   <Label className="font-semibold text-slate-800">Expected Departure</Label>
                   <Input
                     type="date"
+                    placeholder="dd/mm/yyyy"
                     min={arrivalDate || undefined}
                     value={departureDate}
                     onChange={(e) => setDepartureDate(e.target.value)}

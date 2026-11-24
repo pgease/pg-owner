@@ -1035,7 +1035,7 @@ const Tenants = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>Transfer Effective Date</Label>
-                  <Input type="date" value={transferDate} onChange={(e) => setTransferDate(e.target.value)} />
+                  <Input type="date" placeholder="dd/mm/yyyy" value={transferDate} onChange={(e) => setTransferDate(e.target.value)} />
                 </div>
 
                 <div className="space-y-1.5">
@@ -1128,6 +1128,7 @@ const Tenants = () => {
                 <Label className="text-xs font-medium">Scheduled Move-Out Date *</Label>
                 <Input
                   type="date"
+                  placeholder="dd/mm/yyyy"
                   value={noticeMoveOutDate}
                   onChange={(e) => setNoticeMoveOutDate(e.target.value)}
                   className="h-9 text-xs"

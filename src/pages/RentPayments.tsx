@@ -2030,7 +2030,7 @@ export const RentPayments = () => {
                       setHistoryStartDate(e.target.value);
                       setHistoryPage(1);
                     }}
-                    placeholder="From Date"
+                    placeholder="dd/mm/yyyy"
                     aria-label="Payments from date"
                     className="w-[130px] h-8 text-xs py-1"
                     title="Payments from date"
@@ -2043,7 +2043,7 @@ export const RentPayments = () => {
                       setHistoryEndDate(e.target.value);
                       setHistoryPage(1);
                     }}
-                    placeholder="To Date"
+                    placeholder="dd/mm/yyyy"
                     aria-label="Payments to date"
                     className="w-[130px] h-8 text-xs py-1"
                     title="Payments to date"
@@ -2809,7 +2809,7 @@ export const RentPayments = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs" htmlFor="payment-date">Payment date</Label>
-                  <Input id="payment-date" type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} className="h-9 text-xs" />
+                  <Input id="payment-date" type="date" placeholder="dd/mm/yyyy" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} className="h-9 text-xs" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs" htmlFor="payment-discount">Discount (₹)</Label>

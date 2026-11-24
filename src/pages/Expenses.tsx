@@ -443,6 +443,7 @@ const Expenses = () => {
                 <Input
                   id="date"
                   type="date"
+                  placeholder="dd/mm/yyyy"
                   value={expenseDate}
                   onChange={(e) => setExpenseDate(e.target.value)}
                   className="h-9 text-sm"

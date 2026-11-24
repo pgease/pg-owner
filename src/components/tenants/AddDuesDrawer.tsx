@@ -325,6 +325,7 @@ export const AddDuesDrawer: React.FC<AddDuesDrawerProps> = ({
               <Label className="text-xs font-semibold">Due Date</Label>
               <Input
                 type="date"
+                placeholder="dd/mm/yyyy"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
                 className="h-10 text-sm"

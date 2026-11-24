@@ -1228,6 +1228,7 @@ export default function Kyc() {
                   <Label className="text-xs font-medium text-[var(--gray-700)]">Start Date</Label>
                   <Input
                     type="date"
+                    placeholder="dd/mm/yyyy"
                     value={agreementForm.agreementStartDate}
                     onChange={(e) => setAgreementForm({ ...agreementForm, agreementStartDate: e.target.value })}
                     className="h-9 text-sm"
@@ -1237,6 +1238,7 @@ export default function Kyc() {
                   <Label className="text-xs font-medium text-[var(--gray-700)]">End Date (optional)</Label>
                   <Input
                     type="date"
+                    placeholder="dd/mm/yyyy"
                     value={agreementForm.agreementEndDate}
                     onChange={(e) => setAgreementForm({ ...agreementForm, agreementEndDate: e.target.value })}
                     className="h-9 text-sm"

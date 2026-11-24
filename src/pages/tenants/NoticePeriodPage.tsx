@@ -779,6 +779,7 @@ export default function NoticePeriodPage() {
                   </Label>
                   <Input
                     type="date"
+                    placeholder="dd/mm/yyyy"
                     value={initiateForm.noticeGivenAt}
                     onChange={(e) => setInitiateForm({ ...initiateForm, noticeGivenAt: e.target.value })}
                     className="h-9 text-sm"
@@ -791,6 +792,7 @@ export default function NoticePeriodPage() {
                   </Label>
                   <Input
                     type="date"
+                    placeholder="dd/mm/yyyy"
                     value={initiateForm.expectedMoveOutDate}
                     onChange={(e) => setInitiateForm({ ...initiateForm, expectedMoveOutDate: e.target.value })}
                     className="h-9 text-sm"
@@ -855,6 +857,7 @@ export default function NoticePeriodPage() {
                 </Label>
                 <Input
                   type="date"
+                  placeholder="dd/mm/yyyy"
                   value={extendForm.expectedMoveOutDate}
                   onChange={(e) => setExtendForm({ ...extendForm, expectedMoveOutDate: e.target.value })}
                   className="h-9 text-sm"
@@ -938,6 +941,7 @@ export default function NoticePeriodPage() {
                 <Label className="text-xs font-medium text-[var(--gray-700)]">Actual Move-Out Date *</Label>
                 <Input
                   type="date"
+                  placeholder="dd/mm/yyyy"
                   value={moveOutDate}
                   onChange={(e) => setMoveOutDate(e.target.value)}
                   className="h-9 text-sm"
