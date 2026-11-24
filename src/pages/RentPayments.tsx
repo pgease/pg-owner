@@ -912,7 +912,7 @@ export const RentPayments = () => {
       <div className="space-y-5 pb-8 max-w-7xl">
         {/* Main Header */}
         <PageHeader
-          className="hidden md:block"
+          className="block"
           title={
             activeTab === "history"
               ? "Payment History Ledger"

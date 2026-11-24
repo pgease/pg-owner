@@ -441,14 +441,14 @@ export default function WifiManagementPage() {
       <div className="w-full max-w-6xl mx-auto space-y-6 animate-fade-in pb-24">
         {/* TOP HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
-          <div className="hidden md:block">
+          <div>
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400">
-                <Wifi className="h-6 w-6" />
+              <div className="p-2 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 shrink-0">
+                <Wifi className="h-5 w-5 md:h-6 md:w-6" />
               </div>
-              <div>
-                <h1 className="text-page-title">WiFi</h1>
-                <p className="text-sm text-muted-foreground">
+              <div className="min-w-0">
+                <h1 className="text-lg md:text-page-title font-bold md:font-semibold text-slate-900 dark:text-white leading-tight">WiFi</h1>
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Network name and password for {selectedPg?.name || "this PG"}, by block and floor.
                 </p>
               </div>

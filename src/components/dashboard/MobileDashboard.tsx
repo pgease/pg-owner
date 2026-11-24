@@ -7,6 +7,7 @@ import {
   ChevronDown,
   MapPin,
   Plus,
+  RefreshCw,
   Search,
   Settings,
   TriangleAlert,
@@ -21,7 +22,11 @@ import { useMonthlyOwnerKpis } from "@/hooks/usePropertyOwnerQueries";
 import { useOwnerNotifications } from "@/hooks/useOwnerNotifications";
 import { formatInr } from "@/lib/rentDashboard";
 import { cn } from "@/lib/utils";
+import { MonthlyKpiDashboard } from "@/components/dashboard/MonthlyKpiDashboard";
+import { PendingRentCard } from "@/components/dashboard/PendingRentCard";
+import { RoomGrid } from "@/components/dashboard/RoomGrid";
 import { OwnerSupportCommunityCards } from "@/components/dashboard/OwnerSupportCommunityCards";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
 import mascotRent from "@/assets/mascot/mascot-rent.png";
 
 const MONTHS = [
@@ -115,25 +120,38 @@ export function MobileDashboard() {
             </span>
           </button>
 
-          <div className="flex shrink-0 items-center gap-2 pt-0.5">
+          <div className="flex shrink-0 items-center gap-1.5 pt-0.5">
             <button
               type="button"
-              className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[#E4EEEE] bg-white text-[#101010]"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#E4EEEE] bg-white text-[#101010] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition-colors"
+              aria-label="Refresh dashboard"
+              title="Refresh dashboard"
+              onClick={data.refetchAll}
+              disabled={data.isFetching}
+            >
+              <RefreshCw className={cn("h-4 w-4", data.isFetching && "animate-spin")} />
+            </button>
+            <ThemeToggle className="h-10 w-10 rounded-full border-[#E4EEEE] dark:border-slate-700 dark:bg-slate-800" />
+            <button
+              type="button"
+              className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#E4EEEE] bg-white text-[#101010] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
               aria-label="Notifications"
+              title="Notifications"
               onClick={() => navigate("/notifications")}
             >
-              <Bell className="h-5 w-5" />
+              <Bell className="h-4 w-4" />
               {unreadCount > 0 ? (
                 <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[#FF3D00]" />
               ) : null}
             </button>
             <button
               type="button"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-[#E4EEEE] bg-white text-[#101010]"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#E4EEEE] bg-white text-[#101010] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
               aria-label="Settings"
+              title="Settings"
               onClick={() => navigate("/settings")}
             >
-              <Settings className="h-5 w-5" />
+              <Settings className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -241,40 +259,14 @@ export function MobileDashboard() {
         </button>
       </section>
 
-      <section className="bg-[var(--figma-dash-summary,#F5F6FA)] px-4 pb-6 pt-5">
-        <h2 className="text-[16px] font-semibold leading-6 text-[#101010]">Current Month Summary</h2>
-        <p className="mt-1 flex items-center gap-1.5 text-[12px] text-[#636363]">
-          <Calendar className="h-3.5 w-3.5" />
-          {monthName} {data.rent.year}
-        </p>
-
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <SummaryCard
-            icon={<Wallet className="h-4 w-4" />}
-            label="Rent Due"
-            value={
-              rentDue === undefined && data.loading.rent
-                ? "—"
-                : rentDue === undefined
-                  ? "—"
-                  : formatInr(rentDue)
-            }
-            onClick={() => navigate("/rent-payments")}
-          />
-          <SummaryCard
-            icon={<UserPlus className="h-4 w-4" />}
-            label="New Joins"
-            value={dashValue(newJoins, kpis.isLoading)}
-            onClick={() => navigate("/tenants")}
-          />
-          <SummaryCard
-            icon={<TriangleAlert className="h-4 w-4" />}
-            label="Complaints"
-            value={dashValue(data.loading.complaints ? undefined : complaintsCount, data.loading.complaints)}
-            onClick={() => navigate("/complaints")}
-          />
-        </div>
-      </section>
+      {/* Full Monthly KPIs, Pending Rent Collections & Rooms Grid */}
+      {selectedPgId ? (
+        <section className="bg-[var(--figma-dash-summary,#F5F6FA)] dark:bg-slate-900/60 px-3 pb-6 pt-3 space-y-5">
+          <MonthlyKpiDashboard propertyId={selectedPgId} propertyName={selectedPg?.name} />
+          <PendingRentCard data={data} />
+          <RoomGrid data={data} />
+        </section>
+      ) : null}
 
       {/* Owner Community & Support Blocks */}
       <section className="bg-[var(--figma-dash-summary,#F5F6FA)] px-4 pb-8 pt-1 space-y-4">

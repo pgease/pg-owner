@@ -2259,9 +2259,29 @@ function TenantDetailContent() {
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button className="w-full h-12 rounded-full bg-[#008080] hover:bg-[#006666] text-white" onClick={() => setRecordPaymentOpen(true)}>
-                <IndianRupee className="h-4 w-4 mr-1.5" /> Record payment
-              </Button>
+              <div className="flex gap-2 w-full">
+                <Button className="flex-1 h-11 rounded-full bg-[#008080] hover:bg-[#006666] text-white font-semibold shadow-sm" onClick={() => setRecordPaymentOpen(true)}>
+                  <IndianRupee className="h-4 w-4 mr-1.5" /> Record payment
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="secondary" className="h-11 rounded-full px-3.5 font-medium border border-slate-200 dark:border-slate-700">
+                      <Send className="h-4 w-4 mr-1.5 text-[#008080]" /> Reminder
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onClick={() => handleSendWhatsAppReminder("rent")} className="cursor-pointer gap-2">
+                      <IndianRupee className="h-4 w-4 text-[#008080]" /> Send Rent Reminder
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleSendWhatsAppReminder("kyc")} className="cursor-pointer gap-2">
+                      <ShieldCheck className="h-4 w-4 text-emerald-600" /> Send KYC Reminder
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleSendWhatsAppReminder("agreement")} className="cursor-pointer gap-2">
+                      <FileCheck className="h-4 w-4 text-teal-600" /> Send Agreement Reminder
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           )}
         </section>
@@ -4668,18 +4688,32 @@ function TenantDetailContent() {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleRecordManualPayment} className="space-y-4 pt-2">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Amount Paid (₹) *</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  step="0.01"
-                  placeholder="Enter amount"
-                  value={paymentForm.amountPaid || ""}
-                  onChange={(e) => setPaymentForm((p) => ({ ...p, amountPaid: Number(e.target.value) }))}
-                  required
-                  className="font-bold text-base"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Amount Paid (₹) *</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    placeholder="Enter amount"
+                    value={paymentForm.amountPaid || ""}
+                    onChange={(e) => setPaymentForm((p) => ({ ...p, amountPaid: Number(e.target.value) }))}
+                    required
+                    className="font-bold text-base"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Discount / Waiver (₹)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="e.g. 500"
+                    value={(paymentForm as any).discount || ""}
+                    onChange={(e) => setPaymentForm((p: any) => ({ ...p, discount: Number(e.target.value) }))}
+                    className="text-base"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

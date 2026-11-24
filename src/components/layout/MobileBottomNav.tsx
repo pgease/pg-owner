@@ -14,6 +14,11 @@ import {
   HelpCircle,
   ExternalLink,
   ChevronRight,
+  Moon,
+  Sun,
+  Phone,
+  MessageCircle,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { authStorage } from "@/api/http";
@@ -21,6 +26,7 @@ import { getActiveMobileTab, shouldHideMobileTabBar } from "@/lib/mobileRoutes";
 import { useTutorial } from "@/context/TutorialContext";
 import { useApp } from "@/context/AppContext";
 import { usePermissions } from "@/context/PermissionContext";
+import { useThemeMode } from "@/hooks/useThemeMode";
 import { NAV_ITEMS, type NavChild, type NavItem } from "@/lib/ownerNav";
 
 const TABS = [
@@ -56,6 +62,7 @@ export function MobileBottomNav() {
   const { openTutorial } = useTutorial();
   const { properties, selectedPgId, setSelectedPgId } = useApp();
   const { isOwner } = usePermissions();
+  const { isDark, toggleTheme } = useThemeMode();
   const list = Array.isArray(properties) ? properties : [];
   const selectedPg = list.find((p) => p.id === selectedPgId);
 
@@ -235,6 +242,26 @@ export function MobileBottomNav() {
                     <ExternalLink className="h-3.5 w-3.5" />
                   </a>
                 </div>
+
+                <div className="rounded-2xl border border-teal-200 bg-teal-50/60 p-3.5 mt-3 text-center space-y-2">
+                  <p className="text-xs font-semibold text-slate-800">Need help? WhatsApp or call +91 77019 53356</p>
+                  <div className="flex gap-2">
+                    <a
+                      href="tel:+917701953356"
+                      className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl bg-white border border-teal-300 text-teal-800 text-xs font-bold shadow-2xs"
+                    >
+                      <Phone className="h-3.5 w-3.5" /> Call
+                    </a>
+                    <a
+                      href="https://wa.me/917701953356"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl bg-[#008080] text-white text-xs font-bold shadow-2xs"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
+                    </a>
+                  </div>
+                </div>
               </div>
             ) : (
               <>
@@ -271,6 +298,7 @@ export function MobileBottomNav() {
                     More
                   </p>
                   {[
+                    { title: "Owner Profile & Settings", url: "/settings" },
                     { title: "Inventory", url: "/settings/inventory" },
                     { title: "Notifications", url: "/notifications" },
                     { title: "Contact Support", url: "/support" },
@@ -284,6 +312,20 @@ export function MobileBottomNav() {
                       {link.title}
                     </button>
                   ))}
+
+                  <button
+                    type="button"
+                    onClick={toggleTheme}
+                    className="flex min-h-11 w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-[16px] text-[#101010] hover:bg-[#F5F5F5]"
+                  >
+                    <span className="flex items-center gap-2.5">
+                      {isDark ? <Sun className="h-4 w-4 text-amber-500" /> : <Moon className="h-4 w-4 text-teal-600" />}
+                      <span>Appearance</span>
+                    </span>
+                    <span className="text-xs font-semibold text-slate-400">
+                      {isDark ? "Dark Mode" : "Light Mode"}
+                    </span>
+                  </button>
                 </section>
 
                 <button

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Bell } from "lucide-react";
+import { Bell, SlidersHorizontal } from "lucide-react";
 import { useOwnerNotifications } from "@/hooks/useOwnerNotifications";
 import { cn } from "@/lib/utils";
 
@@ -8,19 +8,40 @@ export default function NotificationsPage() {
   const { items, unreadCount, markAllRead, markRead } = useOwnerNotifications();
 
   return (
-    <div className="max-w-xl mx-auto">
-      <div className="hidden md:flex items-center justify-between mb-4">
-        <h1 className="text-page-title">Notifications</h1>
-        {unreadCount > 0 ? (
-          <button type="button" onClick={markAllRead} className="text-sm font-medium text-[#008080]">
-            Mark all as read
+    <div className="max-w-xl mx-auto space-y-4">
+      <div className="hidden md:flex items-center justify-between">
+        <div>
+          <h1 className="text-page-title">Notifications</h1>
+          <p className="text-xs text-slate-500 mt-0.5">Stay updated with tenant payments, dues, and requests</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => navigate("/notifications/preferences")}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50"
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            Preferences
           </button>
-        ) : null}
+          {unreadCount > 0 ? (
+            <button type="button" onClick={markAllRead} className="text-xs font-semibold text-[#008080] px-2 py-1.5">
+              Mark all as read
+            </button>
+          ) : null}
+        </div>
       </div>
 
-      <div className="md:hidden flex justify-end mb-3">
+      <div className="md:hidden flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => navigate("/notifications/preferences")}
+          className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
+        >
+          <SlidersHorizontal className="h-3.5 w-3.5 text-[#008080]" />
+          Preferences
+        </button>
         {unreadCount > 0 ? (
-          <button type="button" onClick={markAllRead} className="text-sm font-medium text-[#008080] min-h-11 px-2">
+          <button type="button" onClick={markAllRead} className="text-xs font-semibold text-[#008080] min-h-9 px-2">
             Mark all as read
           </button>
         ) : null}

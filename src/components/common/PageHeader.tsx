@@ -43,7 +43,7 @@ export function PageHeader({
 }: PageHeaderProps) {
   const headerActions = actions ?? action;
   return (
-    <header className={cn("flex flex-col gap-3", !headerActions && "hidden md:flex", className)}>
+    <header className={cn("flex flex-col gap-3", className)}>
       {breadcrumbs && breadcrumbs.length > 0 ? (
         <nav aria-label="Breadcrumb" className="hidden md:flex items-center gap-1 text-xs text-muted-foreground">
           {breadcrumbs.map((crumb, idx) => {
@@ -67,9 +67,9 @@ export function PageHeader({
       ) : null}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="hidden md:flex min-w-0 items-start gap-2">
+        <div className="flex min-w-0 items-start gap-2">
           {backTo ? (
-            <Button variant="ghost" size="icon" className="-ml-2 mt-0.5 h-8 w-8 shrink-0" asChild>
+            <Button variant="ghost" size="icon" className="hidden md:inline-flex -ml-2 mt-0.5 h-8 w-8 shrink-0" asChild>
               <Link to={backTo} aria-label={backLabel}>
                 <ArrowLeft className="h-4 w-4" />
               </Link>
@@ -77,10 +77,10 @@ export function PageHeader({
           ) : null}
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-page-title break-words leading-tight">{title}</h1>
+              <h1 className="text-lg md:text-page-title font-bold md:font-semibold text-slate-900 dark:text-white break-words leading-tight">{title}</h1>
               {titleAddon}
             </div>
-            {description ? <p className="mt-1 text-[13.5px] text-muted-foreground break-words">{description}</p> : null}
+            {description ? <p className="mt-0.5 md:mt-1 text-xs md:text-[13.5px] text-muted-foreground break-words">{description}</p> : null}
           </div>
         </div>
         {headerActions ? <div className="flex flex-wrap items-center gap-2 sm:shrink-0">{headerActions}</div> : null}

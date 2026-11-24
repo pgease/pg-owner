@@ -497,8 +497,25 @@ const Tenants = () => {
         summary={{
           total: kpi.total,
           due: dueCount,
+          kycVerified: kpi.verified,
+          onNotice: kpi.onNotice,
           kycPending: Math.max(0, kpi.total - kpi.verified),
         }}
+        onMoveTenant={() => handleOpenMoveModal()}
+        onExportCSV={handleExportCSV}
+        density={density}
+        onDensityChange={setDensity}
+        blocks={blocks}
+        selectedBlockId={selectedBlockId}
+        onSelectBlockId={setSelectedBlockId}
+        floors={floors}
+        selectedFloorId={selectedFloorId}
+        onSelectFloorId={setSelectedFloorId}
+        rooms={allPropertyRooms}
+        selectedRoomId={selectedRoomId}
+        onSelectRoomId={setSelectedRoomId}
+        kycFilter={kycFilter}
+        onKycFilter={setKycFilter}
       />
       <div className="hidden space-y-4 pb-8 md:block">
         {/* Page Header */}

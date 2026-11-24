@@ -38,6 +38,7 @@ export default function PropertyNoticesPage() {
   const [category, setCategory] = useState("maintenance");
   const [priority, setPriority] = useState<"normal" | "high" | "urgent">("normal");
   const [targetType, setTargetType] = useState("all_tenants");
+  const [sendOnWhatsApp, setSendOnWhatsApp] = useState(false);
   const [attachmentUrl, setAttachmentUrl] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
 
@@ -54,22 +55,24 @@ export default function PropertyNoticesPage() {
           ? "high"
           : "normal";
 
-      const payload: CreateNoticePayload = {
+      const payload: CreateNoticePayload & { sendOnWhatsApp?: boolean } = {
         title: title.trim(),
         message: message.trim(),
         category,
         priority: validPriority,
         targetType,
+        sendOnWhatsApp,
         attachmentUrl: attachmentUrl.trim() || undefined,
         expiresAt: expiresAt ? new Date(expiresAt).toISOString() : undefined,
       };
-      return createPropertyNotice(selectedPgId, payload);
+      return createPropertyNotice(selectedPgId, payload as any);
     },
     onSuccess: () => {
       toast({ title: "Announcement Published", description: "Notice sent to all tenants successfully." });
       setCreateModalOpen(false);
       setTitle("");
       setMessage("");
+      setSendOnWhatsApp(false);
       setAttachmentUrl("");
       setExpiresAt("");
       queryClient.invalidateQueries({ queryKey: ["propertyNotices", selectedPgId] });
@@ -288,17 +291,47 @@ export default function PropertyNoticesPage() {
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-[var(--gray-700)]">
-                  Expiry Date (optional)
-                </Label>
-                <Input
-                  type="date"
-                  placeholder="dd/mm/yyyy"
-                  value={expiresAt}
-                  onChange={(e) => setExpiresAt(e.target.value)}
-                  className="h-9 text-sm"
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-[var(--gray-700)]">Target Audience</Label>
+                  <Select value={targetType} onValueChange={setTargetType}>
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_tenants">All Residents</SelectItem>
+                      <SelectItem value="block">Specific Block</SelectItem>
+                      <SelectItem value="floor">Specific Floor</SelectItem>
+                      <SelectItem value="room">Specific Room</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-[var(--gray-700)]">
+                    Expiry Date (optional)
+                  </Label>
+                  <Input
+                    type="date"
+                    placeholder="dd/mm/yyyy"
+                    value={expiresAt}
+                    onChange={(e) => setExpiresAt(e.target.value)}
+                    className="h-9 text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="sendOnWhatsApp"
+                  checked={sendOnWhatsApp}
+                  onChange={(e) => setSendOnWhatsApp(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-[#008080] focus:ring-[#008080] cursor-pointer"
                 />
+                <label htmlFor="sendOnWhatsApp" className="text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                  Send WhatsApp broadcast to affected residents
+                </label>
               </div>
             </div>
 

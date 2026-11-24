@@ -148,22 +148,36 @@ const MyPGs = () => {
     <CanAccessPage permission="room_view">
       <div className="space-y-8 animate-fade-in max-w-5xl pb-16">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="hidden md:block">
+          <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-page-title flex items-center gap-2">
-                <Building2 className="h-6 w-6 text-primary" />
-                PG Details
+              <h1 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+                <Building2 className="h-5 w-5 text-teal-600" />
+                Active Property
               </h1>
               {selectedPg && (
-                <Badge className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 text-xs font-bold">
-                  Active Property
+                <Badge className="bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-300 border-teal-200 text-xs font-bold">
+                  {selectedPg.name}
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs md:text-sm text-muted-foreground mt-1">
               Manage primary information and access property modules for {selectedPg?.name ?? "your PG"}
             </p>
           </div>
+          {properties && properties.length > 1 && (
+            <div className="md:hidden flex items-center gap-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5">
+              <span className="text-xs font-bold text-slate-500 shrink-0">Switch PG:</span>
+              <select
+                value={selectedPgId || ""}
+                onChange={(e) => setSelectedPgId(e.target.value)}
+                className="flex-1 text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg h-8 px-2 text-slate-800 dark:text-slate-200"
+              >
+                {properties.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
           {selectedPgId && (
             <Button
               type="button"

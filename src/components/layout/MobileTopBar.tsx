@@ -4,6 +4,7 @@ import mascotRent from "@/assets/mascot/mascot-rent.png";
 import { getMobilePageTitle, getParentRoute, isMobileTabRoot } from "@/lib/mobileRoutes";
 import { useOwnerNotifications } from "@/hooks/useOwnerNotifications";
 import { useEntitlements } from "@/hooks/useEntitlements";
+import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { cn } from "@/lib/utils";
 
 export function MobileTopBar() {
@@ -95,6 +96,7 @@ export function MobileTopBar() {
         >
           <img src={mascotRent} alt="" className="h-7 w-7 rounded-full object-cover object-top" />
         </button>
+        <ThemeToggle className="h-9 w-9 rounded-full border-[#E2E6EA] dark:border-slate-700 shrink-0" />
         <button
           type="button"
           onClick={() => navigate("/notifications")}

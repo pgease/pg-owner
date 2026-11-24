@@ -173,6 +173,7 @@ const App = () => (
                         <Route path="/settings/inventory" element={<InventoryManagementPage />} />
                         <Route path="/inventory" element={<InventoryManagementPage />} />
                         <Route path="/notifications" element={<NotificationsPage />} />
+                        <Route path="/notifications/preferences" element={<SettingsPage />} />
                         <Route path="/settings/notifications" element={<SettingsPage />} />
                         <Route path="/support" element={<Support />} />
                         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
