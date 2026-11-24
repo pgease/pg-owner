@@ -2317,7 +2317,7 @@ export async function getCreditPacks() {
   });
 }
 
-export async function createCreditTopupOrder(creditPackId: string, gateway: 'easebuzz' | 'razorpay' = 'razorpay') {
+export async function createCreditTopupOrder(creditPackId: string, gateway: 'easebuzz' = 'easebuzz') {
   return httpRequest<RazorpayOrderResponse>(`${PROPERTY_OWNER_BASE}/credits/${creditPackId}/checkout-order`, {
     method: 'POST',
     body: { gateway },
@@ -2631,9 +2631,9 @@ export async function getCurrentPlan() {
 
 export async function createPlanCheckoutOrder(
   planId: string,
-  payload?: { numberOfBeds?: number; durationMonths?: number; billingCycle?: 'monthly' | 'annual'; gateway?: 'easebuzz' | 'razorpay' } | 'monthly' | 'annual'
+  payload?: { numberOfBeds?: number; durationMonths?: number; billingCycle?: 'monthly' | 'annual'; gateway?: 'easebuzz' } | 'monthly' | 'annual'
 ) {
-  const body = typeof payload === 'object' ? { ...payload, gateway: payload.gateway || 'razorpay' } : { billingCycle: payload || 'monthly', gateway: 'razorpay' };
+  const body = typeof payload === 'object' ? { ...payload, gateway: 'easebuzz' } : { billingCycle: payload || 'monthly', gateway: 'easebuzz' };
   return httpRequest<RazorpayOrderResponse>(`${PROPERTY_OWNER_BASE}/plans/${planId}/checkout-order`, {
     method: 'POST',
     body,

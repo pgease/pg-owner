@@ -1016,7 +1016,7 @@ export function useCreatePlanCheckoutOrderMutation() {
       numberOfBeds?: number;
       durationMonths?: number;
       billingCycle?: 'monthly' | 'annual';
-      gateway?: 'easebuzz' | 'razorpay';
+      gateway?: 'easebuzz';
     }) =>
       createPlanCheckoutOrder(planId, { numberOfBeds, durationMonths, billingCycle, gateway }),
   });
