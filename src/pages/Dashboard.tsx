@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Building2, UserPlus, IndianRupee, BedDouble, Users, MessageSquareWarning, RefreshCw, ChevronDown, ShieldCheck } from "lucide-react";
+import { Building2, UserPlus, IndianRupee, BedDouble, Users, MessageSquareWarning, RefreshCw, ChevronDown, ShieldCheck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { authStorage } from "@/api/http";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,7 +33,7 @@ import { cn } from "@/lib/utils";
 const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { properties, selectedPgId } = useApp();
+  const { properties, selectedPgId, isLoadingProperties } = useApp();
   const list = Array.isArray(properties) ? properties : [];
   const selectedPg = list.find((p) => p.id === selectedPgId);
   const subAccess = useSubscriptionAccess();
@@ -41,6 +42,20 @@ const Dashboard = () => {
   const [celebrationOpen, setCelebrationOpen] = useState(false);
   const [celebrationPgName, setCelebrationPgName] = useState("");
   const [gateModalOpen, setGateModalOpen] = useState(false);
+
+  // If user is not logged in, immediately redirect to login (never show empty dashboard)
+  useEffect(() => {
+    if (!authStorage.isLoggedIn()) {
+      authStorage.clear();
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    // If logged in and properties finished loading, but owner has zero properties, redirect to onboarding
+    if (!isLoadingProperties && list.length === 0) {
+      navigate("/onboarding", { replace: true });
+    }
+  }, [isLoadingProperties, list.length, navigate]);
 
   // Celebration dialog right after onboarding.
   useEffect(() => {
@@ -79,7 +94,22 @@ const Dashboard = () => {
     else navigate("/onboarding", { state: { forceShowForm: true } });
   };
 
+  if (isLoadingProperties) {
+    return (
+      <div className="flex h-[60vh] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#008080]" />
+      </div>
+    );
+  }
+
   if (!selectedPgId) {
+    if (!list.length) {
+      return (
+        <div className="flex h-[60vh] w-full items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-[#008080]" />
+        </div>
+      );
+    }
     return (
       <CanAccessPage permission="dashboard_view">
         <MobileDashboard />

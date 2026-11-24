@@ -13,7 +13,7 @@ const PROPERTY_OWNER_KEY = "pgEase_propertyOwner";
 const SELECTED_PG_ID_KEY = "pgEase_selectedPgId";
 const LANGUAGE_KEY = "pgEase_language";
 
-import { decodeJwtPayload } from "../lib/jwt";
+import { decodeJwtPayload, isJwtExpired } from "../lib/jwt";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -39,10 +39,22 @@ export const authStorage = {
     window.localStorage.removeItem(PGEASE_TOKEN_KEY);
     window.localStorage.removeItem(REFRESH_TOKEN_KEY);
     window.localStorage.removeItem(PROPERTY_OWNER_KEY);
+    window.dispatchEvent(new Event("pgease-auth-token-updated"));
   },
-  getAccessToken() {
+  getAccessToken(): string | null {
     if (typeof window === "undefined") return null;
-    return window.localStorage.getItem(PGEASE_TOKEN_KEY) || window.localStorage.getItem(ACCESS_TOKEN_KEY);
+    const token = window.localStorage.getItem(PGEASE_TOKEN_KEY) || window.localStorage.getItem(ACCESS_TOKEN_KEY);
+    if (!token || token === "null" || token === "undefined" || !token.trim()) {
+      return null;
+    }
+    if (isJwtExpired(token)) {
+      this.clear();
+      return null;
+    }
+    return token;
+  },
+  isLoggedIn(): boolean {
+    return Boolean(this.getAccessToken());
   },
   getRefreshToken() {
     if (typeof window === "undefined") return null;

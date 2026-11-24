@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { appPrefs } from "@/api/http";
+import { appPrefs, authStorage } from "@/api/http";
 import { getProperties, updateLanguage } from "@/api/propertyOwner";
 import type { PropertyResponse } from "@/api/propertyOwner";
 
@@ -18,6 +18,7 @@ interface AppContextValue {
   selectedPgId: string | null;
   setSelectedPgId: (id: string | null) => void;
   properties: PropertyResponse[];
+  isLoadingProperties: boolean;
   refreshProperties: () => Promise<void>;
   isPgSwitcherOpen: boolean;
   setIsPgSwitcherOpen: (open: boolean) => void;
@@ -31,11 +32,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Lang>(() => appPrefs.getLanguage());
   const [selectedPgId, setSelectedPgIdState] = useState<string | null>(() => appPrefs.getSelectedPgId());
   const [properties, setProperties] = useState<PropertyResponse[]>([]);
+  const [isLoadingProperties, setIsLoadingProperties] = useState(true);
   const [isPgSwitcherOpen, setIsPgSwitcherOpen] = useState(false);
   const [isOwnerDrawerOpen, setIsOwnerDrawerOpen] = useState(false);
 
   const refreshProperties = useCallback(async () => {
     try {
+      if (!authStorage.isLoggedIn()) {
+        authStorage.clear();
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+          window.location.href = "/login";
+        }
+        return;
+      }
       const raw = await getProperties();
       const list = Array.isArray(raw)
         ? raw
@@ -54,8 +63,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
         return prev;
       });
-    } catch {
+    } catch (err: any) {
+      if (err?.status === 401 || !authStorage.isLoggedIn()) {
+        authStorage.clear();
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+          window.location.href = "/login";
+        }
+        return;
+      }
       setProperties([]);
+    } finally {
+      setIsLoadingProperties(false);
     }
   }, []);
 
@@ -80,6 +98,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     selectedPgId,
     setSelectedPgId,
     properties,
+    isLoadingProperties,
     refreshProperties,
     isPgSwitcherOpen,
     setIsPgSwitcherOpen,

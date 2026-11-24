@@ -13,3 +13,19 @@ export function decodeJwtPayload(token: string): Record<string, unknown> | null 
     return null;
   }
 }
+
+/**
+ * Check if a JWT token is expired based on its `exp` claim.
+ */
+export function isJwtExpired(token: string): boolean {
+  try {
+    const payload = decodeJwtPayload(token);
+    if (!payload) return false;
+    if (typeof payload.exp === "number") {
+      return Date.now() >= payload.exp * 1000;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}

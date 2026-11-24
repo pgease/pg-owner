@@ -10,7 +10,8 @@ const RequireAuth = ({ children }: RequireAuthProps) => {
   const location = useLocation();
   const token = authStorage.getAccessToken();
 
-  if (!token) {
+  if (!token || !authStorage.isLoggedIn()) {
+    authStorage.clear();
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
