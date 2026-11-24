@@ -512,6 +512,16 @@ const Onboarding = () => {
     }
   };
 
+  const isFormValid =
+    Boolean(ownerName.trim()) &&
+    Boolean(pgName.trim()) &&
+    Boolean(propertyTypeId) &&
+    Boolean(bedRange) &&
+    Boolean(addressLine1.trim()) &&
+    Boolean(city.trim()) &&
+    Boolean(stateName.trim()) &&
+    /^\d{6}$/.test(pincode.trim());
+
   const bedOptions = BED_RANGE_OPTIONS.map((o) => ({
     value: o.value,
     label: lang === "en" ? o.labelEn : o.labelHi,
@@ -526,7 +536,7 @@ const Onboarding = () => {
       ];
 
   return (
-    <div className="h-screen max-h-screen bg-[#F8FAFB] text-[#1F2937] flex flex-col font-poppins relative selection:bg-[#008080]/15 select-none overflow-hidden">
+    <div className="min-h-screen bg-[#F8FAFB] text-[#1F2937] flex flex-col font-poppins relative selection:bg-[#008080]/15 select-none overflow-x-hidden">
       {/* Soft Brand Teal Gradient Aura at top */}
       <div className="absolute top-0 inset-x-0 h-72 bg-gradient-to-b from-[#E6F3F3] via-[#F4F9F9] to-[#F8FAFB] pointer-events-none" />
 
@@ -540,16 +550,16 @@ const Onboarding = () => {
       />
 
       {/* ================= TOP NAVBAR ================= */}
-      <header className="w-full shrink-0 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 sm:px-8 py-2.5 flex items-center justify-between z-30 shadow-2xs">
+      <header className="sticky top-0 w-full shrink-0 bg-white/95 backdrop-blur-md border-b border-gray-100 px-3.5 sm:px-8 py-2.5 flex items-center justify-between z-30 shadow-2xs">
         {/* Brand Logo & Portal Badge */}
-        <div className="flex items-center gap-2.5 sm:gap-3.5">
+        <div className="flex items-center gap-2 sm:gap-3.5">
           <div className="flex items-center gap-2">
             <img
               src={pgeaseLogo}
               alt="PG Ease"
-              className="h-8 w-8 rounded-xl shadow-2xs object-cover"
+              className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl shadow-2xs object-cover"
             />
-            <span className="font-extrabold text-[16px] sm:text-[18px] tracking-tight text-[#1F2937]">
+            <span className="font-extrabold text-[15px] sm:text-[18px] tracking-tight text-[#1F2937]">
               PG Ease
             </span>
           </div>
@@ -560,7 +570,7 @@ const Onboarding = () => {
         </div>
 
         {/* Right Controls: WhatsApp Support & Language Switcher */}
-        <div className="flex items-center gap-2.5 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           {/* Support Phone */}
           <a
             href="https://wa.me/917701953356"
@@ -580,7 +590,7 @@ const Onboarding = () => {
                 key={l}
                 type="button"
                 onClick={() => setLanguage(l === "en" ? "en-US" : "hi-IN")}
-                className={`px-3 py-0.5 rounded-full text-xs font-semibold transition-all ${
+                className={`px-2.5 sm:px-3 py-0.5 rounded-full text-xs font-semibold transition-all ${
                   lang === l
                     ? "bg-[#008080] text-white shadow-xs"
                     : "text-gray-600 hover:text-gray-900"
@@ -605,11 +615,11 @@ const Onboarding = () => {
         </div>
       </header>
 
-      {/* ================= MAIN ONBOARDING CONTENT (100vh Responsive) ================= */}
-      <main className="flex-1 min-h-0 w-full max-w-2xl lg:max-w-3xl mx-auto px-4 sm:px-6 py-2.5 sm:py-3.5 flex flex-col justify-center overflow-y-auto z-10">
+      {/* ================= MAIN ONBOARDING CONTENT (Mobile Responsive) ================= */}
+      <main className="flex-1 w-full max-w-2xl lg:max-w-3xl mx-auto px-3.5 sm:px-6 py-4 sm:py-8 flex flex-col justify-start md:justify-center z-10">
         {!showForm && properties.length > 0 ? (
           /* ================= RETURNING OWNER PROPERTY PICKER ================= */
-          <motion.div {...stepMotion} className="space-y-4 my-auto">
+          <motion.div {...stepMotion} className="space-y-4 md:my-auto w-full">
             <div className="text-center space-y-1">
               <div className="inline-flex h-11 w-11 rounded-2xl bg-teal-50 border border-teal-200/80 items-center justify-center text-[#008080] shadow-2xs mb-0.5">
                 <Building2 className="h-5 w-5" />
@@ -623,7 +633,7 @@ const Onboarding = () => {
             </div>
 
             <Card className="rounded-2xl border border-gray-200/80 bg-white shadow-lg shadow-gray-200/40 overflow-hidden">
-              <CardContent className="p-5 sm:p-6 space-y-3">
+              <CardContent className="p-4 sm:p-6 space-y-3">
                 <div className="grid gap-2.5 max-h-[320px] overflow-y-auto pr-1">
                   {properties.map((pg) => {
                     const initials = pg.name
@@ -688,10 +698,10 @@ const Onboarding = () => {
           </motion.div>
         ) : (
           /* ================= MAIN PG OWNER ONBOARDING FORM ================= */
-          <motion.div {...stepMotion} className="space-y-3 my-auto py-1">
-            {/* Top Page Header (Compact) */}
-            <div className="text-center space-y-0.5">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#E8F4F4] border border-[#008080]/30 text-[#008080] text-[10px] font-bold tracking-wider uppercase mb-0.5">
+          <motion.div {...stepMotion} className="space-y-3.5 md:my-auto py-1 w-full">
+            {/* Top Page Header */}
+            <div className="text-center space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#E8F4F4] border border-[#008080]/30 text-[#008080] text-[10px] font-bold tracking-wider uppercase">
                 <Sparkles className="h-3 w-3" />
                 <span>{T.stepBadge}</span>
               </div>
@@ -704,10 +714,10 @@ const Onboarding = () => {
               </p>
             </div>
 
-            {/* Main Form Card Container (Fits 100vh) */}
+            {/* Main Form Card Container */}
             <Card className="rounded-2xl border border-gray-200/80 bg-white shadow-xl shadow-gray-200/40">
-              <CardContent className="p-4 sm:p-5 space-y-3">
-                {/* 1. Owner Full Name & PG Name (Generously sized & spaced) */}
+              <CardContent className="p-4 sm:p-5 space-y-3.5">
+                {/* 1. Owner Full Name & PG Name */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div className="space-y-1.5">
                     <Label htmlFor="owner-name" className="text-xs sm:text-[13px] font-semibold text-gray-800 flex items-center gap-1.5">
@@ -740,7 +750,7 @@ const Onboarding = () => {
                   </div>
                 </div>
 
-                {/* 2. Property Type Selection Tiles */}
+                {/* 2. Property Type Selection (Dropdown on mobile, tiles on desktop) */}
                 <div className="space-y-1.5">
                   <Label className="text-xs sm:text-[13px] font-semibold text-gray-800 flex items-center gap-1.5">
                     <Home className="h-4 w-4 text-[#008080]" />
@@ -748,7 +758,24 @@ const Onboarding = () => {
                     <span className="text-red-500 font-bold">*</span>
                   </Label>
 
-                  <div className="grid grid-cols-3 gap-2">
+                  {/* Mobile View: Clean Select Dropdown */}
+                  <div className="block sm:hidden">
+                    <Select value={propertyTypeId} onValueChange={setPropertyTypeId}>
+                      <SelectTrigger className="h-11 rounded-xl border-gray-200 bg-[#F9FAFB] text-sm text-gray-800 focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15">
+                        <SelectValue placeholder={T.selectTypePlaceholder} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availablePropertyTypes.map((type) => (
+                          <SelectItem key={type.id} value={type.id} className="text-sm py-2">
+                            <span className="font-medium">{type.name}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Desktop / Tablet View: Grid Tiles */}
+                  <div className="hidden sm:grid sm:grid-cols-3 gap-2">
                     {availablePropertyTypes.slice(0, 3).map((type) => {
                       const isSelected = propertyTypeId === type.id;
                       return (
@@ -778,23 +805,26 @@ const Onboarding = () => {
                     })}
                   </div>
 
+                  {/* Overflow Property Types for Desktop if more than 3 */}
                   {availablePropertyTypes.length > 3 && (
-                    <Select value={propertyTypeId} onValueChange={setPropertyTypeId}>
-                      <SelectTrigger className="h-10 rounded-xl border-gray-200 bg-[#F9FAFB] text-xs sm:text-sm text-gray-800 mt-1">
-                        <SelectValue placeholder={T.selectTypePlaceholder} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availablePropertyTypes.map((t) => (
-                          <SelectItem key={t.id} value={t.id}>
-                            {t.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="hidden sm:block">
+                      <Select value={propertyTypeId} onValueChange={setPropertyTypeId}>
+                        <SelectTrigger className="h-10 rounded-xl border-gray-200 bg-[#F9FAFB] text-xs sm:text-sm text-gray-800 mt-1">
+                          <SelectValue placeholder={T.selectTypePlaceholder} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availablePropertyTypes.map((t) => (
+                            <SelectItem key={t.id} value={t.id}>
+                              {t.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   )}
                 </div>
 
-                {/* 3. Bed Capacity / Range Selection */}
+                {/* 3. Bed Capacity / Range Selection (Dropdown on mobile, pill buttons on desktop) */}
                 <div className="space-y-1.5">
                   <Label className="text-xs sm:text-[13px] font-semibold text-gray-800 flex items-center gap-1.5">
                     <BedDouble className="h-4 w-4 text-[#008080]" />
@@ -802,7 +832,24 @@ const Onboarding = () => {
                     <span className="text-red-500 font-bold">*</span>
                   </Label>
 
-                  <div className="grid grid-cols-5 gap-1.5">
+                  {/* Mobile View: Clean Select Dropdown */}
+                  <div className="block sm:hidden">
+                    <Select value={bedRange} onValueChange={setBedRange}>
+                      <SelectTrigger className="h-11 rounded-xl border-gray-200 bg-[#F9FAFB] text-sm text-gray-800 focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/15">
+                        <SelectValue placeholder={T.selectRangePlaceholder} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {bedOptions.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value} className="text-sm py-2">
+                            <span className="font-medium">{opt.label}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Desktop / Tablet View: Pill Buttons */}
+                  <div className="hidden sm:grid sm:grid-cols-5 gap-1.5">
                     {bedOptions.map((opt) => {
                       const isSelected = bedRange === opt.value;
                       return (
@@ -837,7 +884,7 @@ const Onboarding = () => {
                       type="button"
                       onClick={() => void handleUseLocation()}
                       disabled={locating}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8F4F4] hover:bg-[#d8eded] border border-[#008080]/30 text-xs font-bold text-[#008080] shadow-2xs transition-all active:scale-95 disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8F4F4] hover:bg-[#d8eded] border border-[#008080]/30 text-xs font-bold text-[#008080] shadow-2xs transition-all active:scale-95 disabled:opacity-50 shrink-0"
                       title="Auto-detect address via GPS"
                     >
                       {locating ? (
@@ -932,13 +979,17 @@ const Onboarding = () => {
                   </div>
                 </div>
 
-                {/* Form Action Button (Always prominent vibrant teal, h-13 sm:h-14) */}
-                <div className="pt-2 sm:pt-3">
+                {/* Form Action Button (Enabled ONLY when mandatory fields are filled) */}
+                <div className="pt-2 sm:pt-3 space-y-1.5">
                   <Button
                     type="button"
                     onClick={() => void handlePropertyContinue()}
-                    disabled={isSubmitting}
-                    className="w-full h-13 sm:h-14 rounded-xl bg-[#008080] hover:bg-[#006e6e] text-white text-base font-bold shadow-lg shadow-teal-700/25 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    disabled={!isFormValid || isSubmitting}
+                    className={`w-full h-13 sm:h-14 rounded-xl text-base font-bold transition-all flex items-center justify-center gap-2 ${
+                      isFormValid && !isSubmitting
+                        ? "bg-[#008080] hover:bg-[#006e6e] text-white shadow-lg shadow-teal-700/25 active:scale-[0.99] cursor-pointer"
+                        : "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed shadow-none"
+                    }`}
                   >
                     {isSubmitting ? (
                       <>
@@ -952,12 +1003,17 @@ const Onboarding = () => {
                       </>
                     )}
                   </Button>
+                  {!isFormValid && (
+                    <p className="text-[11px] text-center text-gray-400 font-medium">
+                      {lang === "en" ? "Fill all required fields (*) to launch dashboard" : "डैशबोर्ड खोलने के लिए सभी आवश्यक फ़ील्ड (*) भरें"}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
             {/* Trust and Security Guarantee */}
-            <div className="flex items-center justify-center gap-1.5 text-center text-[11px] text-gray-400">
+            <div className="flex items-center justify-center gap-1.5 text-center text-[11px] text-gray-400 pt-1">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
               <span>{T.secureFooter}</span>
             </div>
