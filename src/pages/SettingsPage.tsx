@@ -28,6 +28,7 @@ import {
   AlertOctagon,
   ArrowLeft,
   ArrowRight,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +44,7 @@ import {
 } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { getMe } from "@/api/propertyOwner";
-import { authStorage } from "@/api/http";
+import { authStorage, performLogout } from "@/api/http";
 import { useApp } from "@/context/AppContext";
 import { PageHeader } from "@/components/common/PageHeader";
 import {
@@ -370,15 +371,30 @@ export default function SettingsPage() {
           </div>
 
           {!isEditingProfile ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditingProfile(true)}
-              className="h-8 text-xs border-[var(--gray-300)] gap-1.5"
-            >
-              <Edit2 className="h-3.5 w-3.5 text-[var(--brand-600)]" /> Edit Name & Email
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditingProfile(true)}
+                className="h-8 text-xs border-[var(--gray-300)] gap-1.5"
+              >
+                <Edit2 className="h-3.5 w-3.5 text-[var(--brand-600)]" /> Edit Name & Email
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (window.confirm("Are you sure you want to log out of PG Ease?")) {
+                    performLogout();
+                  }
+                }}
+                className="h-8 text-xs border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 gap-1.5"
+              >
+                <LogOut className="h-3.5 w-3.5 text-red-600" /> Log Out
+              </Button>
+            </div>
           ) : (
             <div className="flex items-center gap-2">
               <Button

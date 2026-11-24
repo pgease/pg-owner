@@ -20,7 +20,7 @@ import { useState, useMemo } from "react";
 import pgeaseBrandLogoWhite from "@/assets/pgease-full-brand-logo-white.png";
 import pgeaseIconColor from "@/assets/pgease-icon-color.png";
 import pgeaseIconWhite from "@/assets/pgease-icon-white.png";
-import { authStorage } from "@/api/http";
+import { authStorage, performLogout } from "@/api/http";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 import { usePermissions } from "@/context/PermissionContext";
 import { useApp } from "@/context/AppContext";
@@ -214,8 +214,7 @@ const SidebarContent = ({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   };
 
   const handleLogout = () => {
-    authStorage.clear();
-    navigate("/login");
+    performLogout();
   };
 
   const isLockedByPermission = (permissionKey?: string) => {

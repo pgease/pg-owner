@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useApp } from "@/context/AppContext";
-import { authStorage } from "@/api/http";
+import { authStorage, performLogout } from "@/api/http";
 import { useTutorials } from "@/context/TutorialContext";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
@@ -156,8 +156,7 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
   const { items: notificationItems, unreadCount } = useOwnerNotifications();
 
   const handleLogout = () => {
-    authStorage.clear();
-    navigate("/login");
+    performLogout();
   };
 
   const handleAddProperty = () => {

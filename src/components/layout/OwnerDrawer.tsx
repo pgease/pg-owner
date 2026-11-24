@@ -36,7 +36,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
-import { authStorage } from "@/api/http";
+import { authStorage, performLogout } from "@/api/http";
 import { cn } from "@/lib/utils";
 
 interface OwnerDrawerProps {
@@ -162,9 +162,8 @@ export const OwnerDrawer: React.FC<OwnerDrawerProps> = ({ open, onClose, onOpenS
 
   const handleLogout = () => {
     if (window.confirm("Are you sure you want to log out?")) {
-      authStorage.clear();
       onClose();
-      navigate("/login");
+      performLogout();
     }
   };
 

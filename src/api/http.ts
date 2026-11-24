@@ -35,11 +35,32 @@ export const authStorage = {
   },
   clear() {
     if (typeof window === "undefined") return;
-    window.localStorage.removeItem(ACCESS_TOKEN_KEY);
-    window.localStorage.removeItem(PGEASE_TOKEN_KEY);
-    window.localStorage.removeItem(REFRESH_TOKEN_KEY);
-    window.localStorage.removeItem(PROPERTY_OWNER_KEY);
+    const authKeys = [
+      ACCESS_TOKEN_KEY,
+      PGEASE_TOKEN_KEY,
+      "pgease_token",
+      "pgease_access_token",
+      "access_token",
+      "pgease_auth_token",
+      REFRESH_TOKEN_KEY,
+      "pgease_refresh_token",
+      "refresh_token",
+      PROPERTY_OWNER_KEY,
+      "pgease_propertyOwner",
+      "pgease_owner",
+      "pgease_user",
+      SELECTED_PG_ID_KEY,
+      "pgease_selectedPgId",
+      "trial_expired_gate_dismissed",
+    ];
+    authKeys.forEach((key) => window.localStorage.removeItem(key));
+    try {
+      window.sessionStorage.clear();
+    } catch {
+      // ignore
+    }
     window.dispatchEvent(new Event("pgease-auth-token-updated"));
+    window.dispatchEvent(new Event("pgease-owner-updated"));
   },
   getAccessToken(): string | null {
     if (typeof window === "undefined") return null;
@@ -139,15 +160,15 @@ async function attemptTokenRefresh(): Promise<boolean> {
   }
 }
 
-function forceLogout() {
+export function performLogout() {
   authStorage.clear();
-  if (
-    typeof window !== "undefined" &&
-    !window.location.pathname.startsWith("/login") &&
-    window.location.pathname !== "/"
-  ) {
-    window.location.href = "/login";
+  if (typeof window !== "undefined") {
+    window.location.replace("/login");
   }
+}
+
+function forceLogout() {
+  performLogout();
 }
 
 function formatApiErrorMessage(data: unknown): string {

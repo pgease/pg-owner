@@ -1,12 +1,11 @@
 import { ShieldAlert, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { authStorage } from "@/api/http";
+import { authStorage, performLogout } from "@/api/http";
 import pgeaseLogo from "@/assets/pgease-logo.jpg";
 
 export const StaffExpiredLockout = () => {
   const handleLogout = () => {
-    authStorage.clear();
-    window.location.href = "/login";
+    performLogout();
   };
 
   return (
