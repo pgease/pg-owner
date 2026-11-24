@@ -16,7 +16,7 @@ type Lang = "en" | "hi";
 
 const COPY = {
   en: {
-    welcomeTitle: "Welcome to PG Ease",
+    welcomeTitle: "Welcome to PG Ease Manager",
     welcomeSubtitle: "Enter your mobile number to sign in or register",
     mobileNumber: "Mobile Number",
     phonePlaceholder: "10-digit number",
@@ -45,7 +45,7 @@ const COPY = {
     successBody: "Connecting to your property portfolio...",
   },
   hi: {
-    welcomeTitle: "Welcome to PG Ease",
+    welcomeTitle: "Welcome to PG Ease Manager",
     welcomeSubtitle: "साइन इन या रजिस्टर करने के लिए मोबाइल नंबर दर्ज करें",
     mobileNumber: "मोबाइल नंबर",
     phonePlaceholder: "10-अंकीय नंबर दर्ज करें",
@@ -142,7 +142,7 @@ export function MobileAuthSheet({
   const onOtpStep = step === "otp";
 
   return (
-    <div className="md:hidden relative min-h-[100dvh] bg-[#FFFFFF] flex flex-col justify-between overflow-x-hidden font-poppins select-none">
+    <div className="md:hidden relative min-h-[100dvh] bg-[#FFFFFF] flex flex-col justify-between overflow-x-hidden overflow-y-auto font-poppins select-none" style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top))" }}>
       {/* Top 320dp Soft Gradient from #E6F3F3 to #FFFFFF */}
       <div className="absolute top-0 inset-x-0 h-[320px] bg-gradient-to-b from-[#E6F3F3] to-[#FFFFFF] pointer-events-none" />
 
@@ -175,22 +175,22 @@ export function MobileAuthSheet({
       </div>
 
       {/* Main Content Area */}
-      <div className="relative z-10 flex-1 flex flex-col items-center px-6 pt-4 pb-8 max-w-md mx-auto w-full">
+      <div className="relative z-10 flex-1 flex flex-col items-center px-6 pt-1 pb-4 max-w-md mx-auto w-full">
         {/* Logo: 96dp Teal (#008080) Circle with White Mark Inside (60dp tall, centered, NO white box) */}
-        <div className="flex h-[96px] w-[96px] items-center justify-center rounded-full bg-[#008080] shadow-md mb-6">
+        <div className="flex h-[96px] w-[96px] items-center justify-center rounded-full bg-[#008080] shadow-md mb-3 sm:mb-5 shrink-0">
           <img
             src="/brand/pgease-mark-white.svg"
-            alt="PG Ease"
+            alt="PG Ease Manager"
             className="h-[60px] w-auto object-contain"
           />
         </div>
 
         {/* Title and Subtitle: Truly Centered */}
-        <div className="w-full text-center mb-7">
-          <h1 className="text-[24px] font-semibold text-[#1F2937] leading-[34px] tracking-tight w-full text-center">
+        <div className="w-full text-center mb-3 sm:mb-5 shrink-0">
+          <h1 className="text-[22px] sm:text-[24px] font-semibold text-[#1F2937] leading-[30px] sm:leading-[34px] tracking-tight w-full text-center">
             {onOtpStep ? t.verifyTitle : t.welcomeTitle}
           </h1>
-          <p className="mt-1.5 text-[14px] font-normal text-[#6B7280] leading-[22px] max-w-[300px] mx-auto text-center">
+          <p className="mt-1 text-[13px] sm:text-[14px] font-normal text-[#6B7280] leading-[20px] sm:leading-[22px] max-w-[300px] mx-auto text-center">
             {onOtpStep ? (
               <>
                 {channel === "whatsapp" ? t.verifySubtitleWa : t.verifySubtitleSms}{" "}
@@ -203,7 +203,7 @@ export function MobileAuthSheet({
         </div>
 
         {/* Form Container */}
-        <div className={`w-full space-y-5 ${shaking ? "animate-shake" : ""}`}>
+        <div className={`w-full space-y-3.5 sm:space-y-4 ${shaking ? "animate-shake" : ""}`}>
           {onOtpStep ? (
             /* ================= OTP VERIFICATION ================= */
             <div className="space-y-4">
@@ -346,7 +346,6 @@ export function MobileAuthSheet({
                       }
                     }}
                     placeholder={t.phonePlaceholder}
-                    autoFocus
                     className="w-full bg-transparent pl-3 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none tracking-wide"
                   />
                 </div>
@@ -411,7 +410,7 @@ export function MobileAuthSheet({
         </div>
 
         {/* Safe Badge & Footer Terms */}
-        <div className="w-full text-center mt-auto pt-8 pb-2 space-y-2">
+        <div className="w-full text-center mt-auto pt-3 sm:pt-6 pb-2 space-y-1.5 shrink-0">
           <div className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-400">
             <Lock className="h-3 w-3 text-emerald-600" />
             <span>{t.safeBadge}</span>
