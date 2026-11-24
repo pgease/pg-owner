@@ -1582,68 +1582,86 @@ export const RentPayments = () => {
             ) : (
               <>
                 <div className="space-y-2.5 md:hidden">
-              {filteredRows.map((row) => (
-                <MobileCard key={row.id}>
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-[16px] font-semibold text-[#101010]">{row.tenantName}</p>
-                      <p className="text-[13px] text-[#636363]">
-                        Room {row.roomNumber} · {formatINR(row.monthlyRent)}
-                      </p>
-                    </div>
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-0.5 text-[11px] font-medium",
-                        row.status === "paid"
-                          ? "bg-[#D2FDC0] text-[#187D3F]"
-                          : row.status === "verification_pending"
-                            ? "bg-[#FFE7CC] text-[#FF8800]"
-                            : "bg-[#FFEFEF] text-[#B42318]",
-                      )}
-                    >
-                      {row.status === "paid"
-                        ? "Paid"
-                        : row.status === "verification_pending"
-                          ? "UTR review"
-                          : row.status === "overdue"
-                            ? `Overdue ${row.overdueDays}d`
-                            : row.amountDue > 0
-                              ? `Due ${formatINR(row.amountDue)}`
-                              : "Pending"}
-                    </span>
-                  </div>
-                  <div className="mt-3 flex gap-2">
-                    {row.status === "verification_pending" ? (
-                      <button
-                        type="button"
-                        className="flex h-11 flex-1 items-center justify-center rounded-full bg-[#FFE7CC] text-[13px] font-medium text-[#FF8800]"
-                        onClick={() => {
-                          const v = verifications.find((item) => item.tenantId === row.tenantId || item.tenantName.toLowerCase() === row.tenantName.toLowerCase());
-                          if (v) {
-                            setActiveVerification(v);
-                            setVerificationDrawerOpen(true);
-                          }
-                        }}
-                      >
-                        {(() => {
-                          const v = verifications.find((item) => item.tenantId === row.tenantId || item.tenantName.toLowerCase() === row.tenantName.toLowerCase());
-                          const isCash = v?.paymentMethod?.toUpperCase() === "CASH" || v?.utr === "CASH_HANDOVER" || v?.utrNumber === "CASH_HANDOVER";
-                          return isCash ? "Review Cash" : "Review UTR";
-                        })()}
-                      </button>
-                    ) : row.status !== "paid" ? (
-                      <button
-                        type="button"
-                        className="flex h-11 flex-1 items-center justify-center rounded-full bg-[#008080] text-[13px] font-medium text-white"
-                        onClick={() => handleOpenRecordPayment(row)}
-                      >
-                        Record
-                      </button>
-                    ) : null}
-                  </div>
-                </MobileCard>
-              ))}
-            </div>
+                  {filteredRows.length === 0 ? (
+                    <EmptyState
+                      title={filteredRows.length === 0 && (statusFilter !== "all" && statusFilter !== "dues_all") ? "No tenants match this filter" : (registerRows.length === 0 ? "No rent entries for this month" : "No tenants match this filter")}
+                      description={
+                        registerRows.length === 0
+                          ? `There are no tenant records active for ${MONTH_NAMES[month - 1]} ${year}.`
+                          : "All tenants are settled or there are no records for this status."
+                      }
+                      action={
+                        statusFilter !== "all" && statusFilter !== "dues_all" ? (
+                          <Button variant="secondary" size="sm" onClick={() => setStatusFilter(isDuesRoute ? "dues_all" : "all")}>
+                            Show all {isDuesRoute ? "dues" : "tenants"}
+                          </Button>
+                        ) : undefined
+                      }
+                    />
+                  ) : (
+                    filteredRows.map((row) => (
+                      <MobileCard key={row.id}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-[16px] font-semibold text-[#101010]">{row.tenantName}</p>
+                            <p className="text-[13px] text-[#636363]">
+                              Room {row.roomNumber} · {formatINR(row.monthlyRent)}
+                            </p>
+                          </div>
+                          <span
+                            className={cn(
+                              "rounded-full px-2 py-0.5 text-[11px] font-medium",
+                              row.status === "paid"
+                                ? "bg-[#D2FDC0] text-[#187D3F]"
+                                : row.status === "verification_pending"
+                                  ? "bg-[#FFE7CC] text-[#FF8800]"
+                                  : "bg-[#FFEFEF] text-[#B42318]",
+                            )}
+                          >
+                            {row.status === "paid"
+                              ? "Paid"
+                              : row.status === "verification_pending"
+                                ? "UTR review"
+                                : row.status === "overdue"
+                                  ? `Overdue ${row.overdueDays}d`
+                                  : row.amountDue > 0
+                                    ? `Due ${formatINR(row.amountDue)}`
+                                    : "Pending"}
+                          </span>
+                        </div>
+                        <div className="mt-3 flex gap-2">
+                          {row.status === "verification_pending" ? (
+                            <button
+                              type="button"
+                              className="flex h-11 flex-1 items-center justify-center rounded-full bg-[#FFE7CC] text-[13px] font-medium text-[#FF8800]"
+                              onClick={() => {
+                                const v = verifications.find((item) => item.tenantId === row.tenantId || item.tenantName.toLowerCase() === row.tenantName.toLowerCase());
+                                if (v) {
+                                  setActiveVerification(v);
+                                  setVerificationDrawerOpen(true);
+                                }
+                              }}
+                            >
+                              {(() => {
+                                const v = verifications.find((item) => item.tenantId === row.tenantId || item.tenantName.toLowerCase() === row.tenantName.toLowerCase());
+                                const isCash = v?.paymentMethod?.toUpperCase() === "CASH" || v?.utr === "CASH_HANDOVER" || v?.utrNumber === "CASH_HANDOVER";
+                                return isCash ? "Review Cash" : "Review UTR";
+                              })()}
+                            </button>
+                          ) : row.status !== "paid" ? (
+                            <button
+                              type="button"
+                              className="flex h-11 flex-1 items-center justify-center rounded-full bg-[#008080] text-[13px] font-medium text-white"
+                              onClick={() => handleOpenRecordPayment(row)}
+                            >
+                              Record
+                            </button>
+                          ) : null}
+                        </div>
+                      </MobileCard>
+                    ))
+                  )}
+                </div>
 
             {/* Rent Register DataTable */}
             <div className="hidden md:block">
@@ -1832,7 +1850,7 @@ export const RentPayments = () => {
               onRowClick={(row) => openPassbook(row)}
               emptyState={
                 <EmptyState
-                  title={registerRows.length === 0 ? "No rent entries for this month" : "No tenants match this filter"}
+                  title={filteredRows.length === 0 && (statusFilter !== "all" && statusFilter !== "dues_all") ? "No tenants match this filter" : (registerRows.length === 0 ? "No rent entries for this month" : "No tenants match this filter")}
                   description={
                     registerRows.length === 0
                       ? `There are no tenant records active for ${MONTH_NAMES[month - 1]} ${year}.`
