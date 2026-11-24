@@ -19,6 +19,7 @@ import {
   Plus,
   Trash2,
   CheckCircle2,
+  FileCheck,
   FileText,
   AlertCircle,
   Download,

@@ -115,9 +115,14 @@ export function MobileAuthSheet({
   canResend,
   shaking,
 }: {
+  isSignup?: boolean;
+  showSuccess?: boolean;
+  ownerName?: string;
+  onOwnerNameChange?: (v: string) => void;
+  nameError?: string;
   lang: Lang;
   onLangToggle: () => void;
-  step: "phone" | "otp";
+  step: "phone" | "otp" | "first_time_name";
   phone: string;
   onPhoneChange: (v: string) => void;
   phoneError: string;

@@ -39,6 +39,7 @@ import { useTutorials } from "@/context/TutorialContext";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useOwnerNotifications } from "@/hooks/useOwnerNotifications";
+import { useThemeMode } from "@/hooks/useThemeMode";
 import pgeaseIconColor from "@/assets/pgease-icon-color.png";
 import { cn } from "@/lib/utils";
 import { TrialExpiredGateModal } from "@/components/common/TrialExpiredGateModal";
@@ -77,6 +78,7 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
   const { openYouTubeTutorial, currentRouteTutorialKey } = useTutorials();
   const entitlements = useEntitlements();
   const subAccess = useSubscriptionAccess();
+  const { isDark, setIsDark } = useThemeMode();
   const [trialExpiredOpen, setTrialExpiredOpen] = useState(false);
 
   const [searchModalOpen, setSearchModalOpen] = useState(false);

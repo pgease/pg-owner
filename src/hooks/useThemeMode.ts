@@ -8,7 +8,7 @@ export function useThemeMode() {
 
   return {
     isDark: false,
-    setIsDark: () => {},
+    setIsDark: (_v?: boolean | ((prev: boolean) => boolean)) => {},
     toggleTheme: () => {},
   };
 }

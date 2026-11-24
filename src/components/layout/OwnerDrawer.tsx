@@ -136,7 +136,7 @@ export const OwnerDrawer: React.FC<OwnerDrawerProps> = ({ open, onClose, onOpenS
 
   const owner = authStorage.getPropertyOwner();
   const ownerName = owner?.name && !owner.name.startsWith("user_") ? owner.name : "PG Owner";
-  const ownerPhone = owner?.phone || owner?.mobileContactNumber || "";
+  const ownerPhone = String((owner as any)?.phone || (owner as any)?.mobileContactNumber || "");
   const initials = (ownerName || "O").trim().slice(0, 2).toUpperCase();
 
   // Collapsible sections state - default all open
