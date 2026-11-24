@@ -2724,7 +2724,7 @@ export const RentPayments = () => {
                 size="sm"
                 variant="destructive"
                 onClick={handleRejectVerification}
-                disabled={isRejecting || !rejectionReason.trim()}
+                disabled={isRejecting}
               >
                 {isRejecting ? "Rejecting..." : "Confirm Rejection"}
               </Button>
