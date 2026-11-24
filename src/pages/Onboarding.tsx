@@ -327,9 +327,7 @@ const Onboarding = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [locating, setLocating] = useState(false);
   const [propertyTypes, setPropertyTypes] = useState<PropertyType[]>([]);
-  const currentOwner = authStorage.getPropertyOwner();
-  const initialOwnerName = currentOwner?.name && !currentOwner.name.startsWith("user_") ? currentOwner.name : "";
-  const [ownerName, setOwnerName] = useState(initialOwnerName);
+  const [ownerName, setOwnerName] = useState("");
   const [pgName, setPgName] = useState("");
 
   // Structured address fields
@@ -1003,11 +1001,6 @@ const Onboarding = () => {
                       </>
                     )}
                   </Button>
-                  {!isFormValid && (
-                    <p className="text-[11px] text-center text-gray-400 font-medium">
-                      {lang === "en" ? "Fill all required fields (*) to launch dashboard" : "डैशबोर्ड खोलने के लिए सभी आवश्यक फ़ील्ड (*) भरें"}
-                    </p>
-                  )}
                 </div>
               </CardContent>
             </Card>
