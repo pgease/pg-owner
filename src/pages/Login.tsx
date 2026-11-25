@@ -173,6 +173,7 @@ const TEXTS = {
     firstTimeSubtitle: "Please enter your name to complete your owner account setup.",
     firstTimeContinue: "Continue to Dashboard",
     firstTimeSaving: "Setting up your account...",
+    footerTagline: "Made specially for Indian PG owners · Dedicated exclusively for PGs & Hostels only",
   },
   hi: {
     trustedPill: "भारत भर में पीजी और हॉस्टल के लिए आधुनिक स्मार्ट ऑपरेटिंग प्लेटफ़ॉर्म",
@@ -211,6 +212,7 @@ const TEXTS = {
     firstTimeSubtitle: "अपना ओनर खाता पूरा करने के लिए कृपया अपना नाम दर्ज करें।",
     firstTimeContinue: "डैशबोर्ड खोलें",
     firstTimeSaving: "खाता सेटअप हो रहा है...",
+    footerTagline: "विशेष रूप से भारतीय पीजी मालिकों के लिए निर्मित · केवल पीजी और हॉस्टल को समर्पित",
   },
 };
 
@@ -1146,20 +1148,14 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
         </div>
       </main>
 
-      {/* ================= BOTTOM CLIENT / TRUST BAR (COMPACT 100VH) ================= */}
+      {/* ================= BOTTOM FOOTER BAR ================= */}
       <footer data-website-chrome className="shrink-0 w-full py-2.5 px-4 text-center border-t border-gray-100 bg-[#F4F6F8]/80 select-none">
         <div className="max-w-[1240px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-3 text-center sm:text-left">
-          <div className="text-[10px] font-bold tracking-wider uppercase text-gray-500">
-            POWERING 45,000+ BEDS ACROSS LEADING HOSTELS
+          <div className="flex items-center justify-center sm:justify-start gap-2 text-xs font-semibold text-gray-700">
+            <span className="h-2 w-2 rounded-full bg-[#008080] shrink-0" />
+            <span>{T.footerTagline}</span>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-[11px] sm:text-xs font-extrabold text-gray-600 tracking-wider">
-            <span>SRI SAI CO-LIVING</span>
-            <span>STANZA LIVING PARTNERS</span>
-            <span>KOTA RESIDENCY</span>
-            <span>ZOLO ALLIANCE</span>
-            <span>URBAN CAMPUS PG</span>
-          </div>
-          <div className="text-[10px] text-gray-400">
+          <div className="text-[11px] text-gray-400">
             © 2026 PG Ease Technologies
           </div>
         </div>
