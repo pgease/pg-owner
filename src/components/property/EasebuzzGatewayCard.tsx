@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import { Browser } from "@capacitor/browser";
+import { isAppShell } from "@/lib/appShell";
 import {
   getPaymentSettings,
   lookupIfsc,
@@ -126,6 +127,18 @@ export const EasebuzzGatewayCard = () => {
 
       if (data.submerchant?.status === "KYC_PENDING") {
         setCurrentStep(2);
+        // Auto-refresh KYC link in the background so displayed/copied link is already fresh
+        refreshEasebuzzKycLink()
+          .then((res) => {
+            const freshUrl = res.kycUrl || res.kycDashboardUrl || "";
+            if (freshUrl) {
+              setKycDashboardUrl(freshUrl);
+            }
+            if (res.status === "ACTIVE") {
+              getPaymentSettings().then(setSettings).catch(() => {});
+            }
+          })
+          .catch(() => {});
       } else if (data.submerchant?.status === "ACTIVE") {
         // active state
       } else {
@@ -237,26 +250,56 @@ export const EasebuzzGatewayCard = () => {
     }
   };
 
-  // Step 2 Action: Refresh KYC Link via API 2
-  const handleRefreshKycLink = async () => {
+  // Step 2 Action: Open Easebuzz KYC Portal (always uses a freshly generated link)
+  const handleOpenKycPortal = async () => {
+    const useNativeBrowser = isAppShell();
+    const pendingTab = !useNativeBrowser ? window.open("", "_blank") : null;
     setActionLoading(true);
     try {
       const res = await refreshEasebuzzKycLink();
-      const freshUrl = res.kycUrl || res.kycDashboardUrl || "";
-      if (freshUrl) {
-        setKycDashboardUrl(freshUrl);
+      if (res.status === "ACTIVE") {
+        pendingTab?.close();
+        toast({
+          title: "KYC Approved & Active!",
+          description: "Your Easebuzz Sub-Merchant account is now verified and active.",
+        });
+        await fetchSettings();
+        return;
       }
-      toast({
-        title: "KYC Link Refreshed",
-        description: res.message || "Fresh Easebuzz KYC portal access key generated.",
-      });
-      await fetchSettings();
-      if (freshUrl) {
+
+      const freshUrl = res.kycUrl || res.kycDashboardUrl || kycDashboardUrl || settings?.submerchant?.kycDashboardUrl || "";
+      if (!freshUrl || !freshUrl.startsWith("http")) {
+        pendingTab?.close();
+        toast({
+          title: "KYC Link Unavailable",
+          description: res.message || "Could not retrieve Easebuzz KYC link. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setKycDashboardUrl(freshUrl);
+      setSettings((prev) =>
+        prev && prev.submerchant
+          ? { ...prev, submerchant: { ...prev.submerchant, kycDashboardUrl: freshUrl } }
+          : prev
+      );
+
+      if (useNativeBrowser) {
+        try {
+          await Browser.open({ url: freshUrl });
+        } catch {
+          window.open(freshUrl, "_blank");
+        }
+      } else if (pendingTab) {
+        pendingTab.location.href = freshUrl;
+      } else {
         window.open(freshUrl, "_blank");
       }
     } catch (err: any) {
+      pendingTab?.close();
       toast({
-        title: "Could Not Refresh KYC Link",
+        title: "Could Not Open Easebuzz KYC",
         description: err?.message || "Please try again later.",
         variant: "destructive",
       });
@@ -701,38 +744,16 @@ export const EasebuzzGatewayCard = () => {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
                 <Button
                   type="button"
-                  onClick={async () => {
-                    const url = kycDashboardUrl || sub?.kycDashboardUrl;
-                    if (url && url.startsWith("http")) {
-                      try {
-                        await Browser.open({ url });
-                      } catch {
-                        window.open(url, "_blank");
-                      }
-                    } else {
-                      toast({
-                        title: "Fetching new KYC link",
-                        description: "Retrieving your personalized Easebuzz onboarding link...",
-                      });
-                      handleRefreshKycLink();
-                    }
-                  }}
+                  onClick={handleOpenKycPortal}
                   disabled={actionLoading}
                   className="w-full sm:w-auto bg-[#008080] hover:bg-[#006666] text-white font-bold text-xs h-10 px-6 gap-2 shadow-sm"
                 >
-                  <ExternalLink className="h-4 w-4" />
+                  {actionLoading ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ExternalLink className="h-4 w-4" />
+                  )}
                   Open Easebuzz KYC
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleRefreshKycLink}
-                  disabled={actionLoading}
-                  className="w-full sm:w-auto text-xs h-10 font-semibold gap-2 border-border/80"
-                >
-                  <RefreshCw className={`h-3.5 w-3.5 ${actionLoading ? "animate-spin" : ""}`} />
-                  Refresh KYC Link
                 </Button>
 
                 <Button
