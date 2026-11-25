@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { MobileAuthSheet } from "@/components/auth/MobileAuthSheet";
 
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { toast } from "@/components/ui/use-toast";
+import { toast, toastError } from "@/components/ui/use-toast";
 
 import {
   requestOtp,
@@ -362,11 +362,7 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
         });
       }
     } catch (error: any) {
-      toast({
-        title: "Could not send OTP",
-        description: error?.message ?? "Please verify your mobile number and try again.",
-        variant: "destructive",
-      });
+      toastError(error, "Couldn't send OTP");
     } finally {
       setIsSendingOtp(false);
     }
@@ -500,11 +496,7 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
         setOtp("");
         const message = error?.message || "That code is not correct. Check the 4-digit code and try again.";
         setOtpError(message);
-        toast({
-          title: "Invalid OTP",
-          description: message,
-          variant: "destructive",
-        });
+        toastError(error, "Wrong OTP");
       } finally {
         setIsVerifyingOtp(false);
       }

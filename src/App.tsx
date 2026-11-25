@@ -59,6 +59,8 @@ import ApiCatalogPage from "./pages/reference/ApiCatalogPage";
 import PublicListingPage from "./pages/property/PublicListingPage";
 import FeatureCataloguePage from "./pages/FeatureCataloguePage";
 import { TutorialProvider } from "./context/TutorialContext";
+import { useEffect } from "react";
+import { setAppStatusBar } from "@/utils/statusBar";
 
 import { GlobalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
 
@@ -75,7 +77,12 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
+const App = () => {
+  useEffect(() => {
+    setAppStatusBar(false);
+  }, []);
+
+  return (
   <GlobalErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -220,6 +227,7 @@ const App = () => (
     </TooltipProvider>
   </QueryClientProvider>
 </GlobalErrorBoundary>
-);
+  );
+};
 
 export default App;

@@ -1,111 +1,125 @@
 import * as React from "react";
-import * as ToastPrimitives from "@radix-ui/react-toast";
-import { cva, type VariantProps } from "class-variance-authority";
-import { X } from "lucide-react";
-
+import { AlertCircle, CheckCircle2, Info, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const ToastProvider = ToastPrimitives.Provider;
+export type ToastVariant = "default" | "destructive" | "error" | "success" | "warning" | "info";
 
-const ToastViewport = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Viewport>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>
->(({ className, ...props }, ref) => (
-  <ToastPrimitives.Viewport
-    ref={ref}
-    className={cn(
-      "fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]",
-      className,
-    )}
-    {...props}
-  />
-));
-ToastViewport.displayName = ToastPrimitives.Viewport.displayName;
+export interface ToastItem {
+  id: string;
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  variant?: ToastVariant;
+  duration?: number;
+}
 
-const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
-  {
-    variants: {
-      variant: {
-        default: "border bg-background text-foreground",
-        destructive: "destructive group border-destructive bg-destructive text-destructive-foreground",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  },
-);
+interface ToastCardProps {
+  toast: ToastItem;
+  onDismiss: (id: string) => void;
+}
 
-const Toast = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Root>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> & VariantProps<typeof toastVariants>
->(({ className, variant, ...props }, ref) => {
-  return <ToastPrimitives.Root ref={ref} className={cn(toastVariants({ variant }), className)} {...props} />;
-});
-Toast.displayName = ToastPrimitives.Root.displayName;
+export const ToastCard: React.FC<ToastCardProps> = ({ toast, onDismiss }) => {
+  const [touchStart, setTouchStart] = React.useState<number | null>(null);
+  const [touchDelta, setTouchDelta] = React.useState<number>(0);
+  const [isClosing, setIsClosing] = React.useState(false);
 
-const ToastAction = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Action>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Action>
->(({ className, ...props }, ref) => (
-  <ToastPrimitives.Action
-    ref={ref}
-    className={cn(
-      "inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors group-[.destructive]:border-muted/40 hover:bg-secondary group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 group-[.destructive]:focus:ring-destructive disabled:pointer-events-none disabled:opacity-50",
-      className,
-    )}
-    {...props}
-  />
-));
-ToastAction.displayName = ToastPrimitives.Action.displayName;
+  const variant = toast.variant === "destructive" ? "error" : toast.variant || "default";
 
-const ToastClose = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Close>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Close>
->(({ className, ...props }, ref) => (
-  <ToastPrimitives.Close
-    ref={ref}
-    className={cn(
-      "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity group-hover:opacity-100 group-[.destructive]:text-red-300 hover:text-foreground group-[.destructive]:hover:text-red-50 focus:opacity-100 focus:outline-none focus:ring-2 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
-      className,
-    )}
-    toast-close=""
-    {...props}
-  >
-    <X className="h-4 w-4" />
-  </ToastPrimitives.Close>
-));
-ToastClose.displayName = ToastPrimitives.Close.displayName;
+  const handleClose = React.useCallback(() => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onDismiss(toast.id);
+    }, 200);
+  }, [toast.id, onDismiss]);
 
-const ToastTitle = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Title>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Title>
->(({ className, ...props }, ref) => (
-  <ToastPrimitives.Title ref={ref} className={cn("text-sm font-semibold", className)} {...props} />
-));
-ToastTitle.displayName = ToastPrimitives.Title.displayName;
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientY);
+  };
 
-const ToastDescription = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Description>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Description>
->(({ className, ...props }, ref) => (
-  <ToastPrimitives.Description ref={ref} className={cn("text-sm opacity-90", className)} {...props} />
-));
-ToastDescription.displayName = ToastPrimitives.Description.displayName;
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    const delta = e.touches[0].clientY - touchStart;
+    if (delta > 0) {
+      setTouchDelta(delta);
+    }
+  };
 
-type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>;
+  const onTouchEnd = () => {
+    if (touchDelta > 50) {
+      handleClose();
+    } else {
+      setTouchDelta(0);
+      setTouchStart(null);
+    }
+  };
 
-type ToastActionElement = React.ReactElement<typeof ToastAction>;
+  // Border & Icon mapping
+  let borderLeftColor = "border-l-[#008080]";
+  let iconComponent = <CheckCircle2 className="h-5 w-5 text-[#008080] shrink-0" />;
+  let cardBg = "bg-white";
 
-export {
-  type ToastProps,
-  type ToastActionElement,
-  ToastProvider,
-  ToastViewport,
-  Toast,
-  ToastTitle,
-  ToastDescription,
-  ToastClose,
-  ToastAction,
+  if (variant === "error") {
+    borderLeftColor = "border-l-[#DC2626]";
+    iconComponent = <AlertCircle className="h-5 w-5 text-[#DC2626] shrink-0" />;
+    cardBg = "bg-[#FEF2F2]/60";
+  } else if (variant === "warning") {
+    // Brand requirement: Amber is NOT allowed. Dark teal #005F5F with info icon.
+    borderLeftColor = "border-l-[#005F5F]";
+    iconComponent = <Info className="h-5 w-5 text-[#005F5F] shrink-0" />;
+    cardBg = "bg-[#E6F3F3]/50";
+  } else if (variant === "info" || variant === "default") {
+    borderLeftColor = "border-l-[#008080]";
+    iconComponent = <Info className="h-5 w-5 text-[#008080] shrink-0" />;
+    cardBg = "bg-white";
+  } else if (variant === "success") {
+    borderLeftColor = "border-l-[#008080]";
+    iconComponent = <CheckCircle2 className="h-5 w-5 text-[#008080] shrink-0" />;
+    cardBg = "bg-white";
+  }
+
+  const isAssertive = variant === "error";
+
+  return (
+    <div
+      role="status"
+      aria-live={isAssertive ? "assertive" : "polite"}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      style={{
+        transform: `translateY(${touchDelta}px)`,
+        opacity: isClosing ? 0 : 1,
+        transition: isClosing ? "opacity 200ms ease, transform 200ms ease" : "transform 100ms ease-out",
+      }}
+      className={cn(
+        "pointer-events-auto relative flex w-full max-w-[92%] sm:max-w-[440px] items-start gap-3 rounded-[12px] border border-gray-100 p-[14px] shadow-lg backdrop-blur-sm transition-all duration-200 border-l-4",
+        borderLeftColor,
+        cardBg,
+        !isClosing && "animate-in fade-in-0 slide-in-from-bottom-5 duration-200"
+      )}
+    >
+      <div className="mt-0.5">{iconComponent}</div>
+
+      <div className="flex-1 min-w-0 pr-2">
+        {toast.title && (
+          <h5 className="font-semibold text-sm text-[#1F2937] leading-snug truncate">
+            {toast.title}
+          </h5>
+        )}
+        {toast.description && (
+          <p className="text-[13px] text-[#1F2937]/70 font-normal leading-relaxed mt-0.5 break-words">
+            {toast.description}
+          </p>
+        )}
+      </div>
+
+      <button
+        type="button"
+        onClick={handleClose}
+        className="shrink-0 p-1 rounded-md text-gray-400 hover:text-gray-600 active:bg-gray-100 transition-colors"
+        aria-label="Close notification"
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </div>
+  );
 };
