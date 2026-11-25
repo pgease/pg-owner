@@ -694,6 +694,53 @@ const SidebarContent = ({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         })}
       </nav>
 
+      {/* Subscription / Plan Upgrade Card for Owners */}
+      {isOwner && (
+        <div className="px-2 pb-1.5">
+          {!collapsed ? (
+            <div
+              onClick={goToPlans}
+              className="flex items-center justify-between gap-2 p-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 hover:border-white/25 transition-all cursor-pointer group shadow-2xs"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="h-7 w-7 rounded-lg bg-amber-400/20 border border-amber-300/30 flex items-center justify-center shrink-0">
+                  <Crown className="h-3.5 w-3.5 text-amber-300" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[12.5px] font-bold text-white truncate leading-tight group-hover:text-teal-200 transition-colors">
+                    {subAccess.isTrial
+                      ? `Trial · ${subAccess.trialDaysRemaining}d left`
+                      : subAccess.isExpired
+                      ? "Plan Expired"
+                      : `${subAccess.planDisplayName || "PG Ease Pro"} Active`}
+                  </p>
+                  <p className="text-[10.5px] text-teal-200/80 truncate leading-tight mt-0.5">
+                    {subAccess.isExpired ? "Tap to renew" : "Manage beds & plans"}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-teal-300 group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </div>
+          ) : (
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={goToPlans}
+                  className="mx-auto flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-amber-300 hover:bg-white/20 transition-colors cursor-pointer"
+                  aria-label="Subscription Plans"
+                >
+                  <Crown className="h-4 w-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="text-xs bg-slate-900 text-white border-slate-700 shadow-xl">
+                Subscription Plans
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+      )}
+
       {/* User / Owner Profile & Logout Bar */}
       <div className="border-t border-teal-700/40 bg-teal-900/30 p-2.5 space-y-1.5 backdrop-blur-xs">
         {!collapsed ? (

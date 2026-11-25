@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, Bell, Menu } from "lucide-react";
+import { ArrowLeft, Bell, Menu, Crown } from "lucide-react";
 import { getMobilePageTitle, getParentRoute, isMobileTabRoot } from "@/lib/mobileRoutes";
 import { useOwnerNotifications } from "@/hooks/useOwnerNotifications";
 import { useEntitlements } from "@/hooks/useEntitlements";
@@ -88,14 +88,19 @@ export function MobileTopBar() {
         <div className="flex items-center gap-1.5 min-w-0 max-w-[60%] justify-center">
           <h1 className="truncate text-[15px] font-bold text-[#18212B]">{title}</h1>
           {planChip && (
-            <span
+            <button
+              type="button"
+              onClick={() => navigate("/plans")}
               className={cn(
-                "px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0",
+                "px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0 flex items-center gap-1 active:scale-95 transition-transform cursor-pointer",
                 planChip.className
               )}
+              title="View Subscription Plans"
+              aria-label="View Subscription Plans"
             >
-              {planChip.label}
-            </span>
+              <Crown className="h-2.5 w-2.5 shrink-0" />
+              <span>{planChip.label}</span>
+            </button>
           )}
         </div>
 

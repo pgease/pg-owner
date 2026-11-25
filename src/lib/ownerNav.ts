@@ -8,6 +8,7 @@ import {
   UserCog,
   Users,
   Wrench,
+  Crown,
   type LucideIcon,
 } from "lucide-react";
 
@@ -125,6 +126,12 @@ export const NAV_ITEMS: NavItem[] = [
     badge: "Pro",
     permissionKey: "account_view_dues",
     featureKey: "advanced_reports",
+  },
+  {
+    title: "Subscription Plans",
+    url: "/plans",
+    icon: Crown,
+    ownerOnly: true,
   },
   {
     title: "Account",

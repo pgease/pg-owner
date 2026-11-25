@@ -16,11 +16,13 @@ import {
   MessageSquare,
   Menu,
   Sparkles,
+  Crown,
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { useDashboardData } from "@/components/dashboard/useDashboardData";
 import { useMonthlyOwnerKpis } from "@/hooks/usePropertyOwnerQueries";
 import { useOwnerNotifications } from "@/hooks/useOwnerNotifications";
+import { useEntitlements } from "@/hooks/useEntitlements";
 import { formatInr } from "@/lib/rentDashboard";
 import { cn } from "@/lib/utils";
 import { MonthlyKpiDashboard } from "@/components/dashboard/MonthlyKpiDashboard";
@@ -44,10 +46,10 @@ const MONTHS = [
 ];
 
 const QUICK_ACTIONS = [
+  { label: "Subscription & Plans", to: "/plans" },
   { label: "Add tenant", to: "/tenants/add" },
   { label: "Record rent payment", to: "/rent-payments" },
   { label: "View tenants", to: "/tenants" },
-  { label: "Group Chat (Soon)", to: "/group-chat" },
   { label: "Complaints", to: "/complaints" },
   { label: "Verify KYC", to: "/tenants/kyc" },
   { label: "My PG", to: "/my-pgs" },
@@ -64,6 +66,7 @@ function dashValue(value: string | number | undefined | null, loading?: boolean)
 export function MobileDashboard() {
   const navigate = useNavigate();
   const { properties, selectedPgId, setIsPgSwitcherOpen, setIsOwnerDrawerOpen } = useApp();
+  const entitlements = useEntitlements();
   const list = Array.isArray(properties) ? properties : [];
   const selectedPg = list.find((p) => p.id === selectedPgId);
   const data = useDashboardData(selectedPgId);
@@ -153,12 +156,27 @@ export function MobileDashboard() {
         </div>
       </header>
 
-      {/* Clean tip banner (O5: mascot removed) */}
-      <div className="flex items-center gap-2.5 bg-[#005F5F] px-4 py-2.5 text-[12px] font-medium leading-4 text-white">
-        <Sparkles className="h-4 w-4 text-teal-200 shrink-0" />
-        <p className="min-w-0 flex-1 text-teal-50">
-          Manage tenants, rent collection, and beds in one place.
-        </p>
+      {/* Clean tip banner & Plan Quick Access */}
+      <div className="flex items-center justify-between gap-2.5 bg-[#005F5F] px-4 py-2 text-[12px] font-medium leading-4 text-white">
+        <div className="flex items-center gap-2 min-w-0">
+          <Crown className="h-4 w-4 text-amber-300 shrink-0" />
+          <p className="truncate text-teal-50">
+            {entitlements.isExpired
+              ? "Subscription Expired"
+              : entitlements.isTrial
+              ? `Pro Trial · ${entitlements.daysRemaining}d left`
+              : entitlements.isPro
+              ? "PG Ease Pro Active"
+              : "Manage tenants & beds"}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => navigate("/plans")}
+          className="shrink-0 rounded-lg bg-white/15 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-white hover:text-[#005F5F] transition-colors cursor-pointer"
+        >
+          {entitlements.isExpired ? "Renew" : "View Plans"} →
+        </button>
       </div>
 
       <section className="bg-[var(--figma-dash-hero,#F2FEFE)] px-4 pb-5 pt-4">

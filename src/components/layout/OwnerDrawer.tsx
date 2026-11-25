@@ -34,9 +34,11 @@ import {
   Info,
   LogOut,
   ShieldCheck,
+  Crown,
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { authStorage, performLogout } from "@/api/http";
+import { useEntitlements } from "@/hooks/useEntitlements";
 import { cn } from "@/lib/utils";
 
 interface OwnerDrawerProps {
@@ -61,6 +63,7 @@ const SECTIONS: NavSection[] = [
     title: "Overview",
     items: [
       { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
+      { label: "Subscription Plans", to: "/plans", icon: Crown },
       { label: "Analytics", to: "/reports", icon: BarChart3 },
     ],
   },
@@ -112,6 +115,7 @@ const SECTIONS: NavSection[] = [
   {
     title: "Settings",
     items: [
+      { label: "Subscription & Billing", to: "/plans", icon: Sparkles },
       { label: "Profile", to: "/settings", icon: User },
       { label: "Notifications", to: "/notifications", icon: Bell },
       { label: "App Info", to: "/settings", icon: Info },
@@ -131,6 +135,8 @@ export const OwnerDrawer: React.FC<OwnerDrawerProps> = ({ open, onClose, onOpenS
   const navigate = useNavigate();
   const location = useLocation();
   const { properties, selectedPgId } = useApp();
+  const isOwner = authStorage.isOwner();
+  const entitlements = useEntitlements();
   const list = Array.isArray(properties) ? properties : [];
   const selectedPg = list.find((p) => p.id === selectedPgId);
 
@@ -245,6 +251,48 @@ export const OwnerDrawer: React.FC<OwnerDrawerProps> = ({ open, onClose, onOpenS
               </button>
             </div>
           </div>
+
+          {/* Subscription & Plan Status Card */}
+          {isOwner && (
+            <div
+              onClick={() => handleNavigate("/plans")}
+              className="mt-2.5 rounded-xl bg-gradient-to-r from-teal-900/80 to-emerald-950/70 p-2.5 backdrop-blur-xs border border-white/20 hover:border-white/40 transition-all cursor-pointer shadow-sm group"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/20 text-white">
+                    <Crown className="h-4 w-4 text-amber-300" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[12px] font-bold text-white truncate">
+                        {entitlements.isExpired
+                          ? "Subscription Expired"
+                          : entitlements.isTrial
+                          ? `Pro Trial (${entitlements.daysRemaining}d left)`
+                          : entitlements.isPro
+                          ? "PG Ease Pro Active"
+                          : entitlements.isLite
+                          ? "Lite Plan Active"
+                          : "Subscription Plan"}
+                      </span>
+                    </div>
+                    <p className="text-[10.5px] text-teal-100/80 truncate">
+                      {entitlements.isExpired
+                        ? "Tap to renew subscription"
+                        : entitlements.isPro
+                        ? "Manage beds & billing"
+                        : "Tap to view & upgrade plans"}
+                    </p>
+                  </div>
+                </div>
+                <span className="shrink-0 rounded-lg bg-white/20 group-hover:bg-white text-white group-hover:text-[#008080] px-2.5 py-1 text-[11px] font-bold transition-all shadow-xs flex items-center gap-0.5">
+                  <span>{entitlements.isExpired ? "Renew" : "Plans"}</span>
+                  <ChevronRight className="h-3 w-3" />
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Scrollable Grouped Navigation Links */}
