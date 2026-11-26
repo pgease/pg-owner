@@ -213,41 +213,37 @@ export function MobileDashboardV2() {
       isOffline={isOffline}
       lastUpdated={lastUpdated}
       onRefresh={refetchAll}
-      header={
-        <MobileAppHeader
-          className="pb-8"
-          row2={
-            <div className="flex items-center gap-2 overflow-x-auto ms-no-scrollbar">
-              <StatusChip
-                tone={summary.kycPendingTenants > 0 ? "pending" : "success"}
-                icon={summary.kycPendingTenants > 0 ? <Clock className="h-3 w-3" /> : <CheckCircle2 className="h-3 w-3" />}
-                label={summary.kycPendingTenants > 0 ? `${summary.kycPendingTenants} KYC Pending` : "KYC Verified"}
-                onClick={() => navigate("/tenants/kyc")}
-              />
-              <StatusChip
-                tone={entitlements.isPro || entitlements.isTrial ? "premium" : "neutral"}
-                icon={<Crown className="h-3 w-3" />}
-                label={planChipLabel}
-                onClick={() => navigate("/plans")}
-              />
-              <StatusChip
-                tone={isLowCredits ? "error" : "teal"}
-                icon={<Coins className="h-3 w-3" />}
-                label={
-                  creditsRemaining === 0
-                    ? "No credits · Top up"
-                    : isLowCredits
-                      ? `${creditsRemaining} Credits · Top up`
-                      : `${creditsRemaining} Credits`
-                }
-                onClick={() => navigate("/tenants/kyc")}
-              />
-            </div>
-          }
-        />
-      }
+      header={<MobileAppHeader />}
     >
-      <div className="px-4 -mt-5 space-y-5">
+      <div className="ms-header-gradient px-4 pt-1 pb-7">
+        <div className="flex items-center gap-2 overflow-x-auto ms-no-scrollbar">
+          <StatusChip
+            tone={summary.kycPendingTenants > 0 ? "pending" : "success"}
+            icon={summary.kycPendingTenants > 0 ? <Clock className="h-3 w-3" /> : <CheckCircle2 className="h-3 w-3" />}
+            label={summary.kycPendingTenants > 0 ? `${summary.kycPendingTenants} KYC Pending` : "KYC Verified"}
+            onClick={() => navigate("/tenants/kyc")}
+          />
+          <StatusChip
+            tone={entitlements.isPro || entitlements.isTrial ? "premium" : "neutral"}
+            icon={<Crown className="h-3 w-3" />}
+            label={planChipLabel}
+            onClick={() => navigate("/plans")}
+          />
+          <StatusChip
+            tone={isLowCredits ? "error" : "teal"}
+            icon={<Coins className="h-3 w-3" />}
+            label={
+              creditsRemaining === 0
+                ? "No credits · Top up"
+                : isLowCredits
+                  ? `${creditsRemaining} Credits · Top up`
+                  : `${creditsRemaining} Credits`
+            }
+            onClick={() => navigate("/tenants/kyc")}
+          />
+        </div>
+      </div>
+      <div className="px-4 -mt-4 space-y-5">
         {isError ? (
           <MobileCard>
             <MascotErrorState onRetry={() => void refetchAll()} />

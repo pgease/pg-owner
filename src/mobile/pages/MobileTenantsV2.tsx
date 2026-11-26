@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, Clock, Download, LayoutList, MoreHorizontal, MoreVertical, Plus, Search, Users } from "lucide-react";
+import { CheckCircle2, Clock, Download, MoreHorizontal, MoreVertical, Plus, Search, Users } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { isTenantKycVerified, isTenantOnNotice, usePropertySummary } from "@/mobile/hooks/usePropertySummary";
 import { useNetworkStatus } from "@/mobile/hooks/useNetworkStatus";
@@ -8,15 +8,19 @@ import { formatCount, formatINR } from "@/mobile/utils/formatters";
 import { MobileAppHeader } from "@/mobile/components/ui/MobileHeaders";
 import { PageScaffold } from "@/mobile/components/ui/PageScaffold";
 import {
+  ActiveFilterPills,
   Avatar,
   BottomSheet,
   ExtendedFAB,
+  FilterButton,
   FilterChips,
   ListRow,
   MobileCard,
-  SegmentedTabs,
+  OutlineButton,
+  PrimaryButton,
   SkeletonBlock,
   StatusChip,
+  SwipeTabs,
 } from "@/mobile/components/ui/Primitives";
 import { MascotEmptyState, MascotErrorState } from "@/mobile/components/ui/MascotStates";
 import { toast } from "@/components/ui/use-toast";
@@ -31,9 +35,13 @@ export function MobileTenantsV2({ onExport }: { onExport?: () => void }) {
   const [search, setSearch] = useState("");
   const [kycFilter, setKycFilter] = useState<"all" | "pending" | "verified">("all");
   const [compact, setCompact] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [draftKyc, setDraftKyc] = useState<"all" | "pending" | "verified">("all");
+  const [draftCompact, setDraftCompact] = useState(false);
   const [actionTenant, setActionTenant] = useState<any | null>(null);
   const [overflowOpen, setOverflowOpen] = useState(false);
 
+  const activeFilterCount = (kycFilter !== "all" ? 1 : 0) + (compact ? 1 : 0);
   const hasActiveFilter = search.trim().length > 0 || kycFilter !== "all";
 
   const filtered = useMemo(() => {
@@ -61,7 +69,35 @@ export function MobileTenantsV2({ onExport }: { onExport?: () => void }) {
   const clearFilters = () => {
     setSearch("");
     setKycFilter("all");
+    setCompact(false);
   };
+
+  const openFilterSheet = () => {
+    setDraftKyc(kycFilter);
+    setDraftCompact(compact);
+    setFilterOpen(true);
+  };
+
+  const activePills = [
+    ...(kycFilter !== "all"
+      ? [
+          {
+            id: "kyc",
+            label: kycFilter === "pending" ? "KYC Pending" : "KYC Verified",
+            onRemove: () => setKycFilter("all"),
+          },
+        ]
+      : []),
+    ...(compact
+      ? [
+          {
+            id: "compact",
+            label: "Compact view",
+            onRemove: () => setCompact(false),
+          },
+        ]
+      : []),
+  ];
 
   return (
     <PageScaffold
@@ -70,14 +106,13 @@ export function MobileTenantsV2({ onExport }: { onExport?: () => void }) {
       onRefresh={refetchAll}
       header={
         <MobileAppHeader
-          showPgSwitcher={true}
-          title="Tenant's Info"
-          subtitle={`${formatCount(summary.totalTenants)} tenants registered`}
+          title="Tenants"
+          subtitle={`${formatCount(summary.totalTenants)} registered`}
           rightActions={
             <button
               type="button"
               onClick={() => setOverflowOpen(true)}
-              className="h-10 w-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-white cursor-pointer"
+              className="h-9 w-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-white cursor-pointer"
               aria-label="More tenant options"
             >
               <MoreHorizontal className="h-5 w-5" />
@@ -86,10 +121,10 @@ export function MobileTenantsV2({ onExport }: { onExport?: () => void }) {
         />
       }
     >
-      <div className="px-4 pt-4 space-y-3.5">
-        {/* Search + Normal/Compact Segmented Toggle */}
+      <div className="px-4 pt-4 pb-24 space-y-3.5">
+        {/* Search + Filter Sheet Button (R6) */}
         <div className="flex items-center gap-2">
-          <div className="flex-1 ms-tile h-12 px-3.5 flex items-center gap-2.5">
+          <div className="flex-1 ms-tile h-11 px-3.5 flex items-center gap-2.5">
             <Search className="h-4 w-4 text-[var(--ms-ink-3)] shrink-0" />
             <input
               type="text"
@@ -99,16 +134,10 @@ export function MobileTenantsV2({ onExport }: { onExport?: () => void }) {
               className="w-full bg-transparent text-[13px] text-[var(--ms-ink)] placeholder:text-[var(--ms-placeholder)] focus:outline-none"
             />
           </div>
-          <button
-            type="button"
-            onClick={() => setCompact((v) => !v)}
-            className="ms-tile h-12 px-3 flex items-center gap-1.5 text-[12px] font-medium text-[var(--ms-ink-2)] shrink-0 cursor-pointer"
-            aria-label="Toggle compact view"
-          >
-            <LayoutList className="h-4 w-4 text-[var(--ms-brand-text)]" />
-            <span>{compact ? "Compact" : "Normal"}</span>
-          </button>
+          <FilterButton activeCount={activeFilterCount} onClick={openFilterSheet} />
         </div>
+
+        <ActiveFilterPills pills={activePills} onClearAll={clearFilters} />
 
         {/* Summary Strip */}
         <div className="text-[12px] text-[var(--ms-ink-3)] flex flex-wrap items-center gap-x-2 gap-y-1 px-1">
@@ -119,28 +148,16 @@ export function MobileTenantsV2({ onExport }: { onExport?: () => void }) {
           <span>{formatCount(summary.onNoticeTenants)} on notice</span>
         </div>
 
-        {/* Segmented Tabs */}
-        <SegmentedTabs
+        {/* R5: SwipeTabs */}
+        <SwipeTabs
           tabs={[
             { id: "residents", label: "Residents", badge: summary.totalTenants },
             { id: "notice", label: "Notice Period", badge: summary.onNoticeTenants },
           ]}
           value={tab}
           onChange={setTab}
-        />
-
-        {/* Filter Chips */}
-        <FilterChips
-          items={[
-            { id: "all", label: "All KYC" },
-            { id: "pending", label: "KYC Pending", count: summary.kycPendingTenants },
-            { id: "verified", label: "Verified" },
-          ]}
-          value={kycFilter}
-          onChange={setKycFilter}
-        />
-
-        {/* Content */}
+        >
+          {/* Content */}
         {isLoading ? (
           <div className="space-y-3">
             <SkeletonBlock className="h-20 w-full" />
@@ -243,7 +260,72 @@ export function MobileTenantsV2({ onExport }: { onExport?: () => void }) {
             })}
           </div>
         )}
+        </SwipeTabs>
       </div>
+
+      {/* R6: Filter & View BottomSheet */}
+      <BottomSheet open={filterOpen} onClose={() => setFilterOpen(false)} title="Filter & View">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <div className="text-[12px] font-semibold text-[var(--ms-ink-2)]">KYC Status</div>
+            <FilterChips
+              items={[
+                { id: "all", label: "All KYC" },
+                { id: "pending", label: "KYC Pending", count: summary.kycPendingTenants },
+                { id: "verified", label: "Verified" },
+              ]}
+              value={draftKyc}
+              onChange={setDraftKyc}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-[12px] font-semibold text-[var(--ms-ink-2)]">Row Density</div>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { id: false, label: "Normal" },
+                { id: true, label: "Compact" },
+              ].map((opt) => (
+                <button
+                  key={String(opt.id)}
+                  type="button"
+                  onClick={() => setDraftCompact(opt.id)}
+                  className={
+                    draftCompact === opt.id
+                      ? "h-11 rounded-xl bg-[var(--ms-brand-600)] text-white text-[13px] font-semibold cursor-pointer"
+                      : "h-11 rounded-xl border border-[var(--ms-border)] bg-[var(--ms-page)] text-[var(--ms-ink-2)] text-[13px] font-medium cursor-pointer"
+                  }
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2.5 pt-2">
+            <OutlineButton
+              onClick={() => {
+                setDraftKyc("all");
+                setDraftCompact(false);
+                setKycFilter("all");
+                setCompact(false);
+                setFilterOpen(false);
+              }}
+            >
+              Reset
+            </OutlineButton>
+            <PrimaryButton
+              onClick={() => {
+                setKycFilter(draftKyc);
+                setCompact(draftCompact);
+                setFilterOpen(false);
+              }}
+            >
+              Apply
+            </PrimaryButton>
+          </div>
+        </div>
+      </BottomSheet>
 
       <ExtendedFAB
         icon={<Plus className="h-5 w-5" />}

@@ -38,13 +38,14 @@ import {
   SectionHeader,
 } from "@/mobile/components/ui/Primitives";
 import pgeaseIconColor from "@/assets/pgease-icon-color.png";
+import { applyTheme } from "@/utils/theme";
 
 export default function MobileMenuV2() {
   const navigate = useNavigate();
   const entitlements = useEntitlements();
   const { isOffline, lastUpdated } = useNetworkStatus();
   const [logoutOpen, setLogoutOpen] = useState(false);
-  const [appVersion, setAppVersion] = useState("1.0.11");
+  const [appVersion, setAppVersion] = useState("1.0.12");
   const [isDark, setIsDark] = useState(() =>
     typeof document !== "undefined" ? document.documentElement.classList.contains("dark") : false,
   );
@@ -61,18 +62,7 @@ export default function MobileMenuV2() {
   const toggleDark = () => {
     const next = !isDark;
     setIsDark(next);
-    const val = next ? "dark" : "light";
-    document.documentElement.classList.toggle("dark", next);
-    document.documentElement.setAttribute("data-theme", val);
-    document.documentElement.style.colorScheme = val;
-    try {
-      localStorage.setItem("pgease_theme", val);
-      localStorage.setItem("theme", val);
-      const prefs = (window as any).Capacitor?.Plugins?.Preferences;
-      if (prefs?.set) void prefs.set({ key: "pgease_theme", value: val });
-    } catch {
-      // ignore
-    }
+    applyTheme(next ? "dark" : "light");
   };
 
   const owner = authStorage.getPropertyOwner();
@@ -109,23 +99,21 @@ export default function MobileMenuV2() {
       lastUpdated={lastUpdated}
       header={
         <MobileAppHeader
-          showPgSwitcher={true}
           title="Account & Settings"
-          className="pb-14"
           rightActions={
             <button
               type="button"
               onClick={toggleDark}
-              className="h-10 w-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-white cursor-pointer"
+              className="h-9 w-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-white cursor-pointer"
               aria-label="Toggle dark mode"
             >
-              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
           }
         />
       }
     >
-      <div className="px-4 -mt-10 space-y-5">
+      <div className="px-4 pt-4 space-y-5">
         {/* Profile + Premium Plan Combined Hero Card */}
         <MobileCard className="p-0 overflow-hidden">
           <button

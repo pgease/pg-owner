@@ -149,48 +149,42 @@ export function MobileMyPgV2() {
       isOffline={isOffline}
       lastUpdated={lastUpdated}
       onRefresh={refetchAll}
-      header={
-        <MobileAppHeader
-          showPgSwitcher={true}
-          title="My Property"
-          className="pb-6"
-          row2={
-            <div className="rounded-2xl bg-white/12 border border-white/20 p-3.5 flex items-start gap-3">
-              <img
-                src={photoUrl || pgeaseIconColor}
-                alt={selectedPg?.name || "Property"}
-                className="h-14 w-14 rounded-2xl object-cover bg-white shrink-0 border border-white/25"
-              />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="text-[16px] font-semibold truncate">{selectedPg?.name ?? "My PG"}</span>
-                    {(selectedPg as any)?.isVerified && <CheckCircle2 className="h-4 w-4 text-white shrink-0" />}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setEditOpen(true)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white text-[var(--ms-brand-800)] text-[11px] font-semibold shrink-0 cursor-pointer active:scale-95 transition-transform"
-                  >
-                    <Pencil className="h-3 w-3" />
-                    <span>Edit PG</span>
-                  </button>
-                </div>
-                <p className="text-[12px] text-white/80 truncate mt-0.5">{selectedPg?.address || "No address set"}</p>
-                <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                  {selectedPg?.id && (
-                    <span className="px-2 py-0.5 rounded-full bg-white/15 text-[10px] font-medium">
-                      ID: #{selectedPg.id.slice(0, 8)}
-                    </span>
-                  )}
-                  <StatusChip label="Active" tone="success" />
-                </div>
-              </div>
-            </div>
-          }
-        />
-      }
+      header={<MobileAppHeader title="My Property" />}
     >
+      <div className="ms-header-gradient px-4 pt-1 pb-6 text-white">
+        <div className="rounded-2xl bg-white/12 border border-white/20 p-3.5 flex items-start gap-3">
+          <img
+            src={photoUrl || pgeaseIconColor}
+            alt={selectedPg?.name || "Property"}
+            className="h-14 w-14 rounded-2xl object-cover bg-white shrink-0 border border-white/25"
+          />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-[16px] font-semibold truncate">{selectedPg?.name ?? "My PG"}</span>
+                {(selectedPg as any)?.isVerified && <CheckCircle2 className="h-4 w-4 text-white shrink-0" />}
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditOpen(true)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white text-[var(--ms-brand-800)] text-[11px] font-semibold shrink-0 cursor-pointer active:scale-95 transition-transform"
+              >
+                <Pencil className="h-3 w-3" />
+                <span>Edit PG</span>
+              </button>
+            </div>
+            <p className="text-[12px] text-white/80 truncate mt-0.5">{selectedPg?.address || "No address set"}</p>
+            <div className="flex flex-wrap items-center gap-1.5 mt-2">
+              {selectedPg?.id && (
+                <span className="px-2 py-0.5 rounded-full bg-white/15 text-[10px] font-medium">
+                  ID: #{selectedPg.id.slice(0, 8)}
+                </span>
+              )}
+              <StatusChip label="Active" tone="success" />
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="px-4 -mt-3 space-y-5">
         {/* Phone & 4-Column Real Stats */}
         <MobileCard className="space-y-4">

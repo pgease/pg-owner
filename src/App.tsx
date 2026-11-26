@@ -62,6 +62,7 @@ import { TutorialProvider } from "./context/TutorialContext";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { setAppStatusBar } from "@/utils/statusBar";
+import { hydrateTheme } from "@/utils/theme";
 import { hydrateAuthStorage, initPersistentAuthLifecycle } from "@/api/http";
 import { resolveActiveTab } from "@/mobile/components/ui/MobileBottomNavV2";
 import { ConfirmDialog } from "@/mobile/components/ui/Primitives";
@@ -160,7 +161,8 @@ const AndroidBackManager = () => {
 
 const App = () => {
   useEffect(() => {
-    setAppStatusBar(false);
+    setAppStatusBar(true);
+    void hydrateTheme();
     void hydrateAuthStorage();
     initPersistentAuthLifecycle();
   }, []);

@@ -15,6 +15,7 @@ import {
   PrimaryButton,
   SectionHeader,
   SegmentedTabs,
+  SwipeTabs,
   SkeletonBlock,
   StatTile,
   StatusChip,
@@ -67,7 +68,7 @@ export default function GalleryPage() {
           value={chip}
           onChange={setChip}
         />
-        <SegmentedTabs
+        <SwipeTabs
           tabs={[
             { id: "recent", label: "Recent" },
             { id: "register", label: "Register", badge: 4 },

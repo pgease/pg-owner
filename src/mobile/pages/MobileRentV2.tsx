@@ -8,14 +8,19 @@ import { formatINR } from "@/mobile/utils/formatters";
 import { MobileAppHeader } from "@/mobile/components/ui/MobileHeaders";
 import { PageScaffold } from "@/mobile/components/ui/PageScaffold";
 import {
+  ActiveFilterPills,
   Avatar,
   BottomSheet,
+  FilterButton,
   FilterChips,
   IconTile,
   MobileCard,
   MoneyText,
+  OutlineButton,
+  PrimaryButton,
   SectionHeader,
   StatusChip,
+  SwipeTabs,
 } from "@/mobile/components/ui/Primitives";
 import { MascotEmptyState } from "@/mobile/components/ui/MascotStates";
 import { toast } from "@/components/ui/use-toast";
@@ -64,6 +69,8 @@ export function MobileRentHeaderSection({
 
   const [search, setSearch] = useState("");
   const [methodFilter, setMethodFilter] = useState<"all" | "Cash" | "UPI" | "Bank Transfer">("all");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [draftMethod, setDraftMethod] = useState<"all" | "Cash" | "UPI" | "Bank Transfer">("all");
   const [selectedTx, setSelectedTx] = useState<(typeof transactions)[number] | null>(null);
 
   const filteredTx = useMemo(() => {
@@ -105,9 +112,9 @@ export function MobileRentHeaderSection({
         lastUpdated={lastUpdated}
         onRefresh={refetchAll}
         className="pb-3"
-        header={<MobileAppHeader className="pb-6" />}
+        header={<MobileAppHeader title="Rent" />}
       >
-        <div className="px-4 -mt-4 space-y-4">
+        <div className="px-4 pt-4 space-y-4">
           {/* Teal Hero Revenue Card — Clean overlap, NO INR badge */}
           <div className="ms-header-gradient rounded-[20px] p-5 text-white shadow-lg">
             <div className="text-[13px] text-white/85 font-medium">Total Collected Today</div>
@@ -154,110 +161,136 @@ export function MobileRentHeaderSection({
             </button>
           </div>
 
-          {/* Equal-width 4-column Segmented Control that fits 360px cleanly */}
-          <div className="grid grid-cols-4 gap-1 p-1 rounded-2xl bg-[var(--ms-card)] border border-[var(--ms-border)]">
-            {primaryTabs.map((t) => {
-              const active = activeSubTab === t.id;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => onChangeSubTab(t.id)}
-                  className={
-                    active
-                      ? "flex items-center justify-center gap-1 h-10 rounded-xl bg-[var(--ms-brand-600)] text-white text-[12px] font-semibold shadow-sm cursor-pointer"
-                      : "flex items-center justify-center gap-1 h-10 rounded-xl text-[var(--ms-ink-2)] text-[12px] font-medium cursor-pointer"
-                  }
-                >
-                  <span className="truncate">{t.label}</span>
-                  {t.badge !== undefined && t.badge > 0 && (
-                    <span
-                      className={
-                        active
-                          ? "px-1.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] leading-none"
-                          : "px-1.5 py-0.5 rounded-full bg-[var(--ms-error-bg)] text-[var(--ms-error)] text-[10px] leading-none"
-                      }
-                    >
-                      {t.badge > 99 ? "99+" : t.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Recent Transactions Sub-Tab */}
-          {activeSubTab === "recent" && (
-            <section className="space-y-3">
-              <SectionHeader title="Recent Transactions" />
-              <div className="ms-tile h-11 px-3.5 flex items-center gap-2.5">
-                <Search className="h-4 w-4 text-[var(--ms-ink-3)] shrink-0" />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search tenant or room..."
-                  className="w-full bg-transparent text-[13px] text-[var(--ms-ink)] placeholder:text-[var(--ms-placeholder)] focus:outline-none"
-                />
-              </div>
-              <FilterChips
-                items={[
-                  { id: "all", label: "All" },
-                  { id: "Cash", label: "Cash" },
-                  { id: "UPI", label: "UPI" },
-                  { id: "Bank Transfer", label: "Bank Transfer" },
-                ]}
-                value={methodFilter}
-                onChange={setMethodFilter}
-              />
-
-              {filteredTx.length === 0 ? (
-                <MobileCard>
-                  <MascotEmptyState
-                    variant="empty"
-                    size="md"
-                    title="No transactions found"
-                    message="Your recent payments will appear here"
+          {/* R5: Shared SwipeTabs (Recent / Register / Dues / Review) */}
+          <SwipeTabs
+            tabs={primaryTabs}
+            value={activeSubTab === "history" ? ("recent" as const) : activeSubTab}
+            onChange={(id) => onChangeSubTab(id)}
+          >
+            {/* Recent Transactions Sub-Tab */}
+            {activeSubTab === "recent" && (
+              <section className="space-y-3">
+                <SectionHeader title="Recent Transactions" />
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 ms-tile h-11 px-3.5 flex items-center gap-2.5">
+                    <Search className="h-4 w-4 text-[var(--ms-ink-3)] shrink-0" />
+                    <input
+                      type="text"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Search tenant or room..."
+                      className="w-full bg-transparent text-[13px] text-[var(--ms-ink)] placeholder:text-[var(--ms-placeholder)] focus:outline-none"
+                    />
+                  </div>
+                  <FilterButton
+                    activeCount={methodFilter !== "all" ? 1 : 0}
+                    onClick={() => {
+                      setDraftMethod(methodFilter);
+                      setFilterOpen(true);
+                    }}
                   />
-                </MobileCard>
-              ) : (
-                <div className="space-y-2.5">
-                  {filteredTx.slice(0, 25).map((tx) => {
-                    const dtRaw = tx.paidAt || tx.paymentDate || tx.createdAt;
-                    const dtStr = dtRaw ? new Date(dtRaw).toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—";
-                    return (
-                      <MobileCard
-                        key={tx.id}
-                        onClick={() => setSelectedTx(tx)}
-                        className="p-3.5 flex items-center justify-between gap-3"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <Avatar name={tx.tenantName || "Resident"} size={40} />
-                          <div className="min-w-0">
-                            <div className="text-[14px] font-semibold text-[var(--ms-ink)] truncate">
-                              {tx.tenantName || "Resident"}
-                            </div>
-                            <div className="text-[12px] text-[var(--ms-ink-3)] mt-0.5 truncate">
-                              {tx.roomNumber ? `Room ${tx.roomNumber} · ` : ""}{dtStr}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <MoneyText amount={tx.amountPaid} className="text-[15px] font-semibold text-[var(--ms-success)]" />
-                          <div className="flex items-center justify-end gap-1 mt-1">
-                            <StatusChip label={tx.paymentMethod || "Paid"} tone="info" />
-                            <StatusChip label={tx.status || "Paid"} tone="success" />
-                          </div>
-                        </div>
-                      </MobileCard>
-                    );
-                  })}
                 </div>
-              )}
-            </section>
-          )}
+
+                <ActiveFilterPills
+                  pills={
+                    methodFilter !== "all"
+                      ? [
+                          {
+                            id: "method",
+                            label: methodFilter,
+                            onRemove: () => setMethodFilter("all"),
+                          },
+                        ]
+                      : []
+                  }
+                />
+
+                {filteredTx.length === 0 ? (
+                  <MobileCard>
+                    <MascotEmptyState
+                      variant="empty"
+                      size="md"
+                      title="No transactions found"
+                      message="Your recent payments will appear here"
+                    />
+                  </MobileCard>
+                ) : (
+                  <div className="space-y-2.5">
+                    {filteredTx.slice(0, 25).map((tx) => {
+                      const dtRaw = tx.paidAt || tx.paymentDate || tx.createdAt;
+                      const dtStr = dtRaw ? new Date(dtRaw).toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—";
+                      return (
+                        <MobileCard
+                          key={tx.id}
+                          onClick={() => setSelectedTx(tx)}
+                          className="p-3.5 flex items-center justify-between gap-3"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <Avatar name={tx.tenantName || "Resident"} size={40} />
+                            <div className="min-w-0">
+                              <div className="text-[14px] font-semibold text-[var(--ms-ink)] truncate">
+                                {tx.tenantName || "Resident"}
+                              </div>
+                              <div className="text-[12px] text-[var(--ms-ink-3)] mt-0.5 truncate">
+                                {tx.roomNumber ? `Room ${tx.roomNumber} · ` : ""}{dtStr}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <MoneyText amount={tx.amountPaid} className="text-[15px] font-semibold text-[var(--ms-success)]" />
+                            <div className="flex items-center justify-end gap-1 mt-1">
+                              <StatusChip label={tx.paymentMethod || "Paid"} tone="info" />
+                              <StatusChip label={tx.status || "Paid"} tone="success" />
+                            </div>
+                          </div>
+                        </MobileCard>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            )}
+          </SwipeTabs>
         </div>
       </PageScaffold>
+
+      {/* R6: Filter Transactions BottomSheet */}
+      <BottomSheet open={filterOpen} onClose={() => setFilterOpen(false)} title="Filter Transactions">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <div className="text-[12px] font-semibold text-[var(--ms-ink-2)]">Payment Mode</div>
+            <FilterChips
+              items={[
+                { id: "all", label: "All" },
+                { id: "Cash", label: "Cash" },
+                { id: "UPI", label: "UPI" },
+                { id: "Bank Transfer", label: "Bank Transfer" },
+              ]}
+              value={draftMethod}
+              onChange={setDraftMethod}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2.5 pt-2">
+            <OutlineButton
+              onClick={() => {
+                setDraftMethod("all");
+                setMethodFilter("all");
+                setFilterOpen(false);
+              }}
+            >
+              Reset
+            </OutlineButton>
+            <PrimaryButton
+              onClick={() => {
+                setMethodFilter(draftMethod);
+                setFilterOpen(false);
+              }}
+            >
+              Apply
+            </PrimaryButton>
+          </div>
+        </div>
+      </BottomSheet>
 
       {/* Transaction Detail Sheet (Preserves all ledger columns on mobile) */}
       <BottomSheet open={Boolean(selectedTx)} onClose={() => setSelectedTx(null)} title="Transaction Details">

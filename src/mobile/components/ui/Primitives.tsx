@@ -1,5 +1,5 @@
-import React from "react";
-import { ChevronRight } from "lucide-react";
+import React, { useRef, useState } from "react";
+import { ChevronRight, SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatINR } from "@/mobile/utils/formatters";
 import type { IconTone } from "@/mobile/tokens";
@@ -258,41 +258,231 @@ export function SegmentedTabs<T extends string>({
   onChange: (id: T) => void;
   className?: string;
 }) {
+  return <SwipeTabs tabs={tabs} value={value} onChange={onChange} className={className} />;
+}
+
+/**
+ * R5: Shared SwipeTabs component with animated sliding indicator, horizontal swipe
+ * gesture on wrapped panel content, vertical scroll lock, and left-edge back safety.
+ */
+export function SwipeTabs<T extends string>({
+  tabs,
+  value,
+  onChange,
+  children,
+  className,
+  contentClassName,
+}: {
+  tabs: Array<{ id: T; label: string; badge?: number }>;
+  value: T;
+  onChange: (id: T) => void;
+  children?: React.ReactNode;
+  className?: string;
+  contentClassName?: string;
+}) {
+  const activeIndex = Math.max(
+    0,
+    tabs.findIndex((t) => t.id === value),
+  );
+  const equalGrid = tabs.length > 0 && tabs.length <= 4;
+
+  const gestureRef = useRef<{
+    startX: number;
+    startY: number;
+    lock: "horizontal" | "vertical" | null;
+    edgeSkip: boolean;
+  } | null>(null);
+  const [dragOffset, setDragOffset] = useState(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!children || tabs.length <= 1 || e.touches.length !== 1) return;
+    const t = e.touches[0];
+    gestureRef.current = {
+      startX: t.clientX,
+      startY: t.clientY,
+      lock: null,
+      edgeSkip: t.clientX < 28,
+    };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const g = gestureRef.current;
+    if (!g || g.edgeSkip || e.touches.length !== 1) return;
+    const t = e.touches[0];
+    const dx = t.clientX - g.startX;
+    const dy = t.clientY - g.startY;
+    if (!g.lock) {
+      if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) {
+        g.lock = "vertical";
+        return;
+      }
+      if (Math.abs(dx) > 16 && Math.abs(dx) > Math.abs(dy) * 1.35) {
+        g.lock = "horizontal";
+      }
+    }
+    if (g.lock === "horizontal") {
+      setDragOffset(Math.max(-44, Math.min(44, dx * 0.35)));
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const g = gestureRef.current;
+    gestureRef.current = null;
+    setDragOffset(0);
+    if (!g || g.edgeSkip || g.lock !== "horizontal") return;
+    const t = e.changedTouches[0];
+    if (!t) return;
+    const dx = t.clientX - g.startX;
+    if (Math.abs(dx) < 48) return;
+    if (dx < 0 && activeIndex < tabs.length - 1) {
+      onChange(tabs[activeIndex + 1].id);
+    } else if (dx > 0 && activeIndex > 0) {
+      onChange(tabs[activeIndex - 1].id);
+    }
+  };
+
   return (
-    <div
+    <div className="space-y-3">
+      <div
+        role="tablist"
+        className={cn(
+          "relative p-1 rounded-2xl bg-[var(--ms-card)] border border-[var(--ms-border)]",
+          equalGrid ? "grid" : "flex items-center gap-1.5 overflow-x-auto ms-no-scrollbar",
+          className,
+        )}
+        style={equalGrid ? { gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` } : undefined}
+      >
+        {equalGrid && tabs.length > 0 && (
+          <div
+            aria-hidden="true"
+            className="absolute top-1 bottom-1 left-1 rounded-xl bg-[var(--ms-brand-600)] shadow-sm transition-transform duration-200 ease-out pointer-events-none"
+            style={{
+              width: `calc((100% - 8px) / ${tabs.length})`,
+              transform: `translateX(${activeIndex * 100}%)`,
+            }}
+          />
+        )}
+        {tabs.map((tab) => {
+          const active = tab.id === value;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => onChange(tab.id)}
+              className={cn(
+                "relative z-10 flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-[12.5px] font-medium min-h-[40px] transition-colors cursor-pointer",
+                !equalGrid && "shrink-0 px-3.5",
+                active
+                  ? equalGrid
+                    ? "text-white font-semibold"
+                    : "bg-[var(--ms-brand-600)] text-white font-semibold shadow-sm"
+                  : "text-[var(--ms-ink-2)] hover:text-[var(--ms-ink)]",
+              )}
+            >
+              <span className="truncate">{tab.label}</span>
+              {tab.badge !== undefined && tab.badge > 0 && (
+                <span
+                  className={cn(
+                    "px-1.5 py-0.5 rounded-full text-[10px] font-semibold leading-none shrink-0",
+                    active ? "bg-white/20 text-white" : "bg-[var(--ms-brand-50)] text-[var(--ms-brand-text)]",
+                  )}
+                >
+                  {tab.badge > 99 ? "99+" : tab.badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {children !== undefined && (
+        <div
+          className={cn("transition-transform duration-150 ease-out", contentClassName)}
+          style={dragOffset ? { transform: `translateX(${dragOffset}px)` } : undefined}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * R6: Compact Filter trigger button with active filter count badge.
+ */
+export function FilterButton({
+  activeCount = 0,
+  onClick,
+  label = "Filter",
+  className,
+}: {
+  activeCount?: number;
+  onClick: () => void;
+  label?: string;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
       className={cn(
-        "flex items-center gap-1.5 overflow-x-auto ms-no-scrollbar p-1 rounded-2xl bg-[var(--ms-card)] border border-[var(--ms-border)]",
+        "ms-tile h-11 px-3.5 flex items-center gap-1.5 text-[12.5px] font-medium shrink-0 cursor-pointer active:scale-95 transition-transform",
+        activeCount > 0
+          ? "border-[var(--ms-brand)] text-[var(--ms-brand-text)] bg-[var(--ms-brand-50)]"
+          : "text-[var(--ms-ink-2)]",
         className,
       )}
+      aria-label={label}
     >
-      {tabs.map((tab) => {
-        const active = tab.id === value;
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => onChange(tab.id)}
-            className={cn(
-              "shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium min-h-[40px] transition-all cursor-pointer",
-              active
-                ? "bg-[var(--ms-brand-600)] text-white shadow-sm"
-                : "text-[var(--ms-ink-2)] hover:text-[var(--ms-ink)]",
-            )}
-          >
-            <span>{tab.label}</span>
-            {tab.badge !== undefined && tab.badge > 0 && (
-              <span
-                className={cn(
-                  "px-1.5 py-0.5 rounded-full text-[10px] font-semibold leading-none",
-                  active ? "bg-white/20 text-white" : "bg-[var(--ms-brand-50)] text-[var(--ms-brand-text)]",
-                )}
-              >
-                {tab.badge}
-              </span>
-            )}
-          </button>
-        );
-      })}
+      <SlidersHorizontal className="h-4 w-4 shrink-0" />
+      <span>{label}</span>
+      {activeCount > 0 && (
+        <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-[var(--ms-brand-600)] text-white text-[10px] font-semibold flex items-center justify-center leading-none">
+          {activeCount}
+        </span>
+      )}
+    </button>
+  );
+}
+
+/**
+ * R6: Removable active filter pills shown ONLY when filters are active.
+ */
+export function ActiveFilterPills({
+  pills,
+  onClearAll,
+}: {
+  pills: Array<{ id: string; label: string; onRemove: () => void }>;
+  onClearAll?: () => void;
+}) {
+  if (pills.length === 0) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {pills.map((p) => (
+        <button
+          key={p.id}
+          type="button"
+          onClick={p.onRemove}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[var(--ms-brand-50)] text-[var(--ms-brand-text)] border border-[var(--ms-brand)]/25 text-[11.5px] font-medium cursor-pointer active:scale-95"
+        >
+          <span>{p.label}</span>
+          <X className="h-3 w-3" />
+        </button>
+      ))}
+      {onClearAll && pills.length > 1 && (
+        <button
+          type="button"
+          onClick={onClearAll}
+          className="px-2 py-1 text-[11.5px] font-medium text-[var(--ms-ink-3)] underline cursor-pointer"
+        >
+          Clear all
+        </button>
+      )}
     </div>
   );
 }
