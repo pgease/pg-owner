@@ -1,3 +1,4 @@
 # PG Ease Owner Redesign Progress
 
 - **Phase 0 (Inventory & Baseline)**: Completed. Enumerated all 53 routes, tabs, menus, widgets, filters, actions, dropdowns, toggles, and modals in `inventory.json` / `inventory.md`, mapped every item to `src/mobile/navRegistry.ts`, added `npm run verify:inventory`, and captured BEFORE screenshots at 360x800 in `docs/redesign/before/`.
+- **Phase 1 (Foundations)**: Completed. Created `src/mobile/tokens.ts`, `src/styles/mobile-shell.css` (light + dark tokens, local Poppins, motion & safe-area rules), `src/mobile/utils/formatters.ts` (`formatINR` / `formatCount` + Vitest suite), `src/mobile/hooks/usePropertySummary.ts` (single-source-of-truth counts + Vitest suite), shared components (`Primitives.tsx`, `MascotStates.tsx`, `MobileHeaders.tsx`, `MobileBottomNavV2.tsx`, `PageScaffold.tsx`), and dev-only `/__gallery` page.

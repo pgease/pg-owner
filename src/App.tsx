@@ -63,6 +63,7 @@ import { useEffect } from "react";
 import { setAppStatusBar } from "@/utils/statusBar";
 
 import { GlobalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
+import GalleryPage from "@/mobile/pages/GalleryPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -92,6 +93,7 @@ const App = () => {
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           {/* Auth routes (no layout) — logged-in users go to dashboard; app shell shows splash first */}
+          {import.meta.env.DEV && <Route path="/__gallery" element={<GalleryPage />} />}
           <Route path="/" element={<PublicAuthGate><Login /></PublicAuthGate>} />
           <Route path="/login" element={<PublicAuthGate><Login /></PublicAuthGate>} />
           <Route path="/signup" element={<PublicAuthGate><Login initialMode="signup" /></PublicAuthGate>} />

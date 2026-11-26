@@ -1,6 +1,7 @@
 /* ✅ Design System Tokens */
 @import './styles/tokens.css';
 @import './styles/figma-tokens.css';
+@import './styles/mobile-shell.css';
 
 /* ✅ Local Poppins font */
 @font-face {

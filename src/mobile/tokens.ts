@@ -1,0 +1,41 @@
+export const MOBILE_TOKENS = {
+  brand: {
+    600: "#008080",
+    700: "#006B6B",
+    800: "#005F5F",
+    50: "#E6F3F3",
+    100: "#CCE6E6",
+    darkText: "#14A3A3",
+  },
+  ink: {
+    primary: "#1F2937",
+    secondary: "rgba(31, 41, 55, 0.70)",
+    caption: "#6B7280",
+    placeholder: "#9CA3AF",
+  },
+  surface: {
+    page: "#F8FAFA",
+    card: "#FFFFFF",
+    border: "#E5ECEC",
+    divider: "#EEF2F2",
+  },
+  semantic: {
+    error: "#DC2626",
+    errorBg: "#FEF2F2",
+    success: "#16A34A",
+    successBg: "#F0FDF4",
+    pendingBg: "#E6F3F3",
+    pendingText: "#005F5F",
+  },
+  dark: {
+    page: "#0F1720",
+    surface: "#1F2937",
+    raised: "#273241",
+    text: "#F3F4F6",
+    muted: "#9CA3AF",
+    border: "#374151",
+    headerStart: "#006B6B",
+    headerEnd: "#004747",
+    mascotCircle: "#12302F",
+  },
+} as const;
