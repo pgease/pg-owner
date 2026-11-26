@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Download, LayoutList, MoreVertical, Plus, Search, Users } from "lucide-react";
+import { CheckCircle2, Clock, Download, LayoutList, MoreHorizontal, MoreVertical, Plus, Search, Users } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { isTenantKycVerified, isTenantOnNotice, usePropertySummary } from "@/mobile/hooks/usePropertySummary";
 import { useNetworkStatus } from "@/mobile/hooks/useNetworkStatus";
@@ -32,6 +32,9 @@ export function MobileTenantsV2({ onExport }: { onExport?: () => void }) {
   const [kycFilter, setKycFilter] = useState<"all" | "pending" | "verified">("all");
   const [compact, setCompact] = useState(false);
   const [actionTenant, setActionTenant] = useState<any | null>(null);
+  const [overflowOpen, setOverflowOpen] = useState(false);
+
+  const hasActiveFilter = search.trim().length > 0 || kycFilter !== "all";
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -55,6 +58,11 @@ export function MobileTenantsV2({ onExport }: { onExport?: () => void }) {
     navigate("/tenants/add");
   };
 
+  const clearFilters = () => {
+    setSearch("");
+    setKycFilter("all");
+  };
+
   return (
     <PageScaffold
       isOffline={isOffline}
@@ -62,22 +70,24 @@ export function MobileTenantsV2({ onExport }: { onExport?: () => void }) {
       onRefresh={refetchAll}
       header={
         <MobileAppHeader
-          showPgSwitcher={false}
+          showPgSwitcher={true}
           title="Tenant's Info"
           subtitle={`${formatCount(summary.totalTenants)} tenants registered`}
           rightActions={
-            <div className="px-3 py-1.5 rounded-xl bg-white/15 border border-white/25 text-center shrink-0">
-              <div className="text-[15px] font-semibold leading-none tabular-nums">
-                {formatCount(summary.totalTenants)}
-              </div>
-              <div className="text-[10px] text-white/80 mt-0.5">Total</div>
-            </div>
+            <button
+              type="button"
+              onClick={() => setOverflowOpen(true)}
+              className="h-10 w-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-white cursor-pointer"
+              aria-label="More tenant options"
+            >
+              <MoreHorizontal className="h-5 w-5" />
+            </button>
           }
         />
       }
     >
       <div className="px-4 pt-4 space-y-3.5">
-        {/* Search + View Toggle + Export */}
+        {/* Search + Normal/Compact Segmented Toggle */}
         <div className="flex items-center gap-2">
           <div className="flex-1 ms-tile h-12 px-3.5 flex items-center gap-2.5">
             <Search className="h-4 w-4 text-[var(--ms-ink-3)] shrink-0" />
@@ -92,21 +102,12 @@ export function MobileTenantsV2({ onExport }: { onExport?: () => void }) {
           <button
             type="button"
             onClick={() => setCompact((v) => !v)}
-            className="ms-tile h-12 w-12 flex items-center justify-center text-[var(--ms-ink-2)] shrink-0 cursor-pointer"
+            className="ms-tile h-12 px-3 flex items-center gap-1.5 text-[12px] font-medium text-[var(--ms-ink-2)] shrink-0 cursor-pointer"
             aria-label="Toggle compact view"
           >
-            <LayoutList className="h-5 w-5" />
+            <LayoutList className="h-4 w-4 text-[var(--ms-brand-text)]" />
+            <span>{compact ? "Compact" : "Normal"}</span>
           </button>
-          {onExport && (
-            <button
-              type="button"
-              onClick={onExport}
-              className="ms-tile h-12 w-12 flex items-center justify-center text-[var(--ms-brand-text)] shrink-0 cursor-pointer"
-              aria-label="Export tenants"
-            >
-              <Download className="h-5 w-5" />
-            </button>
-          )}
         </div>
 
         {/* Summary Strip */}
@@ -156,18 +157,32 @@ export function MobileTenantsV2({ onExport }: { onExport?: () => void }) {
           </MobileCard>
         ) : filtered.length === 0 ? (
           <MobileCard>
-            <MascotEmptyState
-              variant="empty"
-              size="md"
-              title={tenants.length === 0 ? "No tenants yet" : "No matching tenants"}
-              message={
-                tenants.length === 0
-                  ? "Tap the button below to add your first tenant"
-                  : "Try adjusting your search or filter chips."
-              }
-              actionLabel={tenants.length === 0 ? "+ Add Tenant" : undefined}
-              onAction={tenants.length === 0 ? handleAddTenant : undefined}
-            />
+            {tab === "notice" && !hasActiveFilter ? (
+              <MascotEmptyState
+                variant="empty"
+                size="md"
+                title="No tenants on notice"
+                message="Tenants who give notice will appear here."
+              />
+            ) : hasActiveFilter ? (
+              <MascotEmptyState
+                variant="empty"
+                size="md"
+                title="No matching tenants"
+                message="Try adjusting your search or filter chips."
+                actionLabel="Clear filters"
+                onAction={clearFilters}
+              />
+            ) : (
+              <MascotEmptyState
+                variant="empty"
+                size="md"
+                title="No tenants yet"
+                message="Tap the button below to add your first tenant"
+                actionLabel="+ Add Tenant"
+                onAction={handleAddTenant}
+              />
+            )}
           </MobileCard>
         ) : (
           <div className="space-y-2.5">
@@ -191,22 +206,23 @@ export function MobileTenantsV2({ onExport }: { onExport?: () => void }) {
                         <span className="text-[14px] font-semibold text-[var(--ms-ink)] truncate">
                           {t.name || "Resident"}
                         </span>
-                        <span className="text-[14px] font-semibold text-[var(--ms-brand-text)] tabular-nums shrink-0">
+                        <span className="text-[14px] font-semibold text-[var(--ms-brand-text)] tabular-nums whitespace-nowrap shrink-0">
                           {formatINR(rentAmt)}
                         </span>
                       </div>
-                      <div className="text-[12px] text-[var(--ms-ink-3)] mt-0.5">
+                      <div className="text-[12px] text-[var(--ms-ink-3)] mt-0.5 truncate">
                         Room {roomNum}
                         {bedNum ? ` · Bed ${bedNum}` : ""}
                       </div>
                       {!compact && (
                         <div className="flex flex-wrap gap-1.5 mt-2">
-                          <StatusChip label="Occupied" tone="teal" />
+                          <StatusChip label="Occupied" tone="success" />
                           <StatusChip
                             label={verified ? "KYC Verified" : "KYC Pending"}
                             tone={verified ? "success" : "pending"}
+                            icon={verified ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
                           />
-                          {onNotice && <StatusChip label="On Notice" tone="error" />}
+                          {onNotice && <StatusChip label="On Notice" tone="pending" />}
                         </div>
                       )}
                     </div>
@@ -216,7 +232,7 @@ export function MobileTenantsV2({ onExport }: { onExport?: () => void }) {
                         e.stopPropagation();
                         setActionTenant(t);
                       }}
-                      className="h-9 w-9 rounded-xl flex items-center justify-center text-[var(--ms-ink-3)] hover:bg-[var(--ms-page)] shrink-0 cursor-pointer"
+                      className="h-10 w-10 rounded-xl flex items-center justify-center text-[var(--ms-ink-3)] hover:bg-[var(--ms-page)] shrink-0 cursor-pointer"
                       aria-label="Tenant actions"
                     >
                       <MoreVertical className="h-4 w-4" />
@@ -233,8 +249,44 @@ export function MobileTenantsV2({ onExport }: { onExport?: () => void }) {
         icon={<Plus className="h-5 w-5" />}
         label="Add Tenant"
         onClick={handleAddTenant}
-        className="bottom-[calc(80px+env(safe-area-inset-bottom,0px))]"
+        className="bottom-[calc(76px+env(safe-area-inset-bottom,0px))]"
       />
+
+      <BottomSheet open={overflowOpen} onClose={() => setOverflowOpen(false)} title="Tenant Options">
+        <div className="divide-y divide-[var(--ms-divider)] rounded-2xl border border-[var(--ms-border)] overflow-hidden">
+          {onExport && (
+            <ListRow
+              tone="green"
+              icon={<Download className="h-5 w-5" />}
+              title="Export Tenants CSV"
+              subtitle="Download resident list"
+              onClick={() => {
+                setOverflowOpen(false);
+                onExport();
+              }}
+            />
+          )}
+          <ListRow
+            tone="blue"
+            icon={<LayoutList className="h-5 w-5" />}
+            title={compact ? "Switch to Normal View" : "Switch to Compact View"}
+            onClick={() => {
+              setCompact((v) => !v);
+              setOverflowOpen(false);
+            }}
+          />
+          <ListRow
+            tone="amber"
+            icon={<Clock className="h-5 w-5" />}
+            title="Notice Period Management"
+            subtitle="Extend, cancel or move out"
+            onClick={() => {
+              setOverflowOpen(false);
+              navigate("/tenants/notice-period");
+            }}
+          />
+        </div>
+      </BottomSheet>
 
       <BottomSheet
         open={Boolean(actionTenant)}
@@ -244,6 +296,7 @@ export function MobileTenantsV2({ onExport }: { onExport?: () => void }) {
         {actionTenant && (
           <div className="divide-y divide-[var(--ms-divider)] rounded-2xl border border-[var(--ms-border)] overflow-hidden">
             <ListRow
+              tone="teal"
               icon={<Users className="h-5 w-5" />}
               title="Open Full Tenant Record"
               subtitle="Joining form, passbook, KYC & payments"
@@ -254,7 +307,8 @@ export function MobileTenantsV2({ onExport }: { onExport?: () => void }) {
               }}
             />
             <ListRow
-              icon={<Users className="h-5 w-5" />}
+              tone="amber"
+              icon={<Clock className="h-5 w-5" />}
               title="Notice Period Actions"
               subtitle="Extend, cancel notice or move out"
               onClick={() => {

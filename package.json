@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify:inventory": "node ./scripts/verify-inventory.mjs"
+    "verify:inventory": "node ./scripts/verify-inventory.mjs",
+    "check:tokens": "node ./scripts/check-tokens.mjs"
   },
   "dependencies": {
     "@capacitor/browser": "^6.0.6",

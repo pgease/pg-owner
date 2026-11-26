@@ -2,6 +2,7 @@ import React from "react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatINR } from "@/mobile/utils/formatters";
+import type { IconTone } from "@/mobile/tokens";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +11,47 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
+const TONE_STYLE: Record<IconTone, { bg: string; fg: string }> = {
+  teal: { bg: "var(--ms-tone-teal-bg)", fg: "var(--ms-tone-teal-fg)" },
+  blue: { bg: "var(--ms-tone-blue-bg)", fg: "var(--ms-tone-blue-fg)" },
+  green: { bg: "var(--ms-tone-green-bg)", fg: "var(--ms-tone-green-fg)" },
+  emerald: { bg: "var(--ms-tone-emerald-bg)", fg: "var(--ms-tone-emerald-fg)" },
+  amber: { bg: "var(--ms-tone-amber-bg)", fg: "var(--ms-tone-amber-fg)" },
+  orange: { bg: "var(--ms-tone-orange-bg)", fg: "var(--ms-tone-orange-fg)" },
+  rose: { bg: "var(--ms-tone-rose-bg)", fg: "var(--ms-tone-rose-fg)" },
+  red: { bg: "var(--ms-tone-red-bg)", fg: "var(--ms-tone-red-fg)" },
+  indigo: { bg: "var(--ms-tone-indigo-bg)", fg: "var(--ms-tone-indigo-fg)" },
+  violet: { bg: "var(--ms-tone-violet-bg)", fg: "var(--ms-tone-violet-fg)" },
+  sky: { bg: "var(--ms-tone-sky-bg)", fg: "var(--ms-tone-sky-fg)" },
+};
+
+export function IconTile({
+  icon,
+  tone = "teal",
+  size = "md",
+  className,
+}: {
+  icon: React.ReactNode;
+  tone?: IconTone;
+  size?: "sm" | "md" | "lg";
+  className?: string;
+}) {
+  const sizeClass = {
+    sm: "h-8 w-8 rounded-lg",
+    md: "h-10 w-10 rounded-xl",
+    lg: "h-12 w-12 rounded-2xl",
+  }[size];
+  const palette = TONE_STYLE[tone] || TONE_STYLE.teal;
+  return (
+    <span
+      style={{ backgroundColor: palette.bg, color: palette.fg }}
+      className={cn("flex items-center justify-center shrink-0", sizeClass, className)}
+    >
+      {icon}
+    </span>
+  );
+}
 
 export function MobileCard({
   children,
@@ -41,13 +83,15 @@ export function StatTile({
   value,
   label,
   onClick,
-  iconBgClass = "bg-[var(--ms-brand-50)] text-[var(--ms-brand-text)]",
+  tone = "teal",
+  iconBgClass,
   className,
 }: {
   icon: React.ReactNode;
   value: React.ReactNode;
   label: string;
   onClick?: () => void;
+  tone?: IconTone;
   iconBgClass?: string;
   className?: string;
 }) {
@@ -61,9 +105,13 @@ export function StatTile({
       )}
     >
       <div className="flex items-center justify-between w-full">
-        <span className={cn("h-9 w-9 rounded-xl flex items-center justify-center shrink-0", iconBgClass)}>
-          {icon}
-        </span>
+        {iconBgClass ? (
+          <span className={cn("h-9 w-9 rounded-xl flex items-center justify-center shrink-0", iconBgClass)}>
+            {icon}
+          </span>
+        ) : (
+          <IconTile icon={icon} tone={tone} size="md" className="h-9 w-9" />
+        )}
         {onClick && <ChevronRight className="h-4 w-4 text-[var(--ms-ink-3)] shrink-0" />}
       </div>
       <div>
@@ -116,6 +164,7 @@ export function ListRow({
   onClick,
   danger,
   disabled,
+  tone = "teal",
   iconBgClass,
   className,
 }: {
@@ -127,9 +176,11 @@ export function ListRow({
   onClick?: () => void;
   danger?: boolean;
   disabled?: boolean;
+  tone?: IconTone;
   iconBgClass?: string;
   className?: string;
 }) {
+  const effectiveTone: IconTone = danger ? "red" : tone;
   return (
     <button
       type="button"
@@ -141,17 +192,13 @@ export function ListRow({
         className,
       )}
     >
-      <span
-        className={cn(
-          "h-10 w-10 rounded-xl flex items-center justify-center shrink-0",
-          iconBgClass ||
-            (danger
-              ? "bg-[var(--ms-error-bg)] text-[var(--ms-error)]"
-              : "bg-[var(--ms-brand-50)] text-[var(--ms-brand-text)]"),
-        )}
-      >
-        {icon}
-      </span>
+      {iconBgClass ? (
+        <span className={cn("h-10 w-10 rounded-xl flex items-center justify-center shrink-0", iconBgClass)}>
+          {icon}
+        </span>
+      ) : (
+        <IconTile icon={icon} tone={effectiveTone} size="md" />
+      )}
       <div className="min-w-0 flex-1">
         <div className={cn("text-[14px] font-medium truncate", danger ? "text-[var(--ms-error)]" : "text-[var(--ms-ink)]")}>
           {title}
@@ -499,6 +546,16 @@ export function Avatar({
   );
 }
 
+export type StatusChipTone =
+  | "teal"
+  | "pending"
+  | "success"
+  | "error"
+  | "info"
+  | "review"
+  | "premium"
+  | "neutral";
+
 export function StatusChip({
   label,
   tone = "teal",
@@ -506,15 +563,18 @@ export function StatusChip({
   onClick,
 }: {
   label: string;
-  tone?: "teal" | "pending" | "success" | "error" | "neutral";
+  tone?: StatusChipTone;
   icon?: React.ReactNode;
   onClick?: () => void;
 }) {
-  const toneClasses: Record<string, string> = {
+  const toneClasses: Record<StatusChipTone, string> = {
     teal: "bg-[var(--ms-brand-50)] text-[var(--ms-brand-text)] border-[var(--ms-brand-100)]",
-    pending: "bg-[var(--ms-brand-50)] text-[var(--ms-brand-800)] dark:text-[var(--ms-brand-text)] border-[var(--ms-brand-600)]/30",
-    success: "bg-[var(--ms-success-bg)] text-[var(--ms-success)] border-[var(--ms-success)]/25",
-    error: "bg-[var(--ms-error-bg)] text-[var(--ms-error)] border-[var(--ms-error)]/25",
+    pending: "bg-[var(--ms-pending-bg)] text-[var(--ms-pending-fg)] border-[var(--ms-pending-border)]",
+    success: "bg-[var(--ms-success-bg)] text-[var(--ms-success)] border-[var(--ms-success-border)]",
+    error: "bg-[var(--ms-error-bg)] text-[var(--ms-error)] border-[var(--ms-error-border)]",
+    info: "bg-[var(--ms-info-bg)] text-[var(--ms-info-fg)] border-[var(--ms-info-border)]",
+    review: "bg-[var(--ms-tone-indigo-bg)] text-[var(--ms-tone-indigo-fg)] border-[var(--ms-info-border)]",
+    premium: "ms-premium-gradient text-[var(--ms-premium-gold)]",
     neutral: "bg-[var(--ms-page)] text-[var(--ms-ink-3)] border-[var(--ms-border)]",
   };
   const Tag = onClick ? "button" : "span";
@@ -523,7 +583,7 @@ export function StatusChip({
       type={onClick ? "button" : undefined}
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border shrink-0",
+        "inline-flex items-center gap-1 px-2.5 h-6 rounded-full text-[12px] font-medium border shrink-0 whitespace-nowrap",
         toneClasses[tone],
         onClick && "cursor-pointer active:scale-95 transition-transform",
       )}

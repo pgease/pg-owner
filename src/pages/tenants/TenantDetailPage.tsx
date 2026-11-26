@@ -2327,12 +2327,33 @@ function TenantDetailContent() {
 
         {/* Tabbed Sections */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="flex h-auto w-full flex-nowrap justify-start gap-1 rounded-full md:rounded-md border border-[var(--gray-200)] bg-[var(--gray-50)] p-1 overflow-x-auto overflow-y-hidden">
-            <TabsTrigger value="overview" className="shrink-0 min-h-10 rounded-full md:rounded-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] data-[state=active]:shadow-sm font-medium">Joining Form</TabsTrigger>
-            <TabsTrigger value="passbook" className="shrink-0 min-h-10 rounded-full md:rounded-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] data-[state=active]:shadow-sm font-medium">Passbook</TabsTrigger>
-            <TabsTrigger value="electricity" className="shrink-0 min-h-10 rounded-full md:rounded-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] data-[state=active]:shadow-sm font-medium">Electricity</TabsTrigger>
-            <TabsTrigger value="notice" className="shrink-0 min-h-10 rounded-full md:rounded-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] data-[state=active]:shadow-sm font-medium">Notice</TabsTrigger>
-            <TabsTrigger value="agreement" className="shrink-0 min-h-10 rounded-full md:rounded-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] data-[state=active]:shadow-sm font-medium">Agreement</TabsTrigger>
+          {/* Desktop horizontal tabs */}
+          <TabsList className="hidden md:flex h-auto w-full flex-nowrap justify-start gap-1 rounded-md border border-[var(--gray-200)] bg-[var(--gray-50)] p-1">
+            <TabsTrigger value="overview" className="shrink-0 min-h-10 rounded-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] data-[state=active]:shadow-sm font-medium">Joining Form</TabsTrigger>
+            <TabsTrigger value="passbook" className="shrink-0 min-h-10 rounded-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] data-[state=active]:shadow-sm font-medium">Passbook</TabsTrigger>
+            <TabsTrigger value="electricity" className="shrink-0 min-h-10 rounded-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] data-[state=active]:shadow-sm font-medium">Electricity</TabsTrigger>
+            <TabsTrigger value="notice" className="shrink-0 min-h-10 rounded-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] data-[state=active]:shadow-sm font-medium">Notice</TabsTrigger>
+            <TabsTrigger value="agreement" className="shrink-0 min-h-10 rounded-sm px-4 data-[state=active]:bg-white data-[state=active]:text-[var(--brand-700)] data-[state=active]:shadow-sm font-medium">Agreement</TabsTrigger>
+          </TabsList>
+
+          {/* Mobile vertical section selector (C7: replaces hidden horizontal scroll tabs) */}
+          <TabsList className="md:hidden grid grid-cols-1 h-auto w-full gap-1.5 bg-transparent p-0 mb-3">
+            {[
+              { value: "overview", label: "Joining Form & Rent Cycle" },
+              { value: "passbook", label: "Passbook & Payments" },
+              { value: "electricity", label: "Electricity & Meter" },
+              { value: "notice", label: "Notice Period & Move-out" },
+              { value: "agreement", label: "Rental Agreement & KYC" },
+            ].map((sec) => (
+              <TabsTrigger
+                key={sec.value}
+                value={sec.value}
+                className="w-full justify-between px-4 py-3 min-h-[48px] rounded-2xl border border-[var(--ms-border)] bg-[var(--ms-card)] text-[14px] font-medium text-[var(--ms-ink)] data-[state=active]:border-[var(--ms-brand-600)] data-[state=active]:bg-[var(--ms-brand-50)] data-[state=active]:text-[var(--ms-brand-text)] data-[state=active]:font-semibold"
+              >
+                <span>{sec.label}</span>
+                <span className="text-[12px] opacity-70">View →</span>
+              </TabsTrigger>
+            ))}
           </TabsList>
 
           {/* TAB 1: OVERVIEW */}

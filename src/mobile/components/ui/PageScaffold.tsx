@@ -31,7 +31,7 @@ export function PageScaffold({
   };
 
   return (
-    <div className={cn("ms-shell ms-chrome-no-select min-h-full pb-[calc(88px+env(safe-area-inset-bottom,0px))]", className)}>
+    <div className={cn("ms-shell ms-chrome-no-select pb-4", className)}>
       {header}
       {isOffline && (
         <OfflineBanner lastUpdated={lastUpdated} onRetry={triggerRefresh} retrying={refreshing} />

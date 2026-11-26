@@ -5,6 +5,7 @@ import AppSidebar from "./AppSidebar";
 import AppHeader from "./AppHeader";
 import { MobileBottomNavV2 } from "@/mobile/components/ui/MobileBottomNavV2";
 import { MobileSubHeader } from "@/mobile/components/ui/MobileHeaders";
+import { RouteTransition } from "@/mobile/components/ui/RouteTransition";
 import { getMobilePageTitle } from "@/lib/mobileRoutes";
 import { SubscriptionBanner } from "./SubscriptionBanner";
 import StaffExpiredLockout from "./StaffExpiredLockout";
@@ -121,11 +122,13 @@ const AppLayout = ({ children }: AppLayoutProps) => {
               ? "bg-[var(--ms-page)] p-0 md:bg-[#F8FAFC] md:p-6"
               : "bg-[var(--ms-page)] p-3 sm:p-4 md:bg-[#F8FAFC] md:p-6",
             shouldHideMobileTabBar(location.pathname)
-              ? "pb-[calc(24px+env(safe-area-inset-bottom,0px))] md:pb-28"
-              : "pb-[calc(96px+env(safe-area-inset-bottom,0px))] md:pb-28",
+              ? "pb-[calc(16px+env(safe-area-inset-bottom,0px))] md:pb-28"
+              : "pb-[calc(72px+env(safe-area-inset-bottom,0px))] md:pb-28",
           )}
         >
-          <div className="mx-auto w-full">{children}</div>
+          <div className="mx-auto w-full">
+            <RouteTransition>{children}</RouteTransition>
+          </div>
         </main>
         <MobileBottomNavV2 />
       </div>

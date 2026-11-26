@@ -45,6 +45,7 @@ export function MobileBottomNavV2() {
     to: string;
     icon: React.ElementType;
     badgeCount?: number;
+    badgeBg?: string;
   }> = [
     { id: "dashboard", label: "Dashboard", to: "/dashboard", icon: LayoutGrid },
     { id: "mypg", label: "My PG", to: "/my-pgs", icon: BedDouble },
@@ -54,6 +55,7 @@ export function MobileBottomNavV2() {
       to: "/tenants",
       icon: Users,
       badgeCount: summary.kycPendingTenants > 0 ? summary.kycPendingTenants : undefined,
+      badgeBg: "bg-[var(--ms-pending-icon)]",
     },
     {
       id: "rent",
@@ -61,6 +63,7 @@ export function MobileBottomNavV2() {
       to: "/rent-payments",
       icon: IndianRupee,
       badgeCount: summary.unpaidTenantsCount > 0 ? summary.unpaidTenantsCount : undefined,
+      badgeBg: "bg-[var(--ms-error-icon)]",
     },
     { id: "menu", label: "Menu", to: "/menu", icon: Menu },
   ];
@@ -105,7 +108,12 @@ export function MobileBottomNavV2() {
               <div className="relative">
                 <Icon className={cn("h-5 w-5 transition-transform duration-150", active && "scale-105")} strokeWidth={active ? 2.3 : 1.8} />
                 {tab.badgeCount !== undefined && (
-                  <span className="absolute -top-1 -right-2 min-w-[14px] h-[14px] px-1 rounded-full bg-[var(--ms-brand-600)] text-white text-[9px] font-semibold flex items-center justify-center">
+                  <span
+                    className={cn(
+                      "absolute -top-1 -right-2 min-w-[14px] h-[14px] px-1 rounded-full text-white text-[9px] font-semibold flex items-center justify-center",
+                      tab.badgeBg || "bg-[var(--ms-brand-600)]",
+                    )}
+                  >
                     {tab.badgeCount > 9 ? "9+" : tab.badgeCount}
                   </span>
                 )}

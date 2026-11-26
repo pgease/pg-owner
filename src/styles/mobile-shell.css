@@ -1,43 +1,77 @@
 /* PG Ease Mobile Shell Design System Tokens & Utilities */
 :root {
+  --ms-brand-50: #E6F3F3;
+  --ms-brand-100: #CCE6E6;
   --ms-brand-600: #008080;
   --ms-brand-700: #006B6B;
   --ms-brand-800: #005F5F;
-  --ms-brand-50: #E6F3F3;
-  --ms-brand-100: #CCE6E6;
   --ms-brand-text: #008080;
 
   --ms-ink: #1F2937;
-  --ms-ink-2: rgba(31, 41, 55, 0.70);
+  --ms-ink-2: #374151;
   --ms-ink-3: #6B7280;
   --ms-placeholder: #9CA3AF;
 
-  --ms-page: #F8FAFA;
+  --ms-page: #F5F7F8;
   --ms-card: #FFFFFF;
   --ms-raised: #FFFFFF;
-  --ms-border: #E5ECEC;
-  --ms-divider: #EEF2F2;
+  --ms-border: #E5E9EB;
+  --ms-divider: #EEF1F2;
 
-  --ms-error: #DC2626;
-  --ms-error-bg: #FEF2F2;
-  --ms-success: #16A34A;
-  --ms-success-bg: #F0FDF4;
+  /* Semantic Status Tokens */
+  --ms-pending-bg: #FEF3C7;
+  --ms-pending-fg: #92400E;
+  --ms-pending-icon: #F59E0B;
+  --ms-pending-border: #FCD34D;
+
+  --ms-error-bg: #FEE2E2;
+  --ms-error: #B91C1C;
+  --ms-error-icon: #DC2626;
+  --ms-error-border: #FCA5A5;
+
+  --ms-success-bg: #DCFCE7;
+  --ms-success: #15803D;
+  --ms-success-icon: #16A34A;
+  --ms-success-border: #86EFAC;
+
+  --ms-info-bg: #DBEAFE;
+  --ms-info-fg: #1D4ED8;
+  --ms-info-icon: #2563EB;
+  --ms-info-border: #93C5FD;
+
+  --ms-premium-from: #111827;
+  --ms-premium-to: #0B3B3B;
+  --ms-premium-gold: #F5C451;
+
   --ms-mascot-circle: #E6F3F3;
-
   --ms-header-start: #008080;
   --ms-header-end: #005F5F;
+
+  /* Decorative Icon Tones */
+  --ms-tone-teal-bg: #E6F3F3;     --ms-tone-teal-fg: #008080;
+  --ms-tone-blue-bg: #DBEAFE;     --ms-tone-blue-fg: #2563EB;
+  --ms-tone-green-bg: #DCFCE7;    --ms-tone-green-fg: #16A34A;
+  --ms-tone-emerald-bg: #D1FAE5;  --ms-tone-emerald-fg: #059669;
+  --ms-tone-amber-bg: #FEF3C7;    --ms-tone-amber-fg: #D97706;
+  --ms-tone-orange-bg: #FFEDD5;   --ms-tone-orange-fg: #EA580C;
+  --ms-tone-rose-bg: #FFE4E6;     --ms-tone-rose-fg: #E11D48;
+  --ms-tone-red-bg: #FEE2E2;      --ms-tone-red-fg: #DC2626;
+  --ms-tone-indigo-bg: #E0E7FF;   --ms-tone-indigo-fg: #4F46E5;
+  --ms-tone-violet-bg: #EDE9FE;   --ms-tone-violet-fg: #7C3AED;
+  --ms-tone-sky-bg: #E0F2FE;      --ms-tone-sky-fg: #0284C7;
 
   --ms-shadow-card: 0 4px 14px rgba(0, 0, 0, 0.06);
   --ms-shadow-float: 0 8px 24px rgba(0, 0, 0, 0.14);
 }
 
-.dark {
-  --ms-brand-text: #14A3A3;
-  --ms-brand-50: #12302F;
-  --ms-brand-100: #1A4442;
+.dark,
+[data-theme="dark"] {
+  --ms-brand-text: #2DD4D4;
+  --ms-brand-50: rgba(20, 163, 163, 0.18);
+  --ms-brand-100: rgba(20, 163, 163, 0.30);
 
   --ms-ink: #F3F4F6;
-  --ms-ink-2: rgba(243, 244, 246, 0.75);
+  --ms-ink-2: #D1D5DB;
   --ms-ink-3: #9CA3AF;
   --ms-placeholder: #6B7280;
 
@@ -47,15 +81,40 @@
   --ms-border: #374151;
   --ms-divider: #2D3748;
 
-  --ms-error-bg: rgba(220, 38, 38, 0.16);
-  --ms-success-bg: rgba(22, 163, 74, 0.16);
-  --ms-mascot-circle: #12302F;
+  --ms-pending-bg: rgba(245, 158, 11, 0.18);
+  --ms-pending-fg: #FBBF24;
+  --ms-pending-border: rgba(245, 158, 11, 0.35);
 
+  --ms-error-bg: rgba(239, 68, 68, 0.18);
+  --ms-error: #F87171;
+  --ms-error-border: rgba(239, 68, 68, 0.35);
+
+  --ms-success-bg: rgba(34, 197, 94, 0.18);
+  --ms-success: #4ADE80;
+  --ms-success-border: rgba(34, 197, 94, 0.35);
+
+  --ms-info-bg: rgba(59, 130, 246, 0.18);
+  --ms-info-fg: #60A5FA;
+  --ms-info-border: rgba(59, 130, 246, 0.35);
+
+  --ms-mascot-circle: #12302F;
   --ms-header-start: #006B6B;
   --ms-header-end: #004747;
 
-  --ms-shadow-card: 0 4px 14px rgba(0, 0, 0, 0.28);
-  --ms-shadow-float: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --ms-tone-teal-bg: rgba(20, 163, 163, 0.18);   --ms-tone-teal-fg: #2DD4D4;
+  --ms-tone-blue-bg: rgba(59, 130, 246, 0.18);   --ms-tone-blue-fg: #60A5FA;
+  --ms-tone-green-bg: rgba(34, 197, 94, 0.18);   --ms-tone-green-fg: #4ADE80;
+  --ms-tone-emerald-bg: rgba(16, 185, 129, 0.18);--ms-tone-emerald-fg: #34D399;
+  --ms-tone-amber-bg: rgba(245, 158, 11, 0.18);  --ms-tone-amber-fg: #FBBF24;
+  --ms-tone-orange-bg: rgba(249, 115, 22, 0.18); --ms-tone-orange-fg: #FB923C;
+  --ms-tone-rose-bg: rgba(244, 63, 94, 0.18);    --ms-tone-rose-fg: #FB7185;
+  --ms-tone-red-bg: rgba(239, 68, 68, 0.18);     --ms-tone-red-fg: #F87171;
+  --ms-tone-indigo-bg: rgba(99, 102, 241, 0.18); --ms-tone-indigo-fg: #818CF8;
+  --ms-tone-violet-bg: rgba(139, 92, 246, 0.18); --ms-tone-violet-fg: #A78BFA;
+  --ms-tone-sky-bg: rgba(14, 165, 233, 0.18);    --ms-tone-sky-fg: #38BDF8;
+
+  --ms-shadow-card: 0 4px 14px rgba(0, 0, 0, 0.30);
+  --ms-shadow-float: 0 8px 24px rgba(0, 0, 0, 0.48);
 }
 
 .ms-shell {
@@ -83,6 +142,11 @@
   background: linear-gradient(135deg, var(--ms-header-start) 0%, var(--ms-header-end) 100%);
 }
 
+.ms-premium-gradient {
+  background: linear-gradient(135deg, var(--ms-premium-from) 0%, var(--ms-premium-to) 100%);
+  border: 1px solid var(--ms-premium-gold);
+}
+
 .ms-card {
   background-color: var(--ms-card);
   border: 1px solid var(--ms-border);
@@ -101,7 +165,7 @@
   background-color: var(--ms-brand-600);
   color: #FFFFFF;
   border-radius: 14px;
-  min-height: 44px;
+  min-height: 48px;
   transition: transform 120ms ease, background-color 150ms ease;
 }
 .ms-btn-primary:active {
@@ -109,10 +173,14 @@
   transform: scale(0.98);
 }
 
-/* Motion & Reduced Motion */
+/* Route & Sheet Motion */
 @keyframes msSlideInRight {
-  from { opacity: 0; transform: translateX(16px); }
+  from { opacity: 0.4; transform: translateX(28px); }
   to { opacity: 1; transform: translateX(0); }
+}
+@keyframes msSlideOutRight {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0.4; transform: translateX(28px); }
 }
 @keyframes msFadeIn {
   from { opacity: 0; }
@@ -124,6 +192,9 @@
 }
 
 .ms-anim-push {
+  animation: msSlideInRight 250ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.ms-anim-pop {
   animation: msSlideInRight 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .ms-anim-tab {
@@ -135,14 +206,13 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ms-anim-push,
+  .ms-anim-pop,
   .ms-anim-tab,
   .ms-anim-sheet {
-    animation: none !important;
-    transition: none !important;
+    animation: msFadeIn 120ms ease-out both !important;
   }
 }
 
-/* Hide scrollbars on horizontal chip strips */
 .ms-no-scrollbar::-webkit-scrollbar {
   display: none;
 }

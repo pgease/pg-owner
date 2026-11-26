@@ -59,16 +59,17 @@ import ApiCatalogPage from "./pages/reference/ApiCatalogPage";
 import PublicListingPage from "./pages/property/PublicListingPage";
 import FeatureCataloguePage from "./pages/FeatureCataloguePage";
 import { TutorialProvider } from "./context/TutorialContext";
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { setAppStatusBar } from "@/utils/statusBar";
 import { hydrateAuthStorage, initPersistentAuthLifecycle } from "@/api/http";
-import { toast } from "@/components/ui/use-toast";
 import { resolveActiveTab } from "@/mobile/components/ui/MobileBottomNavV2";
+import { ConfirmDialog } from "@/mobile/components/ui/Primitives";
 
 import { GlobalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
 import GalleryPage from "@/mobile/pages/GalleryPage";
 import MobileMenuV2 from "@/mobile/pages/MobileMenuV2";
+import SendRemindersPage from "@/mobile/pages/SendRemindersPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -86,7 +87,7 @@ const queryClient = new QueryClient({
 const AndroidBackManager = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const lastBackRef = useRef(0);
+  const [exitOpen, setExitOpen] = useState(false);
 
   useEffect(() => {
     const isMobile = typeof window !== "undefined" && (window.innerWidth < 768 || Boolean((window as any).Capacitor?.isNativePlatform?.()));
@@ -94,48 +95,67 @@ const AndroidBackManager = () => {
   }, [location.pathname]);
 
   useEffect(() => {
-    const capApp = (window as any).Capacitor?.Plugins?.App;
-    if (!capApp?.addListener) return;
-
-    const listener = capApp.addListener("backButton", ({ canGoBack }: { canGoBack: boolean }) => {
-      // 1. Close open dialog/sheet if any
+    const handleBack = (): "handled" | "exit" => {
+      // 1. Close open dialog/sheet/dropdown if any
       const closeBtn = document.querySelector('[data-state="open"] button[aria-label="Close"]') as HTMLButtonElement | null;
       if (closeBtn) {
         closeBtn.click();
-        return;
+        return "handled";
       }
 
       const tab = resolveActiveTab(location.pathname);
       const isTabRoot = ["/dashboard", "/", "/kpis", "/my-pgs", "/tenants", "/rent-payments", "/menu"].includes(location.pathname);
 
       // 2. Pushed screen -> pop
-      if (!isTabRoot && canGoBack) {
+      if (!isTabRoot) {
         navigate(-1);
-        return;
+        return "handled";
       }
 
       // 3. Non-dashboard tab root -> go to Dashboard
       if (tab !== "dashboard") {
         navigate("/dashboard");
-        return;
+        return "handled";
       }
 
-      // 4. Dashboard root -> double back to exit
-      const now = Date.now();
-      if (now - lastBackRef.current < 2000) {
-        void capApp.exitApp();
-      } else {
-        lastBackRef.current = now;
-        toast({ title: "Press back again to exit" });
-      }
+      // 4. Dashboard root -> show Exit confirm dialog
+      setExitOpen(true);
+      return "handled";
+    };
+
+    (window as any).__pgeaseHandleBack = handleBack;
+
+    const capApp = (window as any).Capacitor?.Plugins?.App;
+    if (!capApp?.addListener) return;
+
+    const listener = capApp.addListener("backButton", () => {
+      handleBack();
     });
 
     return () => {
+      delete (window as any).__pgeaseHandleBack;
       void listener?.then?.((h: { remove: () => void }) => h.remove());
     };
   }, [location.pathname, navigate]);
 
-  return null;
+  const handleConfirmExit = () => {
+    const capApp = (window as any).Capacitor?.Plugins?.App;
+    if (capApp?.exitApp) {
+      void capApp.exitApp();
+    }
+  };
+
+  return (
+    <ConfirmDialog
+      open={exitOpen}
+      onOpenChange={setExitOpen}
+      title="Exit PG Ease?"
+      description="Are you sure you want to close PG Ease Manager?"
+      confirmLabel="Exit"
+      cancelLabel="Cancel"
+      onConfirm={handleConfirmExit}
+    />
+  );
 };
 
 const App = () => {
@@ -213,6 +233,7 @@ const App = () => {
                         <Route path="/my-pgs/bank" element={<RequireOwner><BankAccountPage /></RequireOwner>} />
                         <Route path="/bank" element={<RequireOwner><BankAccountPage /></RequireOwner>} />
                         <Route path="/rent-payments" element={<RentPayments />} />
+                        <Route path="/rent-payments/reminders" element={<SendRemindersPage />} />
                         <Route path="/rent-payments/history" element={<RentPayments />} />
                         <Route path="/rent-payments/dues" element={<RentPayments />} />
                         <Route path="/staff" element={<Staff />} />
