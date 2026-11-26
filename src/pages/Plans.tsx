@@ -279,6 +279,7 @@ export default function Plans() {
                 easebuzz_response: response_data,
                 planId,
                 billingCycle,
+                durationMonths: billingCycle === "annual" ? 12 : 1,
                 numberOfBeds: selectedBeds,
               });
               toast({
