@@ -274,17 +274,22 @@ export default function Structure() {
 
   const effectiveFloorId = selectedFloorId || floors[0]?.id || "";
 
-  // Rooms Query: filter from allRooms if synthetic, else query by block and floor
+  // Rooms Query: filter strictly by selected block and floor (unless synthetic); track legacy unassigned rooms
+  const unassignedRooms = useMemo(
+    () => allRooms.filter((r: any) => !r.blockId && !r.floorId),
+    [allRooms]
+  );
+
   const rooms = useMemo(() => {
     if (effectiveBlockId.startsWith("synth-") || effectiveFloorId.startsWith("synth-")) {
       return allRooms;
     }
-    const filtered = allRooms.filter((r: any) => {
-      if (effectiveBlockId && r.blockId && r.blockId !== effectiveBlockId) return false;
-      if (effectiveFloorId && r.floorId && r.floorId !== effectiveFloorId) return false;
-      return true;
+    if (!effectiveBlockId || !effectiveFloorId) return [];
+    return allRooms.filter((r: any) => {
+      const matchBlock = !r.blockId || r.blockId === effectiveBlockId;
+      const matchFloor = r.floorId === effectiveFloorId;
+      return matchBlock && matchFloor;
     });
-    return filtered.length > 0 ? filtered : allRooms;
   }, [allRooms, effectiveBlockId, effectiveFloorId]);
 
   const { data: tenantsData = [] } = usePropertyTenants(currentPropertyId);
@@ -419,29 +424,37 @@ export default function Structure() {
         {/* Page Header */}
         <PageHeader
           title="Rooms & Beds"
-          description="Manage property blocks, floors, rooms, and bed occupancy with direct tenant check-in."
-          actions={
-            <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                className="gap-1.5"
-                onClick={handleOpenAddProperty}
-              >
-                <Plus className="h-4 w-4" /> Add property
-              </Button>
-              <Button
-                size="sm"
-                className="gap-1.5"
-                onClick={handleOpenAddRoom}
-              >
-                <Plus className="h-4 w-4" /> Add room
-              </Button>
-            </div>
-          }
+          description="Follow PG → Block → Floor → Room to organize your property layout and bed occupancy."
         />
 
-        {/* Property & View Switcher Bar */}
+        {/* 4-Step Flow Indicator: PG -> Block -> Floor -> Room */}
+        <div className="register-card px-4 py-2.5 flex flex-wrap items-center gap-2 text-xs">
+          {[
+            { label: "1. PG", done: Boolean(currentPropertyId), active: !currentPropertyId },
+            { label: "2. Block", done: blocks.length > 0, active: Boolean(currentPropertyId) && blocks.length === 0 },
+            { label: "3. Floor", done: floors.length > 0, active: blocks.length > 0 && floors.length === 0 },
+            { label: "4. Room", done: rooms.length > 0, active: floors.length > 0 && rooms.length === 0 },
+          ].map((step, idx, arr) => (
+            <React.Fragment key={step.label}>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-medium",
+                  step.done
+                    ? "bg-[#E6F3F3] text-[#005F5F]"
+                    : step.active
+                      ? "bg-[#008080] text-white font-semibold"
+                      : "bg-[var(--gray-100)] text-[var(--gray-500)]"
+                )}
+              >
+                {step.done && <CheckCircle2 className="h-3.5 w-3.5" />}
+                <span>{step.label}</span>
+              </span>
+              {idx < arr.length - 1 && <span className="text-[var(--gray-400)]">→</span>}
+            </React.Fragment>
+          ))}
+        </div>
+
+        {/* Property & View Switcher Bar (Single PG switcher in top-left header only) */}
         <div className="register-card p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <div className="h-10 w-10 rounded-md bg-[var(--brand-50)] border border-[var(--brand-100)] text-[var(--brand-700)] flex items-center justify-center shrink-0">
@@ -490,19 +503,6 @@ export default function Structure() {
                 <TableIcon className="h-3.5 w-3.5" /> Table View
               </button>
             </div>
-
-            <Select value={currentPropertyId || ""} onValueChange={(val) => setCurrentPropertyId(val)}>
-              <SelectTrigger className="w-[180px] sm:w-[220px] max-w-full h-9 text-xs shrink-0">
-                <SelectValue placeholder="Switch PG" />
-              </SelectTrigger>
-              <SelectContent>
-                {propertyList.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
         </div>
 
@@ -560,11 +560,25 @@ export default function Structure() {
               );
             })}
             {blocks.length === 0 && (
-              <div
-                onClick={() => setAddBlockOpen(true)}
-                className="w-full border border-dashed border-[var(--gray-300)] rounded-sm p-4 text-center cursor-pointer hover:border-[var(--brand-600)] text-xs text-[var(--gray-500)]"
-              >
-                + Add your first block (e.g. Block A, Main Wing)
+              <div className="w-full space-y-3">
+                <div className="register-card p-6 text-center space-y-3">
+                  <p className="text-sm font-semibold text-[var(--gray-900)]">
+                    Start by adding a block or wing (e.g. Block A, Main Wing)
+                  </p>
+                  <Button size="sm" className="gap-1.5" onClick={() => setAddBlockOpen(true)}>
+                    <Plus className="h-4 w-4" /> Add Block
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 opacity-55 pointer-events-none select-none">
+                  <div className="register-card p-4 border-dashed">
+                    <div className="text-xs font-semibold text-[var(--gray-600)]">3. Floor (Locked)</div>
+                    <div className="text-[11px] text-[var(--gray-500)] mt-1">Add a block first to unlock floors.</div>
+                  </div>
+                  <div className="register-card p-4 border-dashed">
+                    <div className="text-xs font-semibold text-[var(--gray-600)]">4. Room (Locked)</div>
+                    <div className="text-[11px] text-[var(--gray-500)] mt-1">Add a floor inside a block to add rooms.</div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -622,27 +636,35 @@ export default function Structure() {
                 );
               })}
               {floors.length === 0 && (
-                <div
-                  onClick={() => setAddFloorOpen(true)}
-                  className="w-full border border-dashed border-[var(--gray-300)] rounded-sm p-3 text-center cursor-pointer hover:border-[var(--brand-600)] text-xs text-[var(--gray-500)]"
-                >
-                  + Add first floor (e.g. Ground Floor, 1st Floor)
+                <div className="w-full register-card p-5 text-center space-y-2.5">
+                  <p className="text-xs font-medium text-[var(--gray-700)]">
+                    Add a floor to {blocks.find((b) => b.id === effectiveBlockId)?.name || "this block"}
+                  </p>
+                  <Button size="sm" variant="secondary" className="gap-1.5" onClick={handleOpenAddFloor}>
+                    <Plus className="h-3.5 w-3.5" /> Add Floor
+                  </Button>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* STEP 3: ROOMS & BED MATRIX */}
+        {/* STEP 3: ROOMS & BED MATRIX (Shown only after Block & Floor exist) */}
+        {effectiveBlockId && effectiveFloorId && (
         <div className="space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <span className="text-xs font-semibold text-[var(--gray-700)] uppercase tracking-wider block">
-                3. Rooms & Bed Matrix
-              </span>
-              <p className="text-xs text-[var(--gray-500)] mt-0.5">
-                Click any vacant bed tile to start new tenant onboarding with pre-selected room & bed.
-              </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <div>
+                <span className="text-xs font-semibold text-[var(--gray-700)] uppercase tracking-wider block">
+                  3. Rooms & Bed Matrix
+                </span>
+                <p className="text-xs text-[var(--gray-500)] mt-0.5">
+                  Click any vacant bed tile to start new tenant onboarding with pre-selected room & bed.
+                </p>
+              </div>
+              <Button size="sm" className="gap-1.5" onClick={handleOpenAddRoom}>
+                <Plus className="h-3.5 w-3.5" /> Add Room
+              </Button>
             </div>
 
             {/* Visual Bed Grid Legend */}
@@ -673,11 +695,11 @@ export default function Structure() {
             <div className="register-card p-8">
               <EmptyState
                 icon={<DoorOpen />}
-                title="No rooms created yet"
+                title={`No rooms in ${floors.find((f) => f.id === effectiveFloorId)?.name || "this floor"}`}
                 description="Add rooms to this floor to track bed occupancy and allocate new tenants."
                 action={
                   <Button size="sm" onClick={handleOpenAddRoom}>
-                    Add first room
+                    Add Room
                   </Button>
                 }
               />
@@ -1012,6 +1034,48 @@ export default function Structure() {
             />
           )}
         </div>
+        )}
+
+        {/* LEGACY UNASSIGNED ROOMS */}
+        {unassignedRooms.length > 0 && (
+          <div className="register-card p-4 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-semibold text-[var(--gray-900)]">
+                  Unassigned Rooms ({unassignedRooms.length})
+                </h3>
+                <p className="text-xs text-[var(--gray-500)]">
+                  Legacy rooms without a block or floor. Move each to a block/floor.
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+              {unassignedRooms.map((r: any) => (
+                <div
+                  key={r.id}
+                  className="flex items-center justify-between gap-2 p-3 rounded-md border border-[var(--gray-200)] bg-[var(--gray-50)]"
+                >
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold text-[var(--gray-900)] truncate">
+                      Room {r.roomNumber}
+                    </div>
+                    <div className="text-[11px] text-[var(--gray-500)]">
+                      {Number(r.capacity || r.numberOfBeds || 1)} beds
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="h-7 text-xs shrink-0"
+                    onClick={() => handleOpenEditRoom(r)}
+                  >
+                    Move to block/floor
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* DIALOG 1: ADD PROPERTY MODAL */}
         <Dialog open={addPropertyOpen} onOpenChange={setAddPropertyOpen}>
@@ -1161,6 +1225,11 @@ export default function Structure() {
             </DialogHeader>
 
             <div className="space-y-3 py-2 text-xs">
+              <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-md bg-[#E6F3F3] text-[#005F5F] font-medium">
+                <span>Block: {blocks.find((b) => b.id === effectiveBlockId)?.name || "—"}</span>
+                <span>·</span>
+                <span>Floor: {floors.find((f) => f.id === effectiveFloorId)?.name || "—"}</span>
+              </div>
               <div className="space-y-1">
                 <Label>Room Number / Name *</Label>
                 <Input

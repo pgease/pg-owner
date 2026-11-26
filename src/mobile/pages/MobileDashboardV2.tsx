@@ -149,7 +149,7 @@ export function MobileDashboardV2() {
     icon: React.ReactNode;
   }> = [
     { label: "Record rent payment", subtitle: "Cash / UPI / Bank Transfer", to: "/rent-payments", tone: "green", icon: <IndianRupee className="h-5 w-5" /> },
-    { label: "Add room or bed", subtitle: "PG Layout & Bed Grid", to: "/my-pgs/structure", tone: "teal", icon: <BedDouble className="h-5 w-5" /> },
+    { label: "PG Layout & Beds", subtitle: "Blocks, floors & bed grid", to: "/my-pgs/structure", tone: "teal", icon: <BedDouble className="h-5 w-5" /> },
     { label: "Verify KYC", subtitle: "Aadhaar e-KYC & agreements", to: "/tenants/kyc", tone: "amber", icon: <ShieldCheck className="h-5 w-5" /> },
     { label: "View complaints", subtitle: "Open maintenance tickets", to: "/complaints", tone: "red", icon: <MessageSquareWarning className="h-5 w-5" /> },
     { label: "Expenses", subtitle: "Track bills & payouts", to: "/expenses", tone: "rose", icon: <TrendingUp className="h-5 w-5" /> },

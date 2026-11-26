@@ -183,7 +183,7 @@ const Dashboard = () => {
                     <IndianRupee className="h-4 w-4 text-[var(--brand-600)]" /> Record rent payment
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/my-pgs/structure")} className="gap-2">
-                    <BedDouble className="h-4 w-4 text-[var(--gray-600)]" /> Add room or bed
+                    <BedDouble className="h-4 w-4 text-[var(--gray-600)]" /> PG Layout & Beds
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/tenants/kyc")} className="gap-2">
                     <ShieldCheck className="h-4 w-4 text-emerald-600" /> Verify KYC
