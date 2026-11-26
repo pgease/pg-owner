@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "verify:inventory": "node ./scripts/verify-inventory.mjs"
   },
   "dependencies": {
     "@capacitor/browser": "^6.0.6",
