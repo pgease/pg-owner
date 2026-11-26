@@ -21,7 +21,7 @@ import { CelebrationDialog } from "@/components/CelebrationDialog";
 import { TrialExpiredGateModal } from "@/components/common/TrialExpiredGateModal";
 import { formatInr } from "@/lib/rentDashboard";
 import { useDashboardData } from "@/components/dashboard/useDashboardData";
-import { MobileDashboard } from "@/components/dashboard/MobileDashboard";
+import { MobileDashboardV2 } from "@/mobile/pages/MobileDashboardV2";
 import { AttentionList } from "@/components/dashboard/AttentionList";
 import { OccupancyCard } from "@/components/dashboard/OccupancyCard";
 import { PendingRentCard } from "@/components/dashboard/PendingRentCard";
@@ -116,7 +116,7 @@ const Dashboard = () => {
     }
     return (
       <CanAccessPage permission="dashboard_view">
-        <MobileDashboard />
+        <div className="md:hidden"><MobileDashboardV2 /></div>
         <div className="mx-auto hidden max-w-lg pt-10 md:block">
           <div className="register-card p-6">
             <EmptyState
@@ -150,7 +150,7 @@ const Dashboard = () => {
 
   return (
     <CanAccessPage permission="dashboard_view">
-      <MobileDashboard />
+      <div className="md:hidden"><MobileDashboardV2 /></div>
       <div className="hidden space-y-6 pb-6 md:block">
         <PageHeader
           title={selectedPg?.name ?? "Dashboard"}

@@ -26,6 +26,7 @@ import { useUpdatePropertyMutation } from "@/hooks/usePropertyOwnerQueries";
 import { DEFAULT_PROPERTY_TYPE_ID } from "@/api/propertyOwner";
 import { authStorage } from "@/api/http";
 import { CanAccess, CanAccessPage } from "@/components/PermissionGuard";
+import { MobileMyPgV2 } from "@/mobile/pages/MobileMyPgV2";
 
 const MyPGs = () => {
   const navigate = useNavigate();
@@ -146,7 +147,10 @@ const MyPGs = () => {
 
   return (
     <CanAccessPage permission="room_view">
-      <div className="space-y-8 animate-fade-in max-w-5xl pb-16">
+      <div className="md:hidden">
+        <MobileMyPgV2 />
+      </div>
+      <div className="hidden md:block space-y-8 animate-fade-in max-w-5xl pb-16">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">

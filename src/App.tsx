@@ -59,12 +59,16 @@ import ApiCatalogPage from "./pages/reference/ApiCatalogPage";
 import PublicListingPage from "./pages/property/PublicListingPage";
 import FeatureCataloguePage from "./pages/FeatureCataloguePage";
 import { TutorialProvider } from "./context/TutorialContext";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { setAppStatusBar } from "@/utils/statusBar";
 import { hydrateAuthStorage, initPersistentAuthLifecycle } from "@/api/http";
+import { toast } from "@/components/ui/use-toast";
+import { resolveActiveTab } from "@/mobile/components/ui/MobileBottomNavV2";
 
 import { GlobalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
 import GalleryPage from "@/mobile/pages/GalleryPage";
+import MobileMenuV2 from "@/mobile/pages/MobileMenuV2";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,6 +82,61 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+const AndroidBackManager = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const lastBackRef = useRef(0);
+
+  useEffect(() => {
+    const isMobile = typeof window !== "undefined" && (window.innerWidth < 768 || Boolean((window as any).Capacitor?.isNativePlatform?.()));
+    if (isMobile) setAppStatusBar(true);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const capApp = (window as any).Capacitor?.Plugins?.App;
+    if (!capApp?.addListener) return;
+
+    const listener = capApp.addListener("backButton", ({ canGoBack }: { canGoBack: boolean }) => {
+      // 1. Close open dialog/sheet if any
+      const closeBtn = document.querySelector('[data-state="open"] button[aria-label="Close"]') as HTMLButtonElement | null;
+      if (closeBtn) {
+        closeBtn.click();
+        return;
+      }
+
+      const tab = resolveActiveTab(location.pathname);
+      const isTabRoot = ["/dashboard", "/", "/kpis", "/my-pgs", "/tenants", "/rent-payments", "/menu"].includes(location.pathname);
+
+      // 2. Pushed screen -> pop
+      if (!isTabRoot && canGoBack) {
+        navigate(-1);
+        return;
+      }
+
+      // 3. Non-dashboard tab root -> go to Dashboard
+      if (tab !== "dashboard") {
+        navigate("/dashboard");
+        return;
+      }
+
+      // 4. Dashboard root -> double back to exit
+      const now = Date.now();
+      if (now - lastBackRef.current < 2000) {
+        void capApp.exitApp();
+      } else {
+        lastBackRef.current = now;
+        toast({ title: "Press back again to exit" });
+      }
+    });
+
+    return () => {
+      void listener?.then?.((h: { remove: () => void }) => h.remove());
+    };
+  }, [location.pathname, navigate]);
+
+  return null;
+};
 
 const App = () => {
   useEffect(() => {
@@ -94,6 +153,7 @@ const App = () => {
         <Sonner />
         <OfflineScreen />
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <AndroidBackManager />
         <Routes>
           {/* Auth routes (no layout) — logged-in users go to dashboard; app shell shows splash first */}
           {import.meta.env.DEV && <Route path="/__gallery" element={<GalleryPage />} />}
@@ -124,6 +184,7 @@ const App = () => {
                       <Routes>
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/menu" element={<MobileMenuV2 />} />
                         <Route path="/kpis" element={<Dashboard />} />
                         <Route path="/tenants/add" element={<AddTenantPage />} />
                         <Route path="/tenants/vacant-rooms" element={<Tenants />} />

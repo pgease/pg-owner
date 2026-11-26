@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { MobileRentHeaderSection, type RentMobileSubTab } from "@/mobile/pages/MobileRentV2";
 import {
   IndianRupee,
   Loader2,
@@ -320,6 +321,9 @@ export const RentPayments = () => {
   const [activeTab, setActiveTab] = useState<"register" | "history">(() => {
     return location.pathname.endsWith("/history") ? "history" : "register";
   });
+  const [mobileRentSubTab, setMobileRentSubTab] = useState<RentMobileSubTab>(() =>
+    location.pathname.endsWith("/history") ? "history" : location.pathname.endsWith("/dues") ? "dues" : "recent",
+  );
 
   // History Query State (GET /api/property-owners/properties/{propertyId}/rent-collections/history)
   const [historyPage, setHistoryPage] = useState(1);
@@ -907,12 +911,48 @@ export const RentPayments = () => {
     });
   };
 
+  const handleMobileRentSubTab = (t: RentMobileSubTab) => {
+    setMobileRentSubTab(t);
+    if (t === "history") {
+      setActiveTab("history");
+    } else if (t === "review") {
+      setActiveTab("register");
+      setStatusFilter("verification_pending");
+    } else if (t === "dues") {
+      setActiveTab("register");
+      setStatusFilter("dues_all");
+    } else if (t === "register") {
+      setActiveTab("register");
+      setStatusFilter("all");
+    }
+  };
+
+  const todayIso = new Date().toISOString().split("T")[0];
+  const collectedToday = useMemo(() => {
+    const items = (historyQuery.data as any)?.items ?? [];
+    return items.reduce((sum: number, item: any) => {
+      const dt = String(item.paidAt || item.createdAt || "").split("T")[0];
+      return dt === todayIso ? sum + (Number(item.amountPaid) || 0) : sum;
+    }, 0);
+  }, [historyQuery.data, todayIso]);
+
   return (
     <CanAccessPage permission="account_view_dues">
-      <div className="space-y-5 pb-8 max-w-7xl">
+      <MobileRentHeaderSection
+        collectedToday={collectedToday}
+        monthlyRevenue={totalCollected}
+        activeSubTab={mobileRentSubTab}
+        onChangeSubTab={handleMobileRentSubTab}
+        reviewCount={counts.verification}
+        duesCount={counts.pending + counts.overdue + counts.partial}
+        onReceiveClick={() => handleOpenRecordPayment()}
+        onSendRemindersClick={() => handleMobileRentSubTab("dues")}
+        transactions={(historyQuery.data as any)?.items ?? []}
+      />
+      <div className={cn("space-y-5 pb-8 max-w-7xl", mobileRentSubTab === "recent" ? "hidden md:block" : "px-3 pt-2 md:px-0 md:pt-0")}>
         {/* Main Header */}
         <PageHeader
-          className="block"
+          className="hidden md:block"
           title={
             activeTab === "history"
               ? "Payment History Ledger"

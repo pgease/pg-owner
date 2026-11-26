@@ -3,8 +3,9 @@ import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import AppSidebar from "./AppSidebar";
 import AppHeader from "./AppHeader";
-import { MobileBottomNav } from "./MobileBottomNav";
-import { MobileTopBar } from "./MobileTopBar";
+import { MobileBottomNavV2 } from "@/mobile/components/ui/MobileBottomNavV2";
+import { MobileSubHeader } from "@/mobile/components/ui/MobileHeaders";
+import { getMobilePageTitle } from "@/lib/mobileRoutes";
 import { SubscriptionBanner } from "./SubscriptionBanner";
 import StaffExpiredLockout from "./StaffExpiredLockout";
 import { authStorage } from "@/api/http";
@@ -43,8 +44,14 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const { isExpired, isLoading } = useEntitlements();
   const { isPgSwitcherOpen, setIsPgSwitcherOpen, isOwnerDrawerOpen, setIsOwnerDrawerOpen } = useApp();
   const isStaff = authStorage.isStaff();
-  const isMobileDashboardHome =
-    location.pathname === "/dashboard" || location.pathname === "/kpis" || location.pathname === "/";
+  const isPrimaryTabRoot =
+    location.pathname === "/dashboard" ||
+    location.pathname === "/kpis" ||
+    location.pathname === "/" ||
+    location.pathname === "/my-pgs" ||
+    location.pathname === "/tenants" ||
+    location.pathname === "/rent-payments" ||
+    location.pathname === "/menu";
 
   // If user is staff and the owner's subscription has expired, enforce full operational lockout.
   if (!isLoading && isExpired && isStaff) {
@@ -93,28 +100,34 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         onMobileClose={() => setMobileOpen(false)}
       />
       <div className="flex-1 h-dvh flex flex-col min-w-0 overflow-hidden overflow-x-hidden">
-        <AppHeader
-          onMenuToggle={() => setIsOwnerDrawerOpen(true)}
-          onSidebarToggle={() => setCollapsed((v) => !v)}
-          isSidebarCollapsed={collapsed}
-        />
-        {isMobileDashboardHome ? null : <MobileTopBar />}
+        <div className="hidden md:block">
+          <AppHeader
+            onMenuToggle={() => setIsOwnerDrawerOpen(true)}
+            onSidebarToggle={() => setCollapsed((v) => !v)}
+            isSidebarCollapsed={collapsed}
+          />
+        </div>
+        {!isPrimaryTabRoot && (
+          <div className="md:hidden">
+            <MobileSubHeader title={getMobilePageTitle(location.pathname)} />
+          </div>
+        )}
         <SubscriptionBanner />
         <main
           id="main-content"
           className={cn(
-            "pgease-app-main flex-1 overflow-y-auto overflow-x-hidden overscroll-contain dark:bg-slate-950 md:rounded-tl-[32px] md:shadow-xl transition-colors",
-            isMobileDashboardHome
-              ? "bg-white p-0 md:bg-[#F8FAFC] md:p-6"
-              : "bg-[#F8FAFC] p-3 sm:p-4 md:p-6",
+            "pgease-app-main flex-1 overflow-y-auto overflow-x-hidden overscroll-contain dark:bg-[#0F1720] md:rounded-tl-[32px] md:shadow-xl transition-colors",
+            isPrimaryTabRoot
+              ? "bg-[var(--ms-page)] p-0 md:bg-[#F8FAFC] md:p-6"
+              : "bg-[var(--ms-page)] p-3 sm:p-4 md:bg-[#F8FAFC] md:p-6",
             shouldHideMobileTabBar(location.pathname)
-              ? "pb-[calc(24px+var(--safe-bottom))] md:pb-28"
-              : "pb-[calc(96px+var(--safe-bottom))] md:pb-28",
+              ? "pb-[calc(24px+env(safe-area-inset-bottom,0px))] md:pb-28"
+              : "pb-[calc(96px+env(safe-area-inset-bottom,0px))] md:pb-28",
           )}
         >
           <div className="mx-auto w-full">{children}</div>
         </main>
-        <MobileBottomNav />
+        <MobileBottomNavV2 />
       </div>
 
       <PgSwitcherSheet open={isPgSwitcherOpen} onOpenChange={setIsPgSwitcherOpen} />
