@@ -61,6 +61,7 @@ import FeatureCataloguePage from "./pages/FeatureCataloguePage";
 import { TutorialProvider } from "./context/TutorialContext";
 import { useEffect } from "react";
 import { setAppStatusBar } from "@/utils/statusBar";
+import { hydrateAuthStorage, initPersistentAuthLifecycle } from "@/api/http";
 
 import { GlobalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
 import GalleryPage from "@/mobile/pages/GalleryPage";
@@ -81,6 +82,8 @@ const queryClient = new QueryClient({
 const App = () => {
   useEffect(() => {
     setAppStatusBar(false);
+    void hydrateAuthStorage();
+    initPersistentAuthLifecycle();
   }, []);
 
   return (

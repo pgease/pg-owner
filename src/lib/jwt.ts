@@ -29,3 +29,16 @@ export function isJwtExpired(token: string): boolean {
     return false;
   }
 }
+
+/**
+ * Check if a JWT token will expire within `thresholdSeconds` (default 120s = 2 min).
+ */
+export function isTokenExpiringSoon(token: string, thresholdSeconds = 120): boolean {
+  try {
+    const payload = decodeJwtPayload(token);
+    if (!payload || typeof payload.exp !== "number") return false;
+    return Date.now() >= payload.exp * 1000 - thresholdSeconds * 1000;
+  } catch {
+    return false;
+  }
+}

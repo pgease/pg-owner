@@ -13,7 +13,54 @@ const PROPERTY_OWNER_KEY = "pgEase_propertyOwner";
 const SELECTED_PG_ID_KEY = "pgEase_selectedPgId";
 const LANGUAGE_KEY = "pgEase_language";
 
-import { decodeJwtPayload, isJwtExpired } from "../lib/jwt";
+import { decodeJwtPayload, isTokenExpiringSoon } from "../lib/jwt";
+
+function getNativePrefs(): {
+  get: (opts: { key: string }) => Promise<{ value: string | null }>;
+  set: (opts: { key: string; value: string }) => Promise<void>;
+  remove: (opts: { key: string }) => Promise<void>;
+} | null {
+  if (typeof window === "undefined") return null;
+  return (window as any).Capacitor?.Plugins?.Preferences ?? null;
+}
+
+let _hydrated = false;
+let _hydratePromise: Promise<void> | null = null;
+
+/**
+ * Hydrates auth tokens from Capacitor Preferences into localStorage on app boot
+ * so sessions survive WebView cache/storage eviction.
+ */
+export function hydrateAuthStorage(): Promise<void> {
+  if (_hydrated) return Promise.resolve();
+  if (_hydratePromise) return _hydratePromise;
+
+  _hydratePromise = (async () => {
+    try {
+      const prefs = getNativePrefs();
+      if (!prefs || typeof window === "undefined") return;
+      const keys = [ACCESS_TOKEN_KEY, PGEASE_TOKEN_KEY, REFRESH_TOKEN_KEY, PROPERTY_OWNER_KEY, SELECTED_PG_ID_KEY];
+      for (const key of keys) {
+        if (!window.localStorage.getItem(key)) {
+          const res = await prefs.get({ key }).catch(() => ({ value: null }));
+          if (res?.value) {
+            window.localStorage.setItem(key, res.value);
+          }
+        }
+      }
+    } finally {
+      _hydrated = true;
+    }
+  })();
+
+  return _hydratePromise;
+}
+
+export function isAuthHydrated(): boolean {
+  if (typeof window === "undefined") return true;
+  if (!getNativePrefs()) return true;
+  return _hydrated;
+}
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -30,6 +77,15 @@ export const authStorage = {
     window.localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
     if (tokens.propertyOwner) {
       window.localStorage.setItem(PROPERTY_OWNER_KEY, JSON.stringify(tokens.propertyOwner));
+    }
+    const prefs = getNativePrefs();
+    if (prefs) {
+      void prefs.set({ key: ACCESS_TOKEN_KEY, value: tokens.accessToken });
+      void prefs.set({ key: PGEASE_TOKEN_KEY, value: tokens.accessToken });
+      void prefs.set({ key: REFRESH_TOKEN_KEY, value: tokens.refreshToken });
+      if (tokens.propertyOwner) {
+        void prefs.set({ key: PROPERTY_OWNER_KEY, value: JSON.stringify(tokens.propertyOwner) });
+      }
     }
     window.dispatchEvent(new Event("pgease-auth-token-updated"));
   },
@@ -54,6 +110,10 @@ export const authStorage = {
       "trial_expired_gate_dismissed",
     ];
     authKeys.forEach((key) => window.localStorage.removeItem(key));
+    const prefs = getNativePrefs();
+    if (prefs) {
+      authKeys.forEach((key) => void prefs.remove({ key }));
+    }
     try {
       window.sessionStorage.clear();
     } catch {
@@ -62,20 +122,21 @@ export const authStorage = {
     window.dispatchEvent(new Event("pgease-auth-token-updated"));
     window.dispatchEvent(new Event("pgease-owner-updated"));
   },
-  getAccessToken(): string | null {
+  getRawAccessToken(): string | null {
     if (typeof window === "undefined") return null;
     const token = window.localStorage.getItem(PGEASE_TOKEN_KEY) || window.localStorage.getItem(ACCESS_TOKEN_KEY);
     if (!token || token === "null" || token === "undefined" || !token.trim()) {
       return null;
     }
-    if (isJwtExpired(token)) {
-      this.clear();
-      return null;
-    }
     return token;
   },
+  getAccessToken(): string | null {
+    // Persistent login: NEVER wipe tokens here when access token is expired;
+    // httpRequest + attemptTokenRefresh will refresh it silently.
+    return this.getRawAccessToken();
+  },
   isLoggedIn(): boolean {
-    return Boolean(this.getAccessToken());
+    return Boolean(this.getRawAccessToken() || this.getRefreshToken());
   },
   getRefreshToken() {
     if (typeof window === "undefined") return null;
@@ -140,35 +201,106 @@ export const appPrefs = {
 
 /* ─── Token refresh with single-flight dedup ─────────────────────────────── */
 
-let _refreshPromise: Promise<boolean> | null = null;
+type RefreshOutcome = "ok" | "invalid" | "network_error";
+let _refreshPromise: Promise<RefreshOutcome> | null = null;
 
-async function attemptTokenRefresh(): Promise<boolean> {
+async function doTokenRefresh(): Promise<RefreshOutcome> {
   const rt = authStorage.getRefreshToken();
-  if (!rt) return false;
+  if (!rt) return "invalid";
   try {
     const res = await fetch(`${API_BASE_URL}/property-owners/refresh-token`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken: rt }),
     });
-    if (!res.ok) return false;
+    if (res.status === 401 || res.status === 403) {
+      return "invalid";
+    }
+    if (!res.ok) {
+      // 5xx, 429, etc. — transient server error, do NOT log user out
+      return "network_error";
+    }
     const json = await res.json();
-    authStorage.set({ accessToken: json.accessToken, refreshToken: json.refreshToken });
-    return true;
+    if (!json?.accessToken) return "network_error";
+    authStorage.set({
+      accessToken: json.accessToken,
+      refreshToken: json.refreshToken || rt,
+    });
+    return "ok";
   } catch {
-    return false;
+    return "network_error";
   }
 }
 
-export function performLogout() {
+export function refreshSessionSingleFlight(): Promise<RefreshOutcome> {
+  if (!_refreshPromise) {
+    _refreshPromise = doTokenRefresh().finally(() => {
+      _refreshPromise = null;
+    });
+  }
+  return _refreshPromise;
+}
+
+export function performLogout(reason: "manual" | "revoked" | "deleted" = "manual") {
+  const rt = authStorage.getRefreshToken();
+  const at = authStorage.getRawAccessToken();
+  if (rt || at) {
+    try {
+      void fetch(`${API_BASE_URL}/property-owners/logout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(at ? { Authorization: `Bearer ${at}` } : {}),
+        },
+        body: JSON.stringify({ refreshToken: rt }),
+        keepalive: true,
+      }).catch(() => {});
+    } catch {
+      // best effort
+    }
+  }
   authStorage.clear();
   if (typeof window !== "undefined") {
+    if (reason === "revoked") {
+      try {
+        window.sessionStorage.setItem("pgease_session_ended_msg", "Your session ended. Please log in again.");
+      } catch {
+        // ignore
+      }
+    }
     window.location.replace("/login");
   }
 }
 
 function forceLogout() {
-  performLogout();
+  performLogout("revoked");
+}
+
+let _lifecycleInit = false;
+export function initPersistentAuthLifecycle() {
+  if (_lifecycleInit || typeof window === "undefined") return;
+  _lifecycleInit = true;
+
+  const maybeProactiveRefresh = () => {
+    if (typeof navigator !== "undefined" && !navigator.onLine) return;
+    const token = authStorage.getRawAccessToken();
+    const rt = authStorage.getRefreshToken();
+    if (!rt) return;
+    if (!token || isTokenExpiringSoon(token, 120)) {
+      void refreshSessionSingleFlight();
+    }
+  };
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") maybeProactiveRefresh();
+  });
+
+  const capApp = (window as any).Capacitor?.Plugins?.App;
+  if (capApp?.addListener) {
+    capApp.addListener("appStateChange", (state: { isActive: boolean }) => {
+      if (state.isActive) maybeProactiveRefresh();
+    });
+  }
 }
 
 function formatApiErrorMessage(data: unknown): string {
@@ -204,7 +336,13 @@ export async function httpRequest<TResponse>(path: string, options: RequestOptio
   }
 
   if (options.auth) {
-    const token = authStorage.getAccessToken();
+    let token = authStorage.getAccessToken();
+    if (token && isTokenExpiringSoon(token, 120) && (typeof navigator === "undefined" || navigator.onLine)) {
+      const outcome = await refreshSessionSingleFlight();
+      if (outcome === "ok") {
+        token = authStorage.getAccessToken();
+      }
+    }
     if (token) {
       (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
     }
@@ -254,18 +392,20 @@ export async function httpRequest<TResponse>(path: string, options: RequestOptio
       error.data = data;
       throw error;
     }
-    if (!_refreshPromise) {
-      _refreshPromise = attemptTokenRefresh().finally(() => { _refreshPromise = null; });
-    }
-    const refreshed = await _refreshPromise;
-    if (refreshed) {
+    const outcome = await refreshSessionSingleFlight();
+    if (outcome === "ok") {
       return httpRequest<TResponse>(path, { ...options, _retried: true });
     }
-    forceLogout();
-    const error: HttpError = new Error("Session expired. Please log in again.");
-    error.status = 401;
-    error.data = data;
-    throw error;
+    if (outcome === "invalid") {
+      forceLogout();
+      const error: HttpError = new Error("Session expired. Please log in again.");
+      error.status = 401;
+      error.data = data;
+      throw error;
+    }
+    const netErr: HttpError = new Error("No internet connection — Check your connection and try again.");
+    netErr.status = 0;
+    throw netErr;
   }
 
   if (!response.ok) {
