@@ -307,8 +307,12 @@ export function MobileAuthSheet({
                       ? onResendChannel(channel === "whatsapp" ? "sms" : "whatsapp")
                       : onResend()
                   }
-                  disabled={isSendingOtp}
-                  className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 font-medium transition-colors"
+                  disabled={!canResend || isSendingOtp}
+                  className={`inline-flex items-center gap-1.5 text-xs font-medium transition-colors ${
+                    canResend && !isSendingOtp
+                      ? "text-gray-500 hover:text-gray-900"
+                      : "text-gray-400 cursor-not-allowed opacity-60"
+                  }`}
                 >
                   <span>{channel === "whatsapp" ? t.didntReceiveWa : t.preferWa}</span>
                   <span className="font-semibold text-[#008080] underline flex items-center gap-1">

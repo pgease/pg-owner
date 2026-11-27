@@ -1122,8 +1122,12 @@ export default function Login({ initialMode }: { initialMode?: string } = {}) {
                     <button
                       type="button"
                       onClick={() => handleSendOtp(channel === "whatsapp" ? "sms" : "whatsapp")}
-                      disabled={isSendingOtp}
-                      className="text-[11px] text-gray-500 hover:text-gray-800 transition-colors inline-flex items-center gap-1 font-medium"
+                      disabled={!canResend || isSendingOtp}
+                      className={`text-[11px] transition-colors inline-flex items-center gap-1 font-medium ${
+                        canResend && !isSendingOtp
+                          ? "text-gray-500 hover:text-gray-800"
+                          : "text-gray-400 cursor-not-allowed opacity-60"
+                      }`}
                     >
                       <span>{T.switchChannelPrompt}</span>
                       <span className="text-[#008080] underline font-semibold inline-flex items-center gap-1">

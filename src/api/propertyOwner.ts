@@ -933,6 +933,7 @@ export function normalizeSingleTenant(raw: any): PropertyTenant {
     stay.isOnNotice ||
     (t.roomTenant && (t.roomTenant.isOnNotice || t.roomTenant.is_on_notice)) ||
     (stay && (stay.isOnNotice || stay.is_on_notice)) ||
+    String(stay.status ?? t.roomTenant?.status ?? t.status ?? "").toUpperCase() === "UNDER_NOTICE" ||
     noticeGivenAt ||
     expectedMoveOutDate
   );

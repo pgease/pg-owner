@@ -158,7 +158,12 @@ export default function FoodDiningPage() {
       setBulkTimingsModalOpen(false);
     },
     onError: (e: any) => {
-      toast({ title: "Failed to update schedule", description: e?.message, variant: "destructive" });
+      console.error("[FoodDining] update schedule failed:", e);
+      toast({
+        title: "Couldn't save meal timings",
+        description: "Please check the start and end times and try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -224,7 +229,20 @@ export default function FoodDiningPage() {
     });
 
     setSchedule(updated);
-    updateMutation.mutate(updated);
+    // Send only the selected days & meal slot being updated so untouched slots never trigger validation errors
+    const payload = selectedDays.map((dayOfWeek) => {
+      const dayRow = updated.find((u) => u.dayOfWeek === dayOfWeek);
+      const slot = dayRow?.[bulkMealType] || { menu: "" };
+      return {
+        dayOfWeek,
+        [bulkMealType]: {
+          menu: slot.menu || "",
+          startTime: formatHHmm(bulkStart),
+          endTime: formatHHmm(bulkEnd),
+        },
+      };
+    }) as DiningDaySchedule[];
+    updateMutation.mutate(payload);
   };
 
   const toggleDaySelection = (dayOfWeek: number) => {

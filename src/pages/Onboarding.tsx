@@ -23,7 +23,9 @@ import {
   Check,
   Building,
   Home,
+  Phone,
 } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
 import pgeaseLogo from "@/assets/pgease-logo.jpg";
 import { toast } from "@/components/ui/use-toast";
 import {
@@ -163,8 +165,8 @@ const TEXTS = {
     secureFooter: "256-bit Bank-Grade Encryption • Your Property & Tenant Data is Strictly Private",
     selectTypePlaceholder: "Select type",
     selectRangePlaceholder: "Choose range",
-    locationDenied: "Location permission denied. Please enter address and 6-digit pincode manually.",
-    locationFailed: "Could not get location. Try again or enter address with pincode.",
+    locationDenied: "Location access is off. Enable it in Settings, or type the address.",
+    locationFailed: "We couldn't read your location. You can try again, or type the address yourself.",
     geocodeFailed: "Could not find that address. Please check city and 6-digit pincode.",
     needPinOrLocation: "Please enter a valid 6-digit pincode.",
     loadTypesError: "Could not load property types. Using default.",
@@ -369,17 +371,48 @@ const Onboarding = () => {
   }, [lang]);
 
   const handleUseLocation = useCallback(async () => {
-    if (!navigator.geolocation) {
-      toast({ title: T.locationFailed, variant: "destructive" });
-      return;
-    }
     setLocating(true);
     try {
-      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 15000 });
-      });
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
+      let lat: number;
+      let lon: number;
+
+      const capGeo = Capacitor.isNativePlatform() ? (Capacitor as any)?.Plugins?.Geolocation : null;
+      if (capGeo) {
+        let perm = await capGeo.checkPermissions();
+        if (perm.location === "prompt" || perm.location === "prompt-with-rationale" || perm.coarseLocation === "prompt") {
+          perm = await capGeo.requestPermissions();
+        }
+        const isGranted = perm.location === "granted" || perm.coarseLocation === "granted";
+        if (!isGranted) {
+          toast({ title: T.locationDenied, variant: "destructive" });
+          return;
+        }
+        const pos = await capGeo.getCurrentPosition({ enableHighAccuracy: true, timeout: 15000 });
+        lat = pos.coords.latitude;
+        lon = pos.coords.longitude;
+      } else {
+        if (!navigator.geolocation) {
+          toast({ title: T.locationFailed, variant: "destructive" });
+          return;
+        }
+        if (navigator.permissions?.query) {
+          try {
+            const p = await navigator.permissions.query({ name: "geolocation" as PermissionName });
+            if (p.state === "denied") {
+              toast({ title: T.locationDenied, variant: "destructive" });
+              return;
+            }
+          } catch {
+            // Some WebViews do not support permissions.query("geolocation")
+          }
+        }
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 15000 });
+        });
+        lat = pos.coords.latitude;
+        lon = pos.coords.longitude;
+      }
+
       setLatitude(lat);
       setLongitude(lon);
       const rev = await reverseGeocode(lat, lon);
@@ -397,9 +430,11 @@ const Onboarding = () => {
           setLocationPin(pin);
         }
       }
-      toast({ title: lang === "en" ? "Location detected successfully" : "लोकेशन सफलतापूर्वक मिल गई" });
-    } catch {
-      toast({ title: T.locationDenied, variant: "destructive" });
+      toast({ title: lang === "en" ? "Location detected successfully" : "लोकेशन सफलतापूर्वक मिल गई", variant: "success" });
+    } catch (err: any) {
+      const msg = String(err?.message || "").toLowerCase();
+      const isDenied = err?.code === 1 || msg.includes("denied") || msg.includes("permission");
+      toast({ title: isDenied ? T.locationDenied : T.locationFailed, variant: "destructive" });
     } finally {
       setLocating(false);
     }
@@ -548,68 +583,93 @@ const Onboarding = () => {
       />
 
       {/* ================= TOP NAVBAR ================= */}
-      <header className="sticky top-0 w-full shrink-0 bg-white/95 backdrop-blur-md border-b border-gray-100 px-3.5 sm:px-8 py-2.5 flex items-center justify-between z-30 shadow-2xs">
-        {/* Brand Logo & Portal Badge */}
-        <div className="flex items-center gap-2 sm:gap-3.5">
-          <div className="flex items-center gap-2">
-            <img
-              src={pgeaseLogo}
-              alt="PG Ease"
-              className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl shadow-2xs object-cover"
-            />
-            <span className="font-extrabold text-[15px] sm:text-[18px] tracking-tight text-[#1F2937]">
-              PG Ease
+      <header className="sticky top-0 w-full shrink-0 bg-white/95 backdrop-blur-md border-b border-gray-100 px-3.5 sm:px-8 pt-[max(0.625rem,env(safe-area-inset-top))] pb-2.5 z-30 shadow-2xs">
+        <div className="flex items-center justify-between gap-2">
+          {/* Brand Logo & Portal Badge */}
+          <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
+            <div className="flex items-center gap-2 shrink-0">
+              <img
+                src={pgeaseLogo}
+                alt="PG Ease"
+                className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl shadow-2xs object-cover"
+              />
+              <span className="font-extrabold text-[15px] sm:text-[18px] tracking-tight text-[#1F2937]">
+                PG Ease
+              </span>
+            </div>
+
+            <span className="inline-flex px-2 sm:px-2.5 py-0.5 rounded-full border border-[#008080]/30 text-[#008080] bg-[#E8F4F4] text-[9px] sm:text-[10px] font-bold tracking-wider uppercase truncate">
+              {T.portalBadge}
             </span>
           </div>
 
-          <span className="hidden sm:inline-flex px-2.5 py-0.5 rounded-full border border-[#008080]/30 text-[#008080] bg-[#E8F4F4] text-[10px] font-bold tracking-wider uppercase">
-            {T.portalBadge}
-          </span>
+          {/* Right Controls: Support & Language Switcher */}
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            {/* Desktop Support Phone */}
+            <a
+              href="https://wa.me/917701953356"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-50 hover:bg-gray-100 border border-gray-200/80 text-xs font-semibold text-gray-700 transition-colors"
+            >
+              <WhatsAppIcon size={14} />
+              <span className="text-gray-500 font-medium">Support:</span>
+              <span className="tabular-nums text-gray-900 font-bold">+91 77019 53356</span>
+            </a>
+
+            {/* Language Toggle Pill */}
+            <div className="rounded-full border border-gray-200 bg-white p-0.5 flex shadow-2xs">
+              {(["en", "hi"] as const).map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  onClick={() => setLanguage(l === "en" ? "en-US" : "hi-IN")}
+                  className={`px-2 sm:px-3 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all ${
+                    lang === l
+                      ? "bg-[#008080] text-white shadow-xs"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  {l === "en" ? "English" : "हिन्दी"}
+                </button>
+              ))}
+            </div>
+
+            {/* Dashboard Shortcut if properties exist */}
+            {properties && properties.length > 0 && (
+              <button
+                type="button"
+                onClick={() => navigate("/dashboard", { replace: true })}
+                className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-[#008080] hover:text-[#006e6e] px-2.5 py-1 rounded-lg hover:bg-teal-50/60 transition-colors"
+              >
+                <span>{T.goToDashboard}</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Right Controls: WhatsApp Support & Language Switcher */}
-        <div className="flex items-center gap-2 sm:gap-4">
-          {/* Support Phone */}
+        {/* Mobile Support Bar (visible on <md) */}
+        <div className="flex md:hidden items-center justify-between gap-2 mt-2 pt-1.5 border-t border-gray-100/80">
+          <div className="flex items-center gap-2 text-[11px] text-gray-600">
+            <span className="font-medium text-gray-500">Support:</span>
+            <a
+              href="tel:+917701953356"
+              className="inline-flex items-center gap-1 font-bold text-[#1F2937] tabular-nums hover:text-[#008080]"
+            >
+              <Phone className="h-3 w-3 text-[#008080]" />
+              +91 77019 53356
+            </a>
+          </div>
           <a
             href="https://wa.me/917701953356"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-50 hover:bg-gray-100 border border-gray-200/80 text-xs font-semibold text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E6F3F3] text-[#005F5F] text-[10px] font-semibold"
           >
-            <WhatsAppIcon size={14} />
-            <span className="text-gray-500 font-medium">Support:</span>
-            <span className="tabular-nums text-gray-900 font-bold">+91 77019 53356</span>
+            <WhatsAppIcon size={12} />
+            <span>WhatsApp Help</span>
           </a>
-
-          {/* Language Toggle Pill */}
-          <div className="rounded-full border border-gray-200 bg-white p-0.5 flex shadow-2xs">
-            {(["en", "hi"] as const).map((l) => (
-              <button
-                key={l}
-                type="button"
-                onClick={() => setLanguage(l === "en" ? "en-US" : "hi-IN")}
-                className={`px-2.5 sm:px-3 py-0.5 rounded-full text-xs font-semibold transition-all ${
-                  lang === l
-                    ? "bg-[#008080] text-white shadow-xs"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                {l === "en" ? "English" : "हिन्दी"}
-              </button>
-            ))}
-          </div>
-
-          {/* Dashboard Shortcut if properties exist */}
-          {properties && properties.length > 0 && (
-            <button
-              type="button"
-              onClick={() => navigate("/dashboard", { replace: true })}
-              className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-[#008080] hover:text-[#006e6e] px-2.5 py-1 rounded-lg hover:bg-teal-50/60 transition-colors"
-            >
-              <span>{T.goToDashboard}</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          )}
         </div>
       </header>
 

@@ -81,6 +81,7 @@
 | `/staff` | **PASS** | None | - |
 | `/staff/roles` | **PASS** | None | - |
 | `/subscription` | **PASS** | None | - |
+| `/subscription-plans` | **PASS** | None | - |
 | `/support` | **PASS** | None | - |
 | `/team` | **PASS** | None | - |
 | `/team/add-staff` | **PASS** | None | - |

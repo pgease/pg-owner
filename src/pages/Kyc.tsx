@@ -386,18 +386,33 @@ export default function Kyc() {
       return;
     }
     try {
-      await requestKycMut.mutateAsync(selectedTenantForKyc);
-      toast({
-        title: "KYC Request Sent",
-        description: "Aadhaar DigiLocker verification link sent to tenant via WhatsApp.",
-      });
+      const res: any = await requestKycMut.mutateAsync(selectedTenantForKyc);
+      const delivered = Boolean(res?.whatsappSent === true || res?.messageId || res?.data?.whatsappSent === true);
+      const directLink = res?.directLink || res?.verificationUrl || res?.data?.directLink;
+      if (delivered) {
+        toast({
+          title: "KYC Request Sent",
+          description: "Aadhaar DigiLocker verification link sent to tenant via WhatsApp.",
+        });
+      } else {
+        if (directLink && navigator.clipboard?.writeText) {
+          void navigator.clipboard.writeText(directLink).catch(() => {});
+        }
+        toast({
+          title: "KYC Request Created",
+          description: directLink
+            ? "WhatsApp delivery could not be confirmed. Verification link copied — share it with the tenant directly."
+            : "WhatsApp delivery could not be confirmed. Please share the KYC link from the row actions.",
+          variant: "warning",
+        });
+      }
       setRequestKycOpen(false);
       setSelectedTenantForKyc("");
       refetchKyc();
     } catch (err: any) {
       toast({
         title: "Failed to request KYC",
-        description: err?.message || "Insufficient credits or invalid tenant.",
+        description: "Insufficient credits or unable to create KYC request. Please try again.",
         variant: "destructive",
       });
     }

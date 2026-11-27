@@ -19,7 +19,7 @@ import { ErrorState } from "@/components/common/ErrorState";
 import { FilterBar } from "@/components/common/FilterBar";
 import { StatCard } from "@/components/common/StatCard";
 
-export type MovementFilter = "all" | "currently_out" | "returned" | "upcoming";
+export type MovementFilter = "all" | "pending" | "approved" | "rejected" | "currently_out" | "returned" | "upcoming";
 
 function pad(value: number): string {
   return String(value).padStart(2, "0");
@@ -177,9 +177,10 @@ export default function NightOutRequestsPage() {
       });
     },
     onError: (err: any) => {
+      console.error("[NightOut] informParent failed:", err);
       toast({
-        title: "Failed to notify guardian",
-        description: err?.message || "Could not dispatch intimation.",
+        title: "Could not send automatic alert",
+        description: "Please share the night-out update directly with the guardian via WhatsApp or call.",
         variant: "destructive",
       });
     },
@@ -236,9 +237,13 @@ export default function NightOutRequestsPage() {
         if (state === "away") acc.currentlyOut += 1;
         else if (state === "returned") acc.returned += 1;
         else if (state === "upcoming") acc.upcoming += 1;
+        const st = String(req.status || "pending").toLowerCase();
+        if (st === "pending" || st === "requested") acc.pending += 1;
+        else if (st === "approved") acc.approved += 1;
+        else if (st === "rejected" || st === "declined") acc.rejected += 1;
         return acc;
       },
-      { currentlyOut: 0, returned: 0, upcoming: 0 }
+      { currentlyOut: 0, returned: 0, upcoming: 0, pending: 0, approved: 0, rejected: 0 }
     );
   }, [requests]);
 
@@ -246,6 +251,10 @@ export default function NightOutRequestsPage() {
     const q = search.trim().toLowerCase();
     return requests.filter((req) => {
       const state = getMovementState(req);
+      const st = String(req.status || "pending").toLowerCase();
+      if (movementFilter === "pending" && st !== "pending" && st !== "requested") return false;
+      if (movementFilter === "approved" && st !== "approved") return false;
+      if (movementFilter === "rejected" && st !== "rejected" && st !== "declined") return false;
       if (movementFilter === "currently_out" && state !== "away") return false;
       if (movementFilter === "returned" && state !== "returned") return false;
       if (movementFilter === "upcoming" && state !== "upcoming") return false;
@@ -319,6 +328,9 @@ export default function NightOutRequestsPage() {
               <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by movement status">
                 {[
                   { key: "all", label: `All Logs (${requests.length})` },
+                  { key: "pending", label: `Pending (${counts.pending})` },
+                  { key: "approved", label: `Approved (${counts.approved})` },
+                  { key: "rejected", label: `Rejected (${counts.rejected})` },
                   { key: "currently_out", label: `Currently Out (${counts.currentlyOut})` },
                   { key: "upcoming", label: `Upcoming (${counts.upcoming})` },
                   { key: "returned", label: `Returned / Completed (${counts.returned})` },
@@ -444,7 +456,22 @@ export default function NightOutRequestsPage() {
                                       size="sm"
                                       variant="outline"
                                       className="h-6 text-[10px] px-2 text-indigo-700 border-indigo-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/40"
-                                      onClick={() => informParentMut.mutate(req.id)}
+                                      onClick={() => {
+                                        const gPhone =
+                                          (req as any).guardianPhone ||
+                                          (req as any).parentPhone ||
+                                          (req as any).emergencyContact ||
+                                          (req as any).tenant?.guardianPhone;
+                                        if (!gPhone) {
+                                          toast({
+                                            title: "No guardian phone saved",
+                                            description: "No parent or guardian number is saved for this tenant. Add one in the tenant profile.",
+                                            variant: "destructive",
+                                          });
+                                          return;
+                                        }
+                                        informParentMut.mutate(req.id);
+                                      }}
                                       disabled={informParentMut.isPending}
                                     >
                                       Notify Parent

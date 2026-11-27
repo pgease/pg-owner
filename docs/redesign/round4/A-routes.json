@@ -476,6 +476,12 @@
     "screenshot": "-"
   },
   {
+    "route": "/subscription-plans",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
     "route": "/support",
     "status": "PASS",
     "errors": [],

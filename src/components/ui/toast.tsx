@@ -52,28 +52,33 @@ export const ToastCard: React.FC<ToastCardProps> = ({ toast, onDismiss }) => {
     }
   };
 
-  // Border & Icon mapping
-  let borderLeftColor = "border-l-[#008080]";
-  let iconComponent = <CheckCircle2 className="h-5 w-5 text-[#008080] shrink-0" />;
-  let cardBg = "bg-white";
+  // Semantic WCAG AA contrast mapping (4.5:1+ for text)
+  let borderLeftColor = "border-[#166534]";
+  let iconComponent = <CheckCircle2 className="h-5 w-5 text-white shrink-0" />;
+  let cardBg = "bg-[#15803D]";
+  let titleColor = "text-white";
+  let descColor = "text-white/95";
+  let closeColor = "text-white/85 hover:text-white active:bg-white/15";
 
   if (variant === "error") {
-    borderLeftColor = "border-l-[#DC2626]";
-    iconComponent = <AlertCircle className="h-5 w-5 text-[#DC2626] shrink-0" />;
-    cardBg = "bg-[#FEF2F2]/60";
+    borderLeftColor = "border-[#B91C1C]";
+    iconComponent = <AlertCircle className="h-5 w-5 text-white shrink-0" />;
+    cardBg = "bg-[#DC2626]";
   } else if (variant === "warning") {
-    // Brand requirement: Amber is NOT allowed. Dark teal #005F5F with info icon.
-    borderLeftColor = "border-l-[#005F5F]";
-    iconComponent = <Info className="h-5 w-5 text-[#005F5F] shrink-0" />;
-    cardBg = "bg-[#E6F3F3]/50";
+    borderLeftColor = "border-[#D97706]";
+    iconComponent = <Info className="h-5 w-5 text-[#111827] shrink-0" />;
+    cardBg = "bg-[#F59E0B]";
+    titleColor = "text-[#111827]";
+    descColor = "text-[#111827]/90";
+    closeColor = "text-[#111827]/80 hover:text-[#111827] active:bg-black/10";
   } else if (variant === "info" || variant === "default") {
-    borderLeftColor = "border-l-[#008080]";
-    iconComponent = <Info className="h-5 w-5 text-[#008080] shrink-0" />;
-    cardBg = "bg-white";
+    borderLeftColor = "border-[#1E40AF]";
+    iconComponent = <Info className="h-5 w-5 text-white shrink-0" />;
+    cardBg = "bg-[#1D4ED8]";
   } else if (variant === "success") {
-    borderLeftColor = "border-l-[#008080]";
-    iconComponent = <CheckCircle2 className="h-5 w-5 text-[#008080] shrink-0" />;
-    cardBg = "bg-white";
+    borderLeftColor = "border-[#166534]";
+    iconComponent = <CheckCircle2 className="h-5 w-5 text-white shrink-0" />;
+    cardBg = "bg-[#15803D]";
   }
 
   const isAssertive = variant === "error";
@@ -91,7 +96,7 @@ export const ToastCard: React.FC<ToastCardProps> = ({ toast, onDismiss }) => {
         transition: isClosing ? "opacity 200ms ease, transform 200ms ease" : "transform 100ms ease-out",
       }}
       className={cn(
-        "pointer-events-auto relative flex w-full max-w-[92%] sm:max-w-[440px] items-start gap-3 rounded-[12px] border border-gray-100 p-[14px] shadow-lg backdrop-blur-sm transition-all duration-200 border-l-4",
+        "pointer-events-auto relative flex w-full max-w-[92%] sm:max-w-[440px] items-start gap-3 rounded-[12px] border p-[14px] shadow-lg transition-all duration-200",
         borderLeftColor,
         cardBg,
         !isClosing && "animate-in fade-in-0 slide-in-from-bottom-5 duration-200"
@@ -101,12 +106,12 @@ export const ToastCard: React.FC<ToastCardProps> = ({ toast, onDismiss }) => {
 
       <div className="flex-1 min-w-0 pr-2">
         {toast.title && (
-          <h5 className="font-semibold text-sm text-[#1F2937] leading-snug truncate">
+          <h5 className={cn("font-semibold text-sm leading-snug truncate", titleColor)}>
             {toast.title}
           </h5>
         )}
         {toast.description && (
-          <p className="text-[13px] text-[#1F2937]/70 font-normal leading-relaxed mt-0.5 break-words">
+          <p className={cn("text-[13px] font-normal leading-relaxed mt-0.5 break-words", descColor)}>
             {toast.description}
           </p>
         )}
@@ -115,7 +120,7 @@ export const ToastCard: React.FC<ToastCardProps> = ({ toast, onDismiss }) => {
       <button
         type="button"
         onClick={handleClose}
-        className="shrink-0 p-1 rounded-md text-gray-400 hover:text-gray-600 active:bg-gray-100 transition-colors"
+        className={cn("shrink-0 p-1 rounded-md transition-colors", closeColor)}
         aria-label="Close notification"
       >
         <X className="h-4 w-4" />

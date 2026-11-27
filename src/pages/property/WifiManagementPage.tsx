@@ -24,6 +24,7 @@ import {
   AlertCircle,
   Radio,
   Sliders,
+  Trash2,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -236,19 +237,31 @@ export default function WifiManagementPage() {
       });
       return;
     }
-    const defaultBlock = blocks[0];
-    const defaultFloor = defaultBlock.floors?.[0];
+    // Prefer the first unconfigured floor so adding a 2nd network never overwrites Floor 1
+    let targetBlock = blocks[0];
+    let targetFloor = targetBlock.floors?.[0];
+    for (const blk of blocks) {
+      const unconf = (blk.floors || []).find((fl) => !fl.wifiSsid?.trim());
+      if (unconf) {
+        targetBlock = blk;
+        targetFloor = unconf;
+        break;
+      }
+    }
 
     setConfigScope("floor");
-    setTargetBlockId(defaultBlock.blockId);
-    setTargetFloorId(defaultFloor?.floorId || "");
-    setSsidInput(defaultFloor?.wifiSsid || `${selectedPg?.name?.replace(/\s+/g, "_") || "PGEase"}_${defaultFloor?.floorName || "WiFi"}`);
-    setPasswordInput(defaultFloor?.wifiPassword || "");
+    setTargetBlockId(targetBlock.blockId);
+    setTargetFloorId(targetFloor?.floorId || "");
+    setSsidInput(
+      targetFloor?.wifiSsid ||
+        `${selectedPg?.name?.replace(/\s+/g, "_") || "PGEase"}_${targetFloor?.floorName || "WiFi"}`
+    );
+    setPasswordInput(targetFloor?.wifiPassword || "");
     setShowPasswordInModal(false);
-    setSpeedInput(defaultFloor?.wifiDetails?.speedMbps || 100);
-    setRouterInput(defaultFloor?.wifiDetails?.routerModel || "TP-Link");
-    setBandInput(defaultFloor?.wifiDetails?.band || "Dual Band (2.4 GHz & 5 GHz)");
-    setNotesInput(defaultFloor?.wifiDetails?.notes || "");
+    setSpeedInput(targetFloor?.wifiDetails?.speedMbps || 100);
+    setRouterInput(targetFloor?.wifiDetails?.routerModel || "TP-Link");
+    setBandInput(targetFloor?.wifiDetails?.band || "Dual Band (2.4 GHz & 5 GHz)");
+    setNotesInput(targetFloor?.wifiDetails?.notes || "");
     setConfigModalOpen(true);
   };
 
@@ -288,25 +301,54 @@ export default function WifiManagementPage() {
         wifiSsid: ssidInput.trim(),
         wifiPassword: passwordInput.trim(),
         wifiDetails: {
-          speedMbps: speedInput,
+          speedMbps: Number(speedInput) || 100,
           routerModel: routerInput.trim(),
           band: bandInput,
           notes: notesInput.trim(),
         },
       });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Floor WiFi Saved",
         description: "Floor network credentials and hardware specs updated successfully.",
+        variant: "success",
       });
       setConfigModalOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["wifiHierarchy", selectedPgId] });
+      await queryClient.invalidateQueries({ queryKey: ["wifiHierarchy", selectedPgId] });
+      await refetch();
     },
     onError: (err: any) => {
       toast({
         title: "Failed to Update Floor WiFi",
         description: err?.message || "Please check your network connection and try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const clearFloorWifiMutation = useMutation({
+    mutationFn: async (floorId: string) => {
+      if (!selectedPgId) throw new Error("Select a PG");
+      return updateFloorWifi(selectedPgId, floorId, {
+        wifiSsid: "",
+        wifiPassword: "",
+        wifiDetails: {},
+      });
+    },
+    onSuccess: async () => {
+      toast({
+        title: "WiFi Network Removed",
+        description: "Floor WiFi credentials cleared.",
+        variant: "success",
+      });
+      await queryClient.invalidateQueries({ queryKey: ["wifiHierarchy", selectedPgId] });
+      await refetch();
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Failed to Remove WiFi",
+        description: err?.message || "Could not remove WiFi network.",
         variant: "destructive",
       });
     },
@@ -862,6 +904,18 @@ export default function WifiManagementPage() {
                                 )}
 
                                 <div className="flex items-center gap-1 ml-auto">
+                                  {Boolean(floor.wifiSsid?.trim()) && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                                      disabled={clearFloorWifiMutation.isPending}
+                                      onClick={() => clearFloorWifiMutation.mutate(floor.floorId)}
+                                      title="Remove WiFi"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  )}
                                   <Button
                                     variant="outline"
                                     size="sm"
