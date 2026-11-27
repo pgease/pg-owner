@@ -217,7 +217,7 @@ export function FilterChips<T extends string>({
   onChange,
   className,
 }: {
-  items: Array<{ id: T; label: string; count?: number }>;
+  items: Array<{ id: NoInfer<T>; label: string; count?: number }>;
   value: T;
   onChange: (id: T) => void;
   className?: string;
@@ -273,7 +273,7 @@ export function SwipeTabs<T extends string>({
   className,
   contentClassName,
 }: {
-  tabs: Array<{ id: T; label: string; badge?: number }>;
+  tabs: Array<{ id: NoInfer<T>; label: string; badge?: number }>;
   value: T;
   onChange: (id: T) => void;
   children?: React.ReactNode;
@@ -572,24 +572,71 @@ export function BottomSheet({
   open,
   onClose,
   title,
+  fullHeight = false,
+  footer,
   children,
 }: {
   open: boolean;
   onClose: () => void;
   title?: string;
+  fullHeight?: boolean;
+  footer?: React.ReactNode;
   children: React.ReactNode;
 }) {
+  React.useEffect(() => {
+    if (!open || typeof document === "undefined") return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(15,23,32,0.55)]"
+      onClick={onClose}
+    >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))" }}
-        className="ms-anim-sheet w-full max-w-lg rounded-t-[24px] bg-[var(--ms-card)] text-[var(--ms-ink)] p-4 pt-3 shadow-2xl max-h-[85dvh] overflow-y-auto"
+        style={{
+          paddingBottom: footer ? undefined : "calc(16px + env(safe-area-inset-bottom, 0px))",
+          maxHeight: fullHeight ? "calc(100dvh - 8px)" : "85dvh",
+        }}
+        className={cn(
+          "ms-anim-sheet w-full max-w-lg rounded-t-[24px] bg-[var(--ms-card)] text-[var(--ms-ink)] shadow-2xl flex flex-col overflow-hidden",
+          fullHeight && "h-[calc(100dvh-8px)]",
+        )}
       >
-        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[var(--ms-border)]" />
-        {title && <h3 className="text-[16px] font-semibold mb-3 px-1">{title}</h3>}
-        {children}
+        {/* Sticky Header */}
+        <div className="shrink-0 px-4 pt-3 pb-2.5 border-b border-[var(--ms-divider)]">
+          <div className="mx-auto mb-2.5 h-1 w-10 rounded-full bg-[var(--ms-border)]" />
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-[16px] font-semibold truncate">{title || ""}</h3>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="h-9 w-9 rounded-xl flex items-center justify-center text-[var(--ms-ink-3)] hover:bg-[var(--ms-page)] cursor-pointer shrink-0"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Scrollable Body */}
+        <div className="flex-1 overflow-y-auto p-4">{children}</div>
+
+        {/* Sticky Footer */}
+        {footer && (
+          <div
+            className="shrink-0 px-4 pt-3 border-t border-[var(--ms-divider)] bg-[var(--ms-card)]"
+            style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))" }}
+          >
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );

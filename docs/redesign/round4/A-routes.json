@@ -1,0 +1,568 @@
+[
+  {
+    "route": "/",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "docs/redesign/round4/routes/root.png"
+  },
+  {
+    "route": "/__gallery",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "docs/redesign/round4/routes/gallery.png"
+  },
+  {
+    "route": "/account",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "docs/redesign/round4/routes/account.png"
+  },
+  {
+    "route": "/activity-logs",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "docs/redesign/round4/routes/activity-logs.png"
+  },
+  {
+    "route": "/api-catalog",
+    "status": "FAIL",
+    "errors": [
+      "Empty #root"
+    ],
+    "screenshot": "docs/redesign/round4/routes/api-catalog.png"
+  },
+  {
+    "route": "/audit-logs",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "docs/redesign/round4/routes/audit-logs.png"
+  },
+  {
+    "route": "/bank",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "docs/redesign/round4/routes/bank.png"
+  },
+  {
+    "route": "/billing",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "docs/redesign/round4/routes/billing.png"
+  },
+  {
+    "route": "/chat",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "docs/redesign/round4/routes/chat.png"
+  },
+  {
+    "route": "/complaints",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "docs/redesign/round4/routes/complaints.png"
+  },
+  {
+    "route": "/contact-us",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "docs/redesign/round4/routes/contact-us.png"
+  },
+  {
+    "route": "/dashboard",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "docs/redesign/round4/routes/dashboard.png"
+  },
+  {
+    "route": "/dashboard#ease-buddy",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/dining",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/eviction",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/expenses",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/expenses/categories",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/expenses/monthly",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/feature-catalogue",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/food",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/food-menu",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/group-chat",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/guest-requests",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/guests",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/inventory",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/kpis",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/leads",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/login",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/menu",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/my-pgs",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/my-pgs/amenities",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/my-pgs/bank",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/my-pgs/facilities",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/my-pgs/notices",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/my-pgs/public-listing",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/my-pgs/restrictions",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/my-pgs/rooms",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/my-pgs/structure",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/my-pgs/wifi",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/night-out",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/nightout",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/notice-period",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/notices",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/notifications",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/notifications/preferences",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/onboarding",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/operations",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/operations/guest-requests",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/operations/guests",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/operations/night-out",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/operations/tools",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/plans",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/post-pg",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/privacy-policy",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/property",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/public-listing",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/refer-and-earn",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/reference/api-catalog",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/referrals",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/refunds",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/rent-payments",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/rent-payments/dues",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/rent-payments/history",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/rent-payments/pending",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/rent-payments/reminders",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/reports",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/reports/export",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/reports/payments",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/settings",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/settings/activity-logs",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/settings/gateway-kyc",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/settings/inventory",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/settings/notifications",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/settings/payment-kyc",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/settings/permissions",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/signup",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/staff",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/staff/roles",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/subscription",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/support",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/team",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/team/add-staff",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/team/permissions",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/team/permissions-matrix",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/tenants",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/tenants/add",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/tenants/guests",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/tenants/kyc",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/tenants/night-out",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/tenants/notice",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/tenants/notice-period",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/tenants/onboarding",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/tenants/vacant-rooms",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  },
+  {
+    "route": "/terms-and-conditions",
+    "status": "PASS",
+    "errors": [],
+    "screenshot": "-"
+  }
+]

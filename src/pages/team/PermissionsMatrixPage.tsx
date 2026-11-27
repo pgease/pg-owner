@@ -311,7 +311,7 @@ export default function PermissionsMatrixPage() {
                 <h3 className="font-bold text-sm sm:text-base text-foreground">
                   Your Current Plan:{" "}
                   <span className="text-primary font-black uppercase">
-                    {isTrial ? "PRO (45-Day Free Trial)" : currentPlan || "LITE PLAN"}
+                    {isTrial ? "LEGACY ACCESS" : currentPlan || "ACTIVE PLAN"}
                   </span>
                 </h3>
                 <Badge variant="outline" className="text-[11px] font-bold bg-emerald-50 text-emerald-700 border-emerald-200">
@@ -615,7 +615,7 @@ export default function PermissionsMatrixPage() {
                   </p>
                 </div>
                 <div className="pt-3 border-t text-[11px] text-purple-700 dark:text-purple-300 font-semibold">
-                  ✓ Included in your 45-Day Free Trial!
+                  ✓ Included in active subscription plan
                 </div>
               </CardContent>
             </Card>

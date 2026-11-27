@@ -2261,6 +2261,9 @@ export interface CreditBalanceResponse {
   freeCreditsAllocated?: number;
   topupCreditsRemaining?: number;
   remainingCredits?: number;
+  kycCreditsBalance?: number;
+  kycAgreementCreditsBalance?: number;
+  agreementCreditsBalance?: number;
   isBlocked?: boolean;
 }
 
@@ -2300,6 +2303,8 @@ export async function getCreditBalance() {
       ...data,
       totalCreditsAvailable: totalAvail,
       remainingCredits: totalAvail,
+      kycCreditsBalance: Number(data.kycCreditsBalance ?? totalAvail),
+      kycAgreementCreditsBalance: Number(data.kycAgreementCreditsBalance ?? data.agreementCreditsBalance ?? 0),
       freeCreditsGiven: Number(data.freeCreditsGiven ?? data.freeCreditsAllocated ?? 0),
       freeCreditsUsed: Number(data.freeCreditsUsed ?? 0),
       freeCreditsRemaining: freeRem,

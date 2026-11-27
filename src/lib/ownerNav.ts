@@ -128,7 +128,7 @@ export const NAV_ITEMS: NavItem[] = [
     featureKey: "advanced_reports",
   },
   {
-    title: "Subscription Plans",
+    title: "Plans & Billing",
     url: "/plans",
     icon: Crown,
     ownerOnly: true,
@@ -139,7 +139,6 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Settings,
     children: [
       { title: "Settings", url: "/settings" },
-      { title: "Plans & Billing", url: "/plans", ownerOnly: true },
       { title: "Refer & Earn", url: "/referrals", ownerOnly: true },
       { title: "Help & Documentation", url: "https://help.pgease.com", isExternal: true },
       { title: "Activity Logs", url: "/activity-logs", featureKey: "audit_logs" },

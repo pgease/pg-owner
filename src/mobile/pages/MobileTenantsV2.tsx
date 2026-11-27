@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, Clock, Download, MoreHorizontal, MoreVertical, Plus, Search, Users } from "lucide-react";
+import { CheckCircle2, Clock, Download, LayoutList, MoreHorizontal, MoreVertical, Plus, Search, Users } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { isTenantKycVerified, isTenantOnNotice, usePropertySummary } from "@/mobile/hooks/usePropertySummary";
 import { useNetworkStatus } from "@/mobile/hooks/useNetworkStatus";
@@ -155,7 +155,7 @@ export function MobileTenantsV2({ onExport }: { onExport?: () => void }) {
             { id: "notice", label: "Notice Period", badge: summary.onNoticeTenants },
           ]}
           value={tab}
-          onChange={setTab}
+          onChange={(v) => setTab(v as typeof tab)}
         >
           {/* Content */}
         {isLoading ? (
@@ -275,7 +275,7 @@ export function MobileTenantsV2({ onExport }: { onExport?: () => void }) {
                 { id: "verified", label: "Verified" },
               ]}
               value={draftKyc}
-              onChange={setDraftKyc}
+              onChange={(v) => setDraftKyc(v as typeof draftKyc)}
             />
           </div>
 

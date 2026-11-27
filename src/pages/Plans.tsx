@@ -322,12 +322,12 @@ export default function Plans() {
           {subAccess.isTrial ? (
             <span className="inline-flex items-center gap-1 rounded bg-[#FFF7E6] px-2.5 py-1 text-xs font-semibold text-[#A15C07]">
               <Clock className="h-3.5 w-3.5" />
-              Free trial: {subAccess.trialDaysRemaining} days left
+              Your current access ends in {subAccess.trialDaysRemaining} days. Buy a plan to continue.
             </span>
           ) : subAccess.isExpired ? (
             <span className="inline-flex items-center gap-1 rounded bg-[#FEF1F0] px-2.5 py-1 text-xs font-semibold text-[#B42318]">
               <AlertTriangle className="h-3.5 w-3.5" />
-              Trial ended. Choose a plan below to keep full editing access.
+              Plan required. Choose a plan below to continue.
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 rounded bg-[#ECFAF1] px-2.5 py-1 text-xs font-semibold text-[#157F3D]">
@@ -340,12 +340,12 @@ export default function Plans() {
 
       {subAccess.isExpired && (
         <div className="rounded-lg border border-[#F6C7C2] bg-[#FEF1F0] p-4 text-sm text-[#7A1E14]">
-          Your data is safe and viewable. Pick Lite or Pro below to continue adding residents and recording payments.
+          Your data is safe and viewable. Buy a plan below to continue adding residents and recording payments.
           <div className="mt-3 flex gap-2">
             <a href={SUPPORT_PHONE_TEL} className="inline-flex items-center gap-1 rounded border bg-white px-3 py-1.5 text-xs font-semibold text-[#18212B]">
               <Phone className="h-3.5 w-3.5" /> Call Support
             </a>
-            <a href={supportWhatsAppUrl("Hi, my PG Ease trial has expired and I want to activate my plan.")} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded bg-[#157F3D] px-3 py-1.5 text-xs font-semibold text-white">
+            <a href={supportWhatsAppUrl("Hi, I want to activate my PG Ease subscription plan.")} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded bg-[#157F3D] px-3 py-1.5 text-xs font-semibold text-white">
               <MessageCircle className="h-3.5 w-3.5" /> WhatsApp Support
             </a>
           </div>

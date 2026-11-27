@@ -18,6 +18,18 @@ function headerTopPadding(): string {
   return isAndroidCapacitor() ? "10px" : "calc(env(safe-area-inset-top, 0px) + 10px)";
 }
 
+type PgAvatarSource = {
+  name?: string | null;
+  photos?: Array<string | { url?: string | null }> | null;
+} | null;
+
+function resolvePgPhotoUrl(pg?: PgAvatarSource): string | null {
+  const first = Array.isArray(pg?.photos) && pg.photos.length > 0 ? pg.photos[0] : null;
+  if (!first) return null;
+  if (typeof first === "string") return first;
+  return typeof first.url === "string" ? first.url : null;
+}
+
 /**
  * R2: Reusable PG Avatar that shows the uploaded PG photo or falls back cleanly
  * to the PG Ease brand mark / initials on a crisp white tile (never blank).
@@ -27,11 +39,11 @@ export function PgAvatar({
   size = "sm",
   className,
 }: {
-  pg?: { name?: string | null; photos?: string[] | null } | null;
+  pg?: PgAvatarSource;
   size?: "sm" | "md" | "lg";
   className?: string;
 }) {
-  const photoUrl = Array.isArray(pg?.photos) && pg.photos.length > 0 ? pg.photos[0] : null;
+  const photoUrl = resolvePgPhotoUrl(pg);
   const [imgError, setImgError] = useState(false);
 
   useEffect(() => {

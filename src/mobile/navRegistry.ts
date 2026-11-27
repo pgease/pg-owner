@@ -477,13 +477,13 @@ export const NAV_REGISTRY: NavRegistryItem[] = [
   // === ACCOUNT, MENU & SUPPORT ===
   {
     id: "account.plans",
-    label: "Subscription & Plans",
-    subtitle: "Manage Pro plan, trial & billing",
+    label: "Plans & Billing",
+    subtitle: "Active plan, beds, credits & billing history",
     icon: "Crown",
     route: "/plans",
     tab: "menu",
     category: "account",
-    keywords: ["plans", "subscription", "pro", "billing", "upgrade", "trial"],
+    keywords: ["plans", "subscription", "pro", "billing", "upgrade", "credits"],
     gating: { ownerOnly: true },
   },
   {

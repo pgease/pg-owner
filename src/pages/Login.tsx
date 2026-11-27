@@ -158,7 +158,7 @@ const TEXTS = {
     sendOtpWhatsapp: "Get Verification Code on WhatsApp",
     sendOtpSms: "Get Verification Code on SMS",
     sending: "Sending code...",
-    trialPill: "New Property Owner? 45-Day Free Pro Plan Trial Auto-Activated",
+    trialPill: "Transparent Pricing: ₹29/bed/month · 2 Months Free Yearly",
     verifyTitle: "Verify Mobile Number",
     verifySubWhatsapp: "Enter the code sent to WhatsApp",
     verifySubSms: "Enter the code sent via SMS",

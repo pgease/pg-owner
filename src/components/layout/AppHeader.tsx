@@ -168,16 +168,16 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
   };
 
   const ownerName = owner?.name && !owner.name.startsWith("user_") ? owner.name : "PG Owner";
+  const rawPhone = String((owner as any)?.phone || (owner as any)?.mobileContactNumber || "").replace(/\D/g, "");
+  const formattedPhone = rawPhone.length >= 10 ? `+91 ${rawPhone.slice(-10, -5)} ${rawPhone.slice(-5)}` : "";
   const initials = (ownerName || "O").trim().slice(0, 2).toUpperCase();
 
-
-
-  // Single source of truth for plan badge
+  // Single source of truth for plan badge (Item F: no free trial promotion)
   const planChip = (() => {
     if (entitlements.isLoading) return null;
     if (entitlements.isExpired) {
       return {
-        label: "Plan expired",
+        label: "Plan Required",
         tone: "text-white bg-rose-500/30 border-rose-400/50 hover:bg-rose-500/40",
       };
     }
@@ -185,7 +185,7 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
     const daysLabel = `${days} ${days === 1 ? "day" : "days"} left`;
     if (entitlements.isTrial) {
       return {
-        label: `Pro Trial · ${daysLabel}`,
+        label: days > 0 ? `Access · ${daysLabel}` : "Plan Required",
         tone: "text-amber-200 bg-amber-400/20 border-amber-300/40 hover:bg-amber-400/30 shadow-xs",
       };
     }
@@ -195,20 +195,8 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
         tone: "text-emerald-100 bg-emerald-400/25 border-emerald-300/40 hover:bg-emerald-400/35 shadow-xs",
       };
     }
-    if (entitlements.isLite) {
-      return {
-        label: "Lite Plan",
-        tone: "text-teal-100 bg-white/10 border-white/20 hover:bg-white/20",
-      };
-    }
-    if (days > 0) {
-      return {
-        label: `Pro Trial · ${daysLabel}`,
-        tone: "text-amber-200 bg-amber-400/20 border-amber-300/40 hover:bg-amber-400/30",
-      };
-    }
     return {
-      label: "Lite Plan",
+      label: "Active Plan",
       tone: "text-teal-100 bg-white/10 border-white/20 hover:bg-white/20",
     };
   })();
@@ -492,6 +480,11 @@ const AppHeader = ({ onMenuToggle, onSidebarToggle, isSidebarCollapsed }: AppHea
                       <p className="truncate text-xs font-extrabold text-slate-900 dark:text-white leading-tight">
                         {ownerName}
                       </p>
+                      {formattedPhone && (
+                        <p className="truncate text-[11px] font-semibold text-[#008080] dark:text-teal-300 leading-tight mt-0.5 tabular-nums">
+                          {formattedPhone}
+                        </p>
+                      )}
                       {owner?.email ? (
                         <p className="truncate text-[10.5px] text-slate-500 leading-tight mt-0.5">
                           {owner.email}

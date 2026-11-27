@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Bell,
   BookOpen,
+  Coins,
   CreditCard,
   Crown,
   FileText,
@@ -19,14 +20,17 @@ import {
   Receipt,
   Settings,
   Shield,
+  ShieldCheck,
   Sun,
   Trash2,
   UserCog,
 } from "lucide-react";
 import { authStorage, performLogout } from "@/api/http";
+import { useApp } from "@/context/AppContext";
 import { useEntitlements } from "@/hooks/useEntitlements";
+import { usePropertySummary } from "@/mobile/hooks/usePropertySummary";
 import { useNetworkStatus } from "@/mobile/hooks/useNetworkStatus";
-import type { IconTone } from "@/mobile/tokens";
+import { tokens, type IconTone } from "@/mobile/tokens";
 import { MobileAppHeader } from "@/mobile/components/ui/MobileHeaders";
 import { PageScaffold } from "@/mobile/components/ui/PageScaffold";
 import {
@@ -36,16 +40,19 @@ import {
   ListRow,
   MobileCard,
   SectionHeader,
+  StatusChip,
 } from "@/mobile/components/ui/Primitives";
 import pgeaseIconColor from "@/assets/pgease-icon-color.png";
 import { applyTheme } from "@/utils/theme";
 
 export default function MobileMenuV2() {
   const navigate = useNavigate();
+  const { selectedPgId } = useApp();
   const entitlements = useEntitlements();
+  const { summary } = usePropertySummary(selectedPgId);
   const { isOffline, lastUpdated } = useNetworkStatus();
   const [logoutOpen, setLogoutOpen] = useState(false);
-  const [appVersion, setAppVersion] = useState("1.0.12");
+  const [appVersion, setAppVersion] = useState("1.0.13");
   const [isDark, setIsDark] = useState(() =>
     typeof document !== "undefined" ? document.documentElement.classList.contains("dark") : false,
   );
@@ -67,17 +74,20 @@ export default function MobileMenuV2() {
 
   const owner = authStorage.getPropertyOwner();
   const ownerName = owner?.name && !owner.name.startsWith("user_") ? owner.name : "PG Owner";
-  const ownerPhone = String((owner as any)?.phone || (owner as any)?.mobileContactNumber || "");
+  const rawPhone = String((owner as any)?.phone || (owner as any)?.mobileContactNumber || "").replace(/\D/g, "");
+  const ownerPhone = rawPhone.length >= 10 ? `+91 ${rawPhone.slice(-10, -5)} ${rawPhone.slice(-5)}` : "";
   const isDeletionPending = Boolean((owner as any)?.deletionRequestedAt);
 
-  const planTitle = entitlements.isTrial
-    ? `Pro Trial (${Math.max(0, entitlements.daysRemaining)}d left)`
-    : entitlements.isPro
-      ? "Pro Plan"
-      : "Lite Plan";
-  const planSub = entitlements.isPro || entitlements.isTrial
-    ? "All premium capabilities enabled"
-    : "Upgrade for Aadhaar KYC, Staff Roles & Reports";
+  const planTitle = entitlements.isExpired
+    ? "Plan Required"
+    : entitlements.isTrial
+      ? `Access ends in ${Math.max(0, entitlements.daysRemaining)}d`
+      : entitlements.isPro
+        ? "Pro Plan"
+        : "Active Plan";
+  const planSub = entitlements.isPro
+    ? "₹29/bed · Active subscription"
+    : "₹29/bed/month · Buy a plan to unlock all features";
 
   const manageRows: Array<{ title: string; sub: string; tone: IconTone; icon: React.ReactNode; to: string; dangerIcon?: boolean }> = [
     { title: "Staff Management", sub: "Manage your team & roles", tone: "blue", icon: <UserCog className="h-5 w-5" />, to: "/team" },
@@ -127,6 +137,20 @@ export default function MobileMenuV2() {
               <div className="flex items-center gap-1.5 text-[12px] text-[var(--ms-ink-3)] mt-0.5">
                 <Phone className="h-3.5 w-3.5" />
                 <span>{ownerPhone || "Owner Account"}</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                <StatusChip
+                  tone={summary.kycCredits !== undefined && summary.kycCredits <= tokens.lowCreditsThreshold ? "error" : "teal"}
+                  icon={<Coins className="h-3 w-3" />}
+                  label={`KYC: ${summary.kycCredits ?? "—"}`}
+                  onClick={() => navigate("/tenants/kyc?type=kyc")}
+                />
+                <StatusChip
+                  tone={summary.kycAgreementCredits !== undefined && summary.kycAgreementCredits <= tokens.lowCreditsThreshold ? "error" : "info"}
+                  icon={<ShieldCheck className="h-3 w-3" />}
+                  label={`KYC+Agr: ${summary.kycAgreementCredits ?? "—"}`}
+                  onClick={() => navigate("/tenants/kyc?type=agreement")}
+                />
               </div>
             </div>
           </button>

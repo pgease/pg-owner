@@ -82,18 +82,20 @@ export function MobileDashboardV2() {
   const moveIns = headline?.moveIns?.count ?? 0;
   const moveOuts = headline?.moveOuts?.count ?? 0;
 
-  const creditsRemaining = summary.remainingCredits ?? 0;
-  const isLowCredits = creditsRemaining <= tokens.lowCreditsThreshold;
+  const kycCredits = summary.kycCredits;
+  const kycAgrCredits = summary.kycAgreementCredits;
+  const isLowKyc = kycCredits !== undefined && kycCredits <= tokens.lowCreditsThreshold;
+  const isLowAgr = kycAgrCredits !== undefined && kycAgrCredits <= tokens.lowCreditsThreshold;
 
   const planChipLabel = entitlements.isLoading
     ? "Plan"
     : entitlements.isExpired
-      ? "Plan Expired"
+      ? "Plan Required"
       : entitlements.isTrial
-        ? `Pro Trial · ${Math.max(0, entitlements.daysRemaining)}d`
+        ? `Access · ${Math.max(0, entitlements.daysRemaining)}d left`
         : entitlements.isPro
           ? "Pro Plan"
-          : "Lite Plan";
+          : "Active Plan";
 
   const guardOnline = (actionName: string, fn: () => void) => {
     if (isOffline) {
@@ -153,7 +155,7 @@ export function MobileDashboardV2() {
     { label: "Verify KYC", subtitle: "Aadhaar e-KYC & agreements", to: "/tenants/kyc", tone: "amber", icon: <ShieldCheck className="h-5 w-5" /> },
     { label: "View complaints", subtitle: "Open maintenance tickets", to: "/complaints", tone: "red", icon: <MessageSquareWarning className="h-5 w-5" /> },
     { label: "Expenses", subtitle: "Track bills & payouts", to: "/expenses", tone: "rose", icon: <TrendingUp className="h-5 w-5" /> },
-    { label: "Subscription & Plans", subtitle: "Manage plan & billing", to: "/plans", tone: "indigo", icon: <Crown className="h-5 w-5" /> },
+    { label: "Plans & Billing", subtitle: "Plan, credits & invoices", to: "/plans", tone: "indigo", icon: <Crown className="h-5 w-5" /> },
   ];
 
   const alertCards: Array<{
@@ -230,16 +232,32 @@ export function MobileDashboardV2() {
             onClick={() => navigate("/plans")}
           />
           <StatusChip
-            tone={isLowCredits ? "error" : "teal"}
+            tone={isLowKyc ? "error" : "teal"}
             icon={<Coins className="h-3 w-3" />}
             label={
-              creditsRemaining === 0
-                ? "No credits · Top up"
-                : isLowCredits
-                  ? `${creditsRemaining} Credits · Top up`
-                  : `${creditsRemaining} Credits`
+              kycCredits === undefined
+                ? "KYC: —"
+                : kycCredits === 0
+                  ? "KYC: 0 · Top up"
+                  : isLowKyc
+                    ? `KYC: ${kycCredits} · Top up`
+                    : `KYC: ${kycCredits}`
             }
-            onClick={() => navigate("/tenants/kyc")}
+            onClick={() => navigate("/tenants/kyc?type=kyc")}
+          />
+          <StatusChip
+            tone={isLowAgr ? "error" : "info"}
+            icon={<ShieldCheck className="h-3 w-3" />}
+            label={
+              kycAgrCredits === undefined
+                ? "KYC+Agr: —"
+                : kycAgrCredits === 0
+                  ? "KYC+Agr: 0 · Top up"
+                  : isLowAgr
+                    ? `KYC+Agr: ${kycAgrCredits} · Top up`
+                    : `KYC+Agr: ${kycAgrCredits}`
+            }
+            onClick={() => navigate("/tenants/kyc?type=agreement")}
           />
         </div>
       </div>

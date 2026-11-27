@@ -106,7 +106,7 @@ export default function NotificationsPage() {
           { id: "tenants", label: "Tenants" },
         ]}
         value={filter}
-        onChange={setFilter}
+        onChange={(v) => setFilter(v as typeof filter)}
       />
 
       {filtered.length === 0 ? (

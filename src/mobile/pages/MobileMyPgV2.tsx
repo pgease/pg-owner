@@ -5,11 +5,13 @@ import {
   BedDouble,
   Building2,
   CheckCircle2,
+  Copy,
   CreditCard,
   FileCheck2,
   Globe,
   Image as ImageIcon,
   Landmark,
+  MapPin,
   Megaphone,
   Moon,
   Pencil,
@@ -35,12 +37,19 @@ import {
   IconTile,
   ListRow,
   MobileCard,
+  OutlineButton,
   PrimaryButton,
   SectionHeader,
   StatusChip,
 } from "@/mobile/components/ui/Primitives";
+import {
+  AddressFields,
+  composeStructuredAddress,
+  isValidIndianPin,
+  splitLegacyAddress,
+  type StructuredAddressValue,
+} from "@/mobile/components/ui/AddressFields";
 import { toast } from "@/components/ui/use-toast";
-import pgeaseIconColor from "@/assets/pgease-icon-color.png";
 
 export function MobileMyPgV2() {
   const navigate = useNavigate();
@@ -56,16 +65,31 @@ export function MobileMyPgV2() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [pgName, setPgName] = useState("");
-  const [pgAddress, setPgAddress] = useState("");
-  const [pgPin, setPgPin] = useState("");
   const [pgBedRange, setPgBedRange] = useState("");
+  const [addrValue, setAddrValue] = useState<StructuredAddressValue>({
+    line1: "",
+    line2: "",
+    city: "",
+    state: "",
+    pin: "",
+  });
+  const [pinConflictHint, setPinConflictHint] = useState(false);
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof StructuredAddressValue | "pgName", string>>>({});
 
   useEffect(() => {
     if (!selectedPg) return;
     setPgName(selectedPg.name || "");
-    setPgAddress(selectedPg.address || "");
-    setPgPin(String(selectedPg.locationPin ?? ""));
     setPgBedRange(selectedPg.bedRange ?? "50-100");
+    const split = splitLegacyAddress(selectedPg.address, selectedPg.locationPin);
+    setAddrValue({
+      line1: split.line1,
+      line2: split.line2,
+      city: split.city,
+      state: split.state,
+      pin: split.pin,
+    });
+    setPinConflictHint(split.pinConflict);
+    setFormErrors({});
   }, [selectedPg]);
 
   const handleSave = async () => {
@@ -74,17 +98,24 @@ export function MobileMyPgV2() {
       return;
     }
     if (!selectedPgId || !selectedPg) return;
-    if (!pgName.trim()) {
-      toast({ title: "PG Name is required", variant: "destructive" });
-      return;
-    }
+
+    const errs: Partial<Record<keyof StructuredAddressValue | "pgName", string>> = {};
+    if (!pgName.trim()) errs.pgName = "PG Name is required";
+    if (!addrValue.line1.trim()) errs.line1 = "Address Line 1 is required";
+    if (!addrValue.city.trim()) errs.city = "City is required";
+    if (!addrValue.state.trim()) errs.state = "State is required";
+    if (!isValidIndianPin(addrValue.pin)) errs.pin = "Enter a valid 6-digit PIN code";
+    setFormErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    const composedAddress = composeStructuredAddress(addrValue);
     try {
       await updateMutation.mutateAsync({
         propertyId: selectedPgId,
         payload: {
           name: pgName.trim(),
-          address: pgAddress.trim(),
-          locationPin: pgPin.trim(),
+          address: composedAddress,
+          locationPin: addrValue.pin.trim(),
           bedRange: pgBedRange.trim() || "50-100",
           latitude: Number(selectedPg.latitude) || 0,
           longitude: Number(selectedPg.longitude) || 0,
@@ -104,7 +135,6 @@ export function MobileMyPgV2() {
     }
   };
 
-  const photoUrl = Array.isArray(selectedPg?.photos) && selectedPg.photos.length > 0 ? selectedPg.photos[0] : null;
   const photosCount = Array.isArray(selectedPg?.photos) ? selectedPg.photos.length : 0;
   const linkedAmenities = Array.isArray(rawAmenities) ? rawAmenities.filter((a: any) => a.linked).length : 0;
   const facilitiesCount =
@@ -151,60 +181,61 @@ export function MobileMyPgV2() {
       onRefresh={refetchAll}
       header={<MobileAppHeader title="My Property" />}
     >
-      <div className="ms-header-gradient px-4 pt-1 pb-6 text-white">
-        <div className="rounded-2xl bg-white/12 border border-white/20 p-3.5 flex items-start gap-3">
-          <img
-            src={photoUrl || pgeaseIconColor}
-            alt={selectedPg?.name || "Property"}
-            className="h-14 w-14 rounded-2xl object-cover bg-white shrink-0 border border-white/25"
-          />
-          <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <span className="text-[16px] font-semibold truncate">{selectedPg?.name ?? "My PG"}</span>
-                {(selectedPg as any)?.isVerified && <CheckCircle2 className="h-4 w-4 text-white shrink-0" />}
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditOpen(true)}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white text-[var(--ms-brand-800)] text-[11px] font-semibold shrink-0 cursor-pointer active:scale-95 transition-transform"
-              >
-                <Pencil className="h-3 w-3" />
-                <span>Edit PG</span>
-              </button>
-            </div>
-            <p className="text-[12px] text-white/80 truncate mt-0.5">{selectedPg?.address || "No address set"}</p>
-            <div className="flex flex-wrap items-center gap-1.5 mt-2">
-              {selectedPg?.id && (
-                <span className="px-2 py-0.5 rounded-full bg-white/15 text-[10px] font-medium">
-                  ID: #{selectedPg.id.slice(0, 8)}
-                </span>
-              )}
-              <StatusChip label="Active" tone="success" />
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="px-4 -mt-3 space-y-5">
-        {/* Phone & 4-Column Real Stats */}
-        <MobileCard className="space-y-4">
+      <div className="px-4 pt-3 space-y-5">
+        {/* B.1: Single Compact Property Card (<= 220px, no duplicated PG name/photo) */}
+        <MobileCard className="p-3.5 space-y-3">
+          {/* Row 1: Status + Copyable ID + Edit PG */}
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-[13px] font-medium text-[var(--ms-ink)]">
-              <Phone className="h-4 w-4 text-[var(--ms-brand-text)]" />
-              {phone ? (
-                <span>{phone}</span>
-              ) : (
+            <div className="flex items-center gap-1.5 min-w-0">
+              <StatusChip label="Active" tone="success" />
+              {selectedPg?.id && (
                 <button
                   type="button"
-                  onClick={() => setEditOpen(true)}
-                  className="text-[var(--ms-brand-text)] font-semibold underline cursor-pointer"
+                  onClick={() => {
+                    void navigator.clipboard?.writeText(selectedPg.id);
+                    toast({ title: "Copied", description: `PG ID #${selectedPg.id.slice(0, 8)} copied.` });
+                  }}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--ms-page)] border border-[var(--ms-border)] text-[11px] font-medium text-[var(--ms-ink-2)] cursor-pointer active:scale-95"
                 >
-                  Add phone number
+                  <span>#{selectedPg.id.slice(0, 8)}</span>
+                  <Copy className="h-3 w-3 text-[var(--ms-ink-3)]" />
                 </button>
               )}
             </div>
+            <button
+              type="button"
+              onClick={() => setEditOpen(true)}
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-full border border-[var(--ms-border)] bg-[var(--ms-page)] text-[var(--ms-ink)] text-[11.5px] font-semibold shrink-0 cursor-pointer active:scale-95 transition-transform"
+            >
+              <Pencil className="h-3 w-3 text-[var(--ms-brand-text)]" />
+              <span>Edit PG</span>
+            </button>
           </div>
-          <div className="grid grid-cols-4 gap-2 text-center">
+
+          {/* Row 2: Phone */}
+          <div className="flex items-center gap-2 text-[13px] font-medium text-[var(--ms-ink)]">
+            <IconTile icon={<Phone className="h-3.5 w-3.5" />} tone="teal" size="sm" className="h-7 w-7 rounded-lg" />
+            {phone ? (
+              <span className="truncate">{phone}</span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setEditOpen(true)}
+                className="text-[var(--ms-brand-text)] font-semibold underline cursor-pointer"
+              >
+                Add phone
+              </button>
+            )}
+          </div>
+
+          {/* Row 3: Full Address (max 2 lines) */}
+          <div className="flex items-start gap-2 text-[12px] text-[var(--ms-ink-2)]">
+            <IconTile icon={<MapPin className="h-3.5 w-3.5" />} tone="blue" size="sm" className="h-7 w-7 rounded-lg mt-0.5" />
+            <p className="line-clamp-2 leading-snug flex-1">{selectedPg?.address || "No address set"}</p>
+          </div>
+
+          {/* Row 4: 4 Stat Tiles */}
+          <div className="grid grid-cols-4 gap-2 pt-1 border-t border-[var(--ms-divider)] text-center">
             {[
               { label: "Rooms", value: formatCount(summary.totalRooms), tone: "indigo" as IconTone, icon: <Building2 className="h-4 w-4" />, to: "/my-pgs/structure" },
               { label: "Beds", value: formatCount(summary.totalBeds), tone: "teal" as IconTone, icon: <BedDouble className="h-4 w-4" />, to: "/my-pgs/structure" },
@@ -215,11 +246,11 @@ export function MobileMyPgV2() {
                 key={s.label}
                 type="button"
                 onClick={() => navigate(s.to)}
-                className="flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition-transform"
+                className="flex flex-col items-center gap-0.5 py-1 cursor-pointer active:scale-95 transition-transform"
               >
-                <IconTile icon={s.icon} tone={s.tone} size="md" className="h-9 w-9" />
-                <span className="text-[15px] font-semibold text-[var(--ms-ink)] tabular-nums">{s.value}</span>
-                <span className="text-[11px] text-[var(--ms-ink-3)]">{s.label}</span>
+                <IconTile icon={s.icon} tone={s.tone} size="md" className="h-8 w-8" />
+                <span className="text-[14px] font-semibold text-[var(--ms-ink)] tabular-nums">{s.value}</span>
+                <span className="text-[10.5px] text-[var(--ms-ink-3)]">{s.label}</span>
               </button>
             ))}
           </div>
@@ -277,59 +308,61 @@ export function MobileMyPgV2() {
         </section>
       </div>
 
-      {/* Edit PG Bottom Sheet */}
-      <BottomSheet open={editOpen} onClose={() => setEditOpen(false)} title="Edit Property Details">
-        <div className="space-y-3.5">
+      {/* B.2 & C: Full-height Edit PG Bottom Sheet with Structured Address */}
+      <BottomSheet
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        title="Edit Property Details"
+        fullHeight
+        footer={
+          <div className="grid grid-cols-2 gap-3">
+            <OutlineButton type="button" onClick={() => setEditOpen(false)}>
+              Cancel
+            </OutlineButton>
+            <PrimaryButton
+              type="button"
+              disabled={updateMutation.isPending}
+              onClick={() => void handleSave()}
+            >
+              {updateMutation.isPending ? "Saving..." : "Save changes"}
+            </PrimaryButton>
+          </div>
+        }
+      >
+        <div className="space-y-3.5 pb-4">
           <div>
-            <label className="text-[12px] font-medium text-[var(--ms-ink-2)]">PG Name</label>
+            <div className="flex items-center justify-between">
+              <label className="text-[12px] font-medium text-[var(--ms-ink-2)]">PG Name *</label>
+              <span className="text-[11px] text-[var(--ms-ink-3)] tabular-nums">{pgName.length}/100</span>
+            </div>
             <input
               type="text"
               maxLength={100}
               value={pgName}
-              onChange={(e) => setPgName(e.target.value)}
-              className="mt-1 w-full h-11 rounded-xl border border-[var(--ms-border)] bg-[var(--ms-page)] px-3 text-[14px]"
+              onChange={(e) => setPgName(e.target.value.slice(0, 100))}
+              className="mt-1 w-full h-11 rounded-xl border border-[var(--ms-border)] bg-[var(--ms-page)] px-3 text-[14px] text-[var(--ms-ink)]"
             />
+            {formErrors.pgName && <p className="mt-1 text-[11px] text-[var(--ms-error)]">{formErrors.pgName}</p>}
           </div>
+
+          <AddressFields
+            value={addrValue}
+            onChange={setAddrValue}
+            pinConflictHint={pinConflictHint}
+            errors={formErrors}
+          />
+
           <div>
-            <label className="text-[12px] font-medium text-[var(--ms-ink-2)]">Address</label>
+            <label className="text-[12px] font-medium text-[var(--ms-ink-2)]">Bed Range</label>
             <input
               type="text"
-              maxLength={100}
-              value={pgAddress}
-              onChange={(e) => setPgAddress(e.target.value)}
-              className="mt-1 w-full h-11 rounded-xl border border-[var(--ms-border)] bg-[var(--ms-page)] px-3 text-[14px]"
+              maxLength={30}
+              value={pgBedRange}
+              onChange={(e) => setPgBedRange(e.target.value)}
+              placeholder="e.g. 50-100"
+              className="mt-1 w-full h-11 rounded-xl border border-[var(--ms-border)] bg-[var(--ms-page)] px-3 text-[14px] text-[var(--ms-ink)]"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-[12px] font-medium text-[var(--ms-ink-2)]">PIN Code</label>
-              <input
-                type="text"
-                maxLength={10}
-                value={pgPin}
-                onChange={(e) => setPgPin(e.target.value)}
-                className="mt-1 w-full h-11 rounded-xl border border-[var(--ms-border)] bg-[var(--ms-page)] px-3 text-[14px]"
-              />
-            </div>
-            <div>
-              <label className="text-[12px] font-medium text-[var(--ms-ink-2)]">Bed Range</label>
-              <input
-                type="text"
-                maxLength={30}
-                value={pgBedRange}
-                onChange={(e) => setPgBedRange(e.target.value)}
-                className="mt-1 w-full h-11 rounded-xl border border-[var(--ms-border)] bg-[var(--ms-page)] px-3 text-[14px]"
-              />
-            </div>
-          </div>
-          <PrimaryButton
-            type="button"
-            disabled={updateMutation.isPending}
-            onClick={() => void handleSave()}
-            className="w-full"
-          >
-            {updateMutation.isPending ? "Saving..." : "Save Changes"}
-          </PrimaryButton>
         </div>
       </BottomSheet>
     </PageScaffold>

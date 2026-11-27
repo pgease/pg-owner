@@ -104,7 +104,7 @@ export default function SendRemindersPage() {
           { id: "partial", label: "Partial", count: duesList.filter((d) => d.status === "partial").length },
         ]}
         value={filter}
-        onChange={setFilter}
+        onChange={(v) => setFilter(v as typeof filter)}
       />
 
       {/* Channel selector */}

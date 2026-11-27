@@ -267,7 +267,7 @@ export function MobileRentHeaderSection({
                 { id: "Bank Transfer", label: "Bank Transfer" },
               ]}
               value={draftMethod}
-              onChange={setDraftMethod}
+              onChange={(v) => setDraftMethod(v as typeof draftMethod)}
             />
           </div>
           <div className="grid grid-cols-2 gap-2.5 pt-2">

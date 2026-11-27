@@ -255,6 +255,8 @@ const App = () => {
                         <Route path="/reports/payments" element={<Reports />} />
                         <Route path="/reports/export" element={<Reports />} />
                         <Route path="/plans" element={<RequireOwner><Plans /></RequireOwner>} />
+                        <Route path="/subscription" element={<Navigate to="/plans" replace />} />
+                        <Route path="/subscription-plans" element={<Navigate to="/plans" replace />} />
                         <Route path="/referrals" element={<RequireOwner><ReferralsPage /></RequireOwner>} />
                         <Route path="/feature-catalogue" element={<FeatureCataloguePage />} />
                         <Route path="/api-catalog" element={<ApiCatalogPage />} />

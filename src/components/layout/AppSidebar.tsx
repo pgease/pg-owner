@@ -734,7 +734,7 @@ const SidebarContent = ({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
                 </button>
               </TooltipTrigger>
               <TooltipContent side="right" className="text-xs bg-slate-900 text-white border-slate-700 shadow-xl">
-                Subscription Plans
+                <span>Plans & Billing</span>
               </TooltipContent>
             </Tooltip>
           )}

@@ -23,6 +23,8 @@ export interface DerivedPropertySummary {
   totalOpenTickets: number;
   pendingKycApplications: number;
   remainingCredits: number | undefined;
+  kycCredits: number | undefined;
+  kycAgreementCredits: number | undefined;
   collectedThisMonth: number;
   pendingRentAmount: number;
   unpaidTenantsCount: number;
@@ -50,6 +52,8 @@ export function computePropertySummary(params: {
   kycApps?: Array<Record<string, unknown>>;
   propertyId: string | null;
   creditsRemaining?: number;
+  kycCredits?: number;
+  kycAgreementCredits?: number;
   collectedThisMonth?: number;
   pendingRentAmount?: number;
   unpaidTenantsCount?: number;
@@ -104,6 +108,8 @@ export function computePropertySummary(params: {
     totalOpenTickets: openComplaints + inProgressComplaints,
     pendingKycApplications,
     remainingCredits: params.creditsRemaining,
+    kycCredits: params.kycCredits ?? params.creditsRemaining,
+    kycAgreementCredits: params.kycAgreementCredits,
     collectedThisMonth: Number(params.collectedThisMonth ?? 0),
     pendingRentAmount: Number(params.pendingRentAmount ?? 0),
     unpaidTenantsCount: Number(params.unpaidTenantsCount ?? 0),
@@ -140,6 +146,8 @@ export function usePropertySummary(propertyId: string | null) {
       kycApps: (kycQuery.data as Array<Record<string, unknown>> | undefined) ?? [],
       propertyId,
       creditsRemaining: creditsQuery.data ? Number(creditsQuery.data.remainingCredits ?? 0) : undefined,
+      kycCredits: creditsQuery.data ? Number((creditsQuery.data as any).kycCreditsBalance ?? creditsQuery.data.remainingCredits ?? 0) : undefined,
+      kycAgreementCredits: creditsQuery.data ? Number((creditsQuery.data as any).kycAgreementCreditsBalance ?? 0) : undefined,
       collectedThisMonth: Number(d?.totalCollectedThisPeriod ?? 0),
       pendingRentAmount,
       unpaidTenantsCount: d?.unpaidCount ?? unpaid.length,

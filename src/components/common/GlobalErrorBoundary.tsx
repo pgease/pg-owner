@@ -57,18 +57,21 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             </div>
 
             <h1 className="text-lg font-bold text-gray-900 mb-1">
-              Unable to load this page
+              Something went wrong on this page
             </h1>
             <p className="text-xs text-gray-500 mb-6 leading-relaxed">
-              We encountered an unexpected display issue while rendering the dashboard. You can reload or return to setup.
+              We encountered an unexpected display issue. Please reload the page or return to setup.
             </p>
 
-            {this.state.error?.message && (
-              <div className="mb-6 rounded-xl bg-gray-50 border border-gray-200 p-3 text-left">
-                <p className="text-[11px] font-mono text-gray-600 break-words">
+            {import.meta.env.DEV && this.state.error?.message && (
+              <details className="mb-6 rounded-xl bg-gray-50 border border-gray-200 p-3 text-left">
+                <summary className="text-[11px] font-semibold text-gray-700 cursor-pointer">
+                  Technical details (dev only)
+                </summary>
+                <p className="mt-2 text-[11px] font-mono text-gray-600 break-words">
                   {this.state.error.message}
                 </p>
-              </div>
+              </details>
             )}
 
             <div className="flex flex-col gap-2.5">

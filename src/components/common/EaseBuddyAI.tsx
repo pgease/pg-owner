@@ -200,10 +200,10 @@ export const EaseBuddyAI: React.FC<{
           {/* Quick Prompt Suggestions */}
           <div className="bg-[var(--gray-50)]/50 border-b border-[var(--gray-200)] px-3 py-2 flex gap-1.5 overflow-x-auto shrink-0 scrollbar-none">
             <button
-              onClick={() => handleSend("Tell me about the 45-day Lite trial")}
+              onClick={() => handleSend("How does per-bed pricing work?")}
               className="text-xs whitespace-nowrap bg-white border border-[var(--gray-300)] hover:border-[var(--brand-600)] hover:text-[var(--brand-600)] text-[var(--gray-700)] px-2.5 py-1 rounded-sm transition-colors flex items-center gap-1 font-medium shadow-none"
             >
-              <Sparkles className="h-3 w-3 text-[var(--brand-600)]" /> 45-Day Trial
+              <Sparkles className="h-3 w-3 text-[var(--brand-600)]" /> Pricing & Plans
             </button>
             <button
               onClick={() => handleSend("What is the difference between Lite and Pro plans?")}
